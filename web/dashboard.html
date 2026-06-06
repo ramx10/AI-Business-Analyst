@@ -234,6 +234,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       render(activeTemplate);
     });
   }
+
+  // Listen for global theme toggling via header button
+  window.addEventListener('theme-changed', (e) => {
+    if (themeSelect) themeSelect.value = e.detail.theme;
+    const activeTemplate = localStorage.getItem('ai_ba_template') || 'exec';
+    render(activeTemplate);
+  });
 });
 </script>
 </body>

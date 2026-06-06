@@ -1,3 +1,27 @@
+// ─── Theme Management ──────────────────────────────────────────
+(function() {
+  const savedTheme = localStorage.getItem('ai_ba_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+})();
+
+function toggleTheme() {
+  const current = localStorage.getItem('ai_ba_theme') || 'dark';
+  // If corporate light is active, toggle to dark. Otherwise toggle to corporate light.
+  const next = current === 'dark' ? 'light-corporate' : 'dark';
+  localStorage.setItem('ai_ba_theme', next);
+  document.documentElement.setAttribute('data-theme', next);
+  
+  const toggles = document.querySelectorAll('#global-theme-toggle');
+  toggles.forEach(t => t.innerHTML = next === 'dark' ? '☀️' : '🌙');
+  
+  const select = document.getElementById('theme-select');
+  if (select) {
+    select.value = next;
+  }
+  
+  window.dispatchEvent(new CustomEvent('theme-changed', { detail: { theme: next } }));
+}
+
 // ─── API Client ───────────────────────────────────────────────
 const API = {
   async post(path, body, isForm = false) {
@@ -74,12 +98,26 @@ function renderSessionBadge() {
   const el = document.getElementById('session-badge');
   if (!el) return;
   const id = Session.get();
+  
+  const theme = localStorage.getItem('ai_ba_theme') || 'dark';
+  const themeToggle = `<button class="btn btn-ghost btn-sm" id="global-theme-toggle" title="Toggle Light/Dark Mode" style="font-size:14px;padding:4px 8px;margin-right:8px;line-height:1;">
+    ${theme === 'dark' ? '☀️' : '🌙'}
+  </button>`;
+  
+  let statusHtml = '';
   if (id) {
-    el.innerHTML = `<span class="status-dot">Dataset loaded</span>
+    statusHtml = `<span class="status-dot">Dataset loaded</span>
       <button class="btn btn-ghost btn-sm" onclick="Session.clear();location.reload();">Clear</button>`;
   } else {
-    el.innerHTML = `<span class="status-dot inactive">No dataset</span>
+    statusHtml = `<span class="status-dot inactive">No dataset</span>
       <a href="/upload.html" class="btn btn-secondary btn-sm">Upload →</a>`;
+  }
+  
+  el.innerHTML = themeToggle + statusHtml;
+  
+  const toggleBtn = el.querySelector('#global-theme-toggle');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', toggleTheme);
   }
 }
 
@@ -88,6 +126,7 @@ function showLoading(el, msg = 'Loading…') {
   el.innerHTML = `<div class="loading-state"><div class="spinner"></div><span>${msg}</span></div>`;
 }
 
+// ─── Alert Injection ──────────────────────────────────────────
 function showAlert(el, type, msg) {
   el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
 }
