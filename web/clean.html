@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Data Cleaning — AI Business Analyst</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-crumb">
+        <span>AI Business Analyst</span><span class="topbar-sep">/</span>
+        <span class="current">Data Cleaning</span>
+      </div>
+      <div class="topbar-actions" id="session-badge"></div>
+    </header>
+    <div class="page-content">
+      <div class="page-header">
+        <h1 class="page-title">Data Cleaning</h1>
+        <p class="page-subtitle">Step 3 of 6 — Quality metrics and automated cleaning.</p>
+      </div>
+      <div id="clean-root"><div class="loading-state"><div class="spinner"></div><span>Analyzing quality…</span></div></div>
+    </div>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+<script>
+initSidebar('clean');
+document.addEventListener('DOMContentLoaded', async () => {
+  const root = document.getElementById('clean-root');
+  const sid = Session.require(); if (!sid) return;
+
+  async function load() {
+    try {
+      const d = await API.get(`/api/clean/preview?session_id=${sid}`);
+      const isClean = d.total_missing === 0 && d.duplicate_rows === 0;
+
+      const missingRows = Object.keys(d.missing_by_column).length
+        ? Object.entries(d.missing_by_column).map(([col,cnt]) => `
+            <tr>
+              <td style="font-family:monospace;font-size:12px;">${col}</td>
+              <td>${cnt.toLocaleString()}</td>
+              <td>${d.missing_pct_by_column[col]}%</td>
+              <td style="width:140px">
+                <div class="quality-bar" style="width:140px">
+                  <div class="quality-bar-fill" style="width:${Math.min(d.missing_pct_by_column[col]*5,100)}%;background:var(--red)"></div>
+                </div>
+              </td>
+            </tr>`).join('')
+        : `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-secondary)">No missing values detected.</td></tr>`;
+
+      root.innerHTML = `
+        <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+          <div class="kpi-card">
+            <div class="kpi-label">Completeness</div>
+            <div class="kpi-value" style="color:${d.completeness_pct>95?'var(--green)':'var(--red)'}">${d.completeness_pct}%</div>
+            <div class="kpi-trend ${d.completeness_pct>95?'up':'down'}">${d.completeness_pct>95?'↑ Clean':'↓ Needs attention'}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Missing Values</div>
+            <div class="kpi-value" style="color:${d.total_missing>0?'var(--red)':'var(--green)'}">${d.total_missing.toLocaleString()}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Duplicate Rows</div>
+            <div class="kpi-value" style="color:${d.duplicate_rows>0?'var(--red)':'var(--green)'}">${d.duplicate_rows.toLocaleString()}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Total Rows</div>
+            <div class="kpi-value">${d.total_rows.toLocaleString()}</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Missing Values by Column</div></div>
+            <div class="table-wrap">
+              <table><thead><tr><th>Column</th><th>Missing</th><th>%</th><th>Distribution</th></tr></thead>
+              <tbody>${missingRows}</tbody></table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Auto-Clean</div></div>
+            <div class="card-body">
+              ${isClean
+                ? `<div class="alert alert-success" style="margin-bottom:16px">Dataset is already clean — no action needed.</div>`
+                : `<p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.65">
+                    The auto-cleaner will:<br>
+                    &nbsp;• Drop all duplicate rows<br>
+                    &nbsp;• Fill numeric gaps with column <strong>median</strong><br>
+                    &nbsp;• Fill text gaps with column <strong>mode</strong>
+                  </p>
+                  <button class="btn btn-primary" id="clean-btn">Run Auto-Clean</button>`}
+              <div id="clean-status" style="margin-top:12px;"></div>
+              <div style="margin-top:20px;display:flex;gap:8px;">
+                <a href="/schema.html" class="btn btn-ghost btn-sm">← Back</a>
+                <a href="/dashboard.html" class="btn btn-secondary btn-sm">Continue to Dashboard →</a>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      const btn = document.getElementById('clean-btn');
+      if (btn) btn.addEventListener('click', async () => {
+        btn.disabled = true; btn.textContent = 'Cleaning…';
+        try {
+          const r = await API.post(`/api/clean/apply?session_id=${sid}`, {});
+          showAlert(document.getElementById('clean-status'), 'success',
+            `Done — removed ${r.duplicates_removed} duplicates, fixed ${r.missing_before} missing values.`);
+          setTimeout(load, 1200);
+        } catch(e) {
+          showAlert(document.getElementById('clean-status'), 'danger', e.message);
+          btn.disabled = false; btn.textContent = 'Run Auto-Clean';
+        }
+      });
+    } catch(e) {
+      root.innerHTML = `<div class="alert alert-danger">${e.message} — <a href="/upload.html" style="color:inherit">upload a dataset first</a></div>`;
+    }
+  }
+  load();
+});
+</script>
+</body>
+</html>

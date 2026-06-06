@@ -1,31 +1,14 @@
-from config.llm import llm
+class SchemaAgent:
 
+    def analyze_schema(self, df):
 
-class SchemaUnderstandingAgent:
+        schema_info = {}
 
-    def understand_schema(
-        self,
-        dataset_columns
-    ):
+        for column in df.columns:
 
-        prompt = f"""
-        You are a senior data analyst.
+            schema_info[column] = {
+                "datatype": str(df[column].dtype),
+                "unique_values": int(df[column].nunique())
+            }
 
-        Understand the meaning of dataset columns.
-
-        Dataset Columns:
-        {dataset_columns}
-
-        For each column explain:
-
-        1. Business meaning
-        2. Data type
-        3. Possible use in analytics
-        4. Whether it is KPI relevant
-
-        Return in structured format.
-        """
-
-        response = llm.invoke(prompt)
-
-        return response.content
+        return schema_info

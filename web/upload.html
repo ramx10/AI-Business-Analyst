@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Upload Data — AI Business Analyst</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-crumb">
+        <span>AI Business Analyst</span><span class="topbar-sep">/</span>
+        <span class="current">Upload Data</span>
+      </div>
+      <div class="topbar-actions" id="session-badge"></div>
+    </header>
+    <div class="page-content">
+
+      <div class="page-header">
+        <h1 class="page-title">Upload Data</h1>
+        <p class="page-subtitle">Step 1 of 6 — Ingest your dataset to begin the analysis pipeline.</p>
+      </div>
+
+      <!-- Quick Start -->
+      <div class="section">
+        <div class="section-header"><div class="section-title">Quick Start</div></div>
+        <div class="card no-hover">
+          <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+            <div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Load Demo Dataset</div>
+              <div style="font-size:12px;color:var(--text-secondary);">1,500-row retail sales dataset with regions, products, revenue & profit.</div>
+            </div>
+            <button class="btn btn-primary" id="sample-btn">↑ Load Sample Dataset</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider-text">or upload your own file</div>
+
+      <!-- Upload -->
+      <div class="section">
+        <div class="card no-hover">
+          <div class="card-body">
+            <div class="upload-zone" id="upload-zone">
+              <div class="upload-icon">↑</div>
+              <h3>Drag & drop your CSV file here</h3>
+              <p>or click to browse — CSV files only</p>
+              <input type="file" id="file-input" accept=".csv" style="display:none"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="upload-status"></div>
+      <div id="upload-preview"></div>
+
+      <div id="continue-wrap" style="display:none;margin-top:16px;">
+        <a href="/schema.html" class="btn btn-primary">Continue to Schema Analysis →</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+<script src="/js/upload.js"></script>
+<script>initSidebar('upload');</script>
+</body>
+</html>

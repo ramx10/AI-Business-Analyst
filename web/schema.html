@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Schema Analysis — AI Business Analyst</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-crumb">
+        <span>AI Business Analyst</span><span class="topbar-sep">/</span>
+        <span class="current">Schema Analysis</span>
+      </div>
+      <div class="topbar-actions" id="session-badge"></div>
+    </header>
+    <div class="page-content">
+      <div class="page-header">
+        <h1 class="page-title">Schema Analysis</h1>
+        <p class="page-subtitle">Step 2 of 6 — Column types, distributions, and structural overview.</p>
+      </div>
+      <div id="schema-root"><div class="loading-state"><div class="spinner"></div><span>Analyzing schema…</span></div></div>
+      <div style="margin-top:20px;display:flex;gap:8px;">
+        <a href="/upload.html" class="btn btn-ghost btn-sm">← Back</a>
+        <a href="/clean.html" class="btn btn-primary btn-sm">Continue to Cleaning →</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+<script>
+initSidebar('schema');
+document.addEventListener('DOMContentLoaded', async () => {
+  const root = document.getElementById('schema-root');
+  const sid = Session.require(); if (!sid) return;
+  try {
+    const d = await API.get(`/api/schema?session_id=${sid}`);
+    const rows = Object.entries(d.schema).map(([col, info]) => {
+      const isNum = info.datatype.includes('int') || info.datatype.includes('float');
+      return `<tr>
+        <td style="font-family:monospace;font-size:12px;">${col}</td>
+        <td><span class="chip ${isNum?'chip-blue':'chip-purple'}">${info.datatype}</span></td>
+        <td style="color:var(--text-secondary)">${info.unique_values.toLocaleString()}</td>
+        <td><span class="pill ${isNum?'pill-blue':'pill-muted'}">${isNum?'Numeric':'Categorical'}</span></td>
+      </tr>`;
+    }).join('');
+
+    const numChips = d.numeric_columns.map(c=>`<span class="chip chip-blue" style="margin:2px">${c}</span>`).join('');
+    const catChips = d.categorical_columns.map(c=>`<span class="chip chip-purple" style="margin:2px">${c}</span>`).join('');
+
+    root.innerHTML = `
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Rows</div>
+          <div class="kpi-value">${d.total_rows.toLocaleString()}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Columns</div>
+          <div class="kpi-value">${d.total_columns}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Numeric Columns</div>
+          <div class="kpi-value">${d.numeric_columns.length}</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Column Schema</div><div class="card-subtitle">${d.total_columns} columns detected</div></div>
+          <div class="table-wrap">
+            <table><thead><tr><th>Name</th><th>Type</th><th>Unique Values</th><th>Group</th></tr></thead>
+            <tbody>${rows}</tbody></table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Column Groups</div></div>
+          <div class="card-body">
+            <div style="margin-bottom:20px;">
+              <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);margin-bottom:10px;">
+                Numeric <span style="color:var(--blue)">(${d.numeric_columns.length})</span>
+              </div>
+              <div>${numChips||'<span style="color:var(--text-tertiary);font-size:12px">None</span>'}</div>
+            </div>
+            <div class="divider"></div>
+            <div>
+              <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);margin-bottom:10px;">
+                Categorical <span style="color:#a78bfa">(${d.categorical_columns.length})</span>
+              </div>
+              <div>${catChips||'<span style="color:var(--text-tertiary);font-size:12px">None</span>'}</div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  } catch(e) {
+    root.innerHTML = `<div class="alert alert-danger">${e.message} — <a href="/upload.html" style="color:inherit">upload a dataset first</a></div>`;
+  }
+});
+</script>
+</body>
+</html>

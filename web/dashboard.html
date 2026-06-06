@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Dashboard — AI Business Analyst</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-crumb">
+        <span>AI Business Analyst</span><span class="topbar-sep">/</span>
+        <span class="current">Executive Dashboard</span>
+      </div>
+      <div class="topbar-actions" id="session-badge"></div>
+    </header>
+    <div class="page-content">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <h1 class="page-title">Executive Dashboard</h1>
+          <p class="page-subtitle">Step 4 of 6 — KPIs, trends, and breakdowns.</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <a href="/insights.html" class="btn btn-primary btn-sm">AI Insights →</a>
+        </div>
+      </div>
+      <div id="dash-root"><div class="loading-state"><div class="spinner"></div><span>Building dashboard…</span></div></div>
+    </div>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+<script src="/js/dashboard.js"></script>
+<script>
+initSidebar('dashboard');
+document.addEventListener('DOMContentLoaded', async () => {
+  const root = document.getElementById('dash-root');
+  const sid = Session.require(); if (!sid) return;
+  try {
+    const d = await API.get(`/api/dashboard?session_id=${sid}`);
+    const k = d.kpis, c = d.charts;
+
+    const kpiDefs = [
+      { key:'revenue',       label:'Total Revenue',   },
+      { key:'profit',        label:'Net Profit',      },
+      { key:'orders',        label:'Total Orders',    },
+      { key:'customers',     label:'Unique Customers',},
+      { key:'profit_margin', label:'Profit Margin',   },
+    ];
+    const kpiHtml = kpiDefs.map(kd => {
+      const kpi = k[kd.key]; if (!kpi) return '';
+      const up = kpi.direction === 'up';
+      return `<div class="kpi-card">
+        <div class="kpi-label">${kd.label}</div>
+        <div class="kpi-value">${kpi.value}</div>
+        <div class="kpi-trend ${up?'up':'down'}">${up?'↑':'↓'} ${kpi.trend} <span>vs last period</span></div>
+      </div>`;
+    }).join('');
+
+    root.innerHTML = `
+      <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)">${kpiHtml}</div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Revenue Trend</div><div class="card-subtitle">Monthly</div></div>
+          <div class="card-body" style="padding-top:0"><div style="height:220px"><canvas id="chart-trend"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Revenue by Region</div></div>
+          <div class="card-body" style="padding-top:0"><div style="height:220px"><canvas id="chart-region"></canvas></div></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Category Share</div></div>
+          <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-cat"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Top 10 Products</div></div>
+          <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-prod"></canvas></div></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-header"><div class="card-title">Revenue vs Profit by Product</div><div class="card-subtitle">Scatter analysis</div></div>
+        <div class="card-body" style="padding-top:0"><div style="height:260px"><canvas id="chart-scatter"></canvas></div></div>
+      </div>`;
+
+    makeLineChart('chart-trend', c.revenue_trend.labels, c.revenue_trend.values);
+    makeBarChart('chart-region', c.regional.labels, c.regional.values);
+    makeDoughnutChart('chart-cat', c.category.labels, c.category.values);
+    makeBarChart('chart-prod', c.products.labels, c.products.values, true);
+    makeScatterChart('chart-scatter', c.scatter.revenue, c.scatter.profit, c.scatter.labels);
+
+  } catch(e) {
+    root.innerHTML = `<div class="alert alert-danger">${e.message} — <a href="/upload.html" style="color:inherit">upload a dataset first</a></div>`;
+  }
+});
+</script>
+</body>
+</html>

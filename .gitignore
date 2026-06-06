@@ -20,3 +20,5 @@ Thumbs.db
 
 # Reports/Data if large or temporary
 *.log
+data/sessions/
+reports/report_*.md

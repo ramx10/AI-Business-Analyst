@@ -1,32 +1,16 @@
-from config.llm import llm
-
-
 class DataCleaningAgent:
 
-    def analyze_data_quality(
-        self,
-        dataframe_info
-    ):
+    def analyze_data_quality(self, df):
 
-        prompt = f"""
-        You are a senior data cleaning expert.
+        missing_values = (
+            df.isnull()
+            .sum()[df.isnull().sum() > 0]
+            .to_dict()
+        )
 
-        Analyze dataset quality.
+        duplicate_rows = int(df.duplicated().sum())
 
-        Dataset Information:
-        {dataframe_info}
-
-        Identify:
-
-        1. Missing values
-        2. Duplicate risks
-        3. Datatype problems
-        4. Outlier risks
-        5. Recommended cleaning steps
-
-        Give practical recommendations.
-        """
-
-        response = llm.invoke(prompt)
-
-        return response.content
+        return {
+            "missing_values": missing_values,
+            "duplicate_rows": duplicate_rows
+        }
