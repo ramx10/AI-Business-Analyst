@@ -1,79 +1,165 @@
-// ─── Chart Palette ────────────────────────────────────────────
-const PALETTE = ['#7c3aed','#2563eb','#059669','#d97706','#dc2626','#0891b2','#7c3aed','#4f46e5'];
-const PALETTE_MUTED = PALETTE.map(c => c + '55');
+// ─── Chart Theme Manager ───────────────────────────────────────
+window.chartInstances = {};
 
-const BASE_OPTS = {
-  responsive: true,
-  maintainAspectRatio: false,
-  animation: { duration: 600 },
-  plugins: {
-    legend: {
-      labels: { color: '#52525b', font: { family: 'Inter', size: 11 }, boxWidth: 10, padding: 14 }
-    },
-    tooltip: {
-      backgroundColor: '#111111',
-      titleColor: '#e4e4e7',
-      bodyColor: '#71717a',
-      borderColor: '#222222',
-      borderWidth: 1,
-      padding: 10,
-      cornerRadius: 6,
-    }
-  },
-  scales: {
-    x: {
-      grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
-      ticks: { color: '#52525b', font: { family: 'Inter', size: 11 } }
-    },
-    y: {
-      grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
-      ticks: { color: '#52525b', font: { family: 'Inter', size: 11 } }
-    }
+function getThemeConfig() {
+  const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+  
+  if (theme === 'light-corporate') {
+    const palette = ['#2563eb', '#4f46e5', '#0d9488', '#d97706', '#dc2626', '#06b6d4', '#475569'];
+    return {
+      palette: palette,
+      paletteMuted: palette.map(c => c + '33'),
+      gridColor: 'rgba(15, 23, 42, 0.06)',
+      textColor: '#475569',
+      tooltipBg: '#ffffff',
+      tooltipText: '#0f172a',
+      tooltipBorder: '#cbd5e1'
+    };
+  } else if (theme === 'pastel-soft') {
+    const palette = ['#e19584', '#e2a3c7', '#93b7be', '#b5ca8d', '#d9a05b', '#a3b5c7', '#d0b3e1'];
+    return {
+      palette: palette,
+      paletteMuted: palette.map(c => c + '55'),
+      gridColor: 'rgba(110, 97, 80, 0.06)',
+      textColor: '#6e6150',
+      tooltipBg: '#ffffff',
+      tooltipText: '#2d261e',
+      tooltipBorder: '#e9e3d5'
+    };
+  } else {
+    // Default Dark
+    const palette = ['#7c3aed', '#2563eb', '#059669', '#d97706', '#dc2626', '#0891b2', '#4f46e5'];
+    return {
+      palette: palette,
+      paletteMuted: palette.map(c => c + '55'),
+      gridColor: 'rgba(255,255,255,0.03)',
+      textColor: '#71717a',
+      tooltipBg: '#111111',
+      tooltipText: '#e4e4e7',
+      tooltipBorder: '#222222'
+    };
   }
-};
+}
+
+function getBaseOpts(cfg) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 500 },
+    plugins: {
+      legend: {
+        labels: { color: cfg.textColor, font: { family: 'Inter', size: 11 }, boxWidth: 10, padding: 14 }
+      },
+      tooltip: {
+        backgroundColor: cfg.tooltipBg,
+        titleColor: cfg.tooltipText,
+        bodyColor: cfg.textColor,
+        borderColor: cfg.tooltipBorder,
+        borderWidth: 1,
+        padding: 10,
+        cornerRadius: 6,
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: cfg.gridColor, drawBorder: false },
+        ticks: { color: cfg.textColor, font: { family: 'Inter', size: 11 } }
+      },
+      y: {
+        grid: { color: cfg.gridColor, drawBorder: false },
+        ticks: { color: cfg.textColor, font: { family: 'Inter', size: 11 } }
+      }
+    }
+  };
+}
 
 function makeLineChart(id, labels, data) {
   const ctx = document.getElementById(id); if (!ctx) return;
-  new Chart(ctx, {
+  if (window.chartInstances[id]) { window.chartInstances[id].destroy(); }
+  
+  const cfg = getThemeConfig();
+  const baseOpts = getBaseOpts(cfg);
+  
+  window.chartInstances[id] = new Chart(ctx, {
     type: 'line',
     data: {
       labels,
-      datasets: [{ data, borderColor: PALETTE[0], backgroundColor: PALETTE[0]+'18',
-        fill: true, tension: 0.35, pointRadius: 2, pointHoverRadius: 5,
-        pointBackgroundColor: PALETTE[0], borderWidth: 2 }]
+      datasets: [{
+        data,
+        borderColor: cfg.palette[0],
+        backgroundColor: cfg.palette[0] + '18',
+        fill: true,
+        tension: 0.35,
+        pointRadius: 2,
+        pointHoverRadius: 5,
+        pointBackgroundColor: cfg.palette[0],
+        borderWidth: 2
+      }]
     },
-    options: { ...BASE_OPTS, plugins: { ...BASE_OPTS.plugins, legend: { display: false } } }
+    options: { ...baseOpts, plugins: { ...baseOpts.plugins, legend: { display: false } } }
   });
 }
 
 function makeBarChart(id, labels, data, horizontal = false) {
   const ctx = document.getElementById(id); if (!ctx) return;
-  new Chart(ctx, {
+  if (window.chartInstances[id]) { window.chartInstances[id].destroy(); }
+  
+  const cfg = getThemeConfig();
+  const baseOpts = getBaseOpts(cfg);
+  
+  window.chartInstances[id] = new Chart(ctx, {
     type: 'bar',
     data: {
       labels,
-      datasets: [{ data, backgroundColor: PALETTE_MUTED, borderColor: PALETTE,
-        borderWidth: 1, borderRadius: 4, borderSkipped: false }]
+      datasets: [{
+        data,
+        backgroundColor: cfg.paletteMuted,
+        borderColor: cfg.palette,
+        borderWidth: 1,
+        borderRadius: 4,
+        borderSkipped: false
+      }]
     },
     options: {
-      ...BASE_OPTS,
+      ...baseOpts,
       indexAxis: horizontal ? 'y' : 'x',
-      plugins: { ...BASE_OPTS.plugins, legend: { display: false } }
+      plugins: { ...baseOpts.plugins, legend: { display: false } }
     }
   });
 }
 
 function makeDoughnutChart(id, labels, data) {
   const ctx = document.getElementById(id); if (!ctx) return;
-  new Chart(ctx, {
+  if (window.chartInstances[id]) { window.chartInstances[id].destroy(); }
+  
+  const cfg = getThemeConfig();
+  const baseOpts = getBaseOpts(cfg);
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light-corporate' && 
+                 document.documentElement.getAttribute('data-theme') !== 'pastel-soft';
+  
+  window.chartInstances[id] = new Chart(ctx, {
     type: 'doughnut',
-    data: { labels, datasets: [{ data, backgroundColor: PALETTE, borderColor: '#111111', borderWidth: 2, hoverOffset: 6 }] },
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: cfg.palette,
+        borderColor: isDark ? '#111111' : '#ffffff',
+        borderWidth: 2,
+        hoverOffset: 6
+      }]
+    },
     options: {
-      responsive: true, maintainAspectRatio: false, cutout: '68%',
-      animation: { duration: 600 },
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '68%',
+      animation: { duration: 500 },
       plugins: {
-        legend: { position: 'right', labels: { color: '#52525b', font: { family: 'Inter', size: 11 }, padding: 14, boxWidth: 10 } },
-        tooltip: BASE_OPTS.plugins.tooltip
+        legend: {
+          position: 'right',
+          labels: { color: cfg.textColor, font: { family: 'Inter', size: 11 }, padding: 14, boxWidth: 10 }
+        },
+        tooltip: baseOpts.plugins.tooltip
       }
     }
   });
@@ -81,18 +167,34 @@ function makeDoughnutChart(id, labels, data) {
 
 function makeScatterChart(id, xData, yData, labels) {
   const ctx = document.getElementById(id); if (!ctx) return;
+  if (window.chartInstances[id]) { window.chartInstances[id].destroy(); }
+  
+  const cfg = getThemeConfig();
+  const baseOpts = getBaseOpts(cfg);
   const points = xData.map((x, i) => ({ x, y: yData[i], label: labels[i] }));
-  new Chart(ctx, {
+  
+  window.chartInstances[id] = new Chart(ctx, {
     type: 'scatter',
-    data: { datasets: [{ data: points, backgroundColor: PALETTE[0]+'99', borderColor: PALETTE[0], pointRadius: 6, pointHoverRadius: 9, borderWidth: 1 }] },
+    data: {
+      datasets: [{
+        data: points,
+        backgroundColor: cfg.palette[0] + '99',
+        borderColor: cfg.palette[0],
+        pointRadius: 6,
+        pointHoverRadius: 9,
+        borderWidth: 1
+      }]
+    },
     options: {
-      ...BASE_OPTS,
+      ...baseOpts,
       plugins: {
-        ...BASE_OPTS.plugins,
+        ...baseOpts.plugins,
         legend: { display: false },
         tooltip: {
-          ...BASE_OPTS.plugins.tooltip,
-          callbacks: { label: ctx => ` ${ctx.raw.label}  Rev: ${ctx.raw.x.toLocaleString()}  Profit: ${ctx.raw.y.toLocaleString()}` }
+          ...baseOpts.plugins.tooltip,
+          callbacks: {
+            label: ctx => ` ${ctx.raw.label}  Rev: ${ctx.raw.x.toLocaleString()}  Profit: ${ctx.raw.y.toLocaleString()}`
+          }
         }
       }
     }

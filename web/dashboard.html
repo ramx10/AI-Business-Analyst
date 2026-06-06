@@ -5,6 +5,11 @@
   <title>Dashboard — AI Business Analyst</title>
   <link rel="stylesheet" href="/css/styles.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script>
+    // Apply theme immediately to prevent screen flashing
+    const savedTheme = localStorage.getItem('ai_ba_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
 </head>
 <body>
 <div class="layout">
@@ -18,15 +23,38 @@
       <div class="topbar-actions" id="session-badge"></div>
     </header>
     <div class="page-content">
-      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div>
           <h1 class="page-title">Executive Dashboard</h1>
           <p class="page-subtitle">Step 4 of 6 — KPIs, trends, and breakdowns.</p>
+        </div>
+      </div>
+
+      <!-- Control Panel for Themes & Templates -->
+      <div class="control-panel" style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:12px 20px;">
+        <div style="display:flex;gap:20px;align-items:center;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-secondary);">Template:</span>
+            <select id="template-select" class="input" style="width:170px;padding:5px 10px;font-size:12px;cursor:pointer;">
+              <option value="exec">Executive Overview</option>
+              <option value="sales">Sales & Operations</option>
+              <option value="product">Product Performance</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-secondary);">Theme:</span>
+            <select id="theme-select" class="input" style="width:160px;padding:5px 10px;font-size:12px;cursor:pointer;">
+              <option value="dark">Sleek Dark</option>
+              <option value="light-corporate">Light Corporate</option>
+              <option value="pastel-soft">Pastel Soft</option>
+            </select>
+          </div>
         </div>
         <div style="display:flex;gap:8px;">
           <a href="/insights.html" class="btn btn-primary btn-sm">AI Insights →</a>
         </div>
       </div>
+
       <div id="dash-root"><div class="loading-state"><div class="spinner"></div><span>Building dashboard…</span></div></div>
     </div>
   </div>
@@ -35,68 +63,176 @@
 <script src="/js/dashboard.js"></script>
 <script>
 initSidebar('dashboard');
+
 document.addEventListener('DOMContentLoaded', async () => {
   const root = document.getElementById('dash-root');
   const sid = Session.require(); if (!sid) return;
-  try {
-    const d = await API.get(`/api/dashboard?session_id=${sid}`);
-    const k = d.kpis, c = d.charts;
 
-    const kpiDefs = [
-      { key:'revenue',       label:'Total Revenue',   },
-      { key:'profit',        label:'Net Profit',      },
-      { key:'orders',        label:'Total Orders',    },
-      { key:'customers',     label:'Unique Customers',},
-      { key:'profit_margin', label:'Profit Margin',   },
-    ];
-    const kpiHtml = kpiDefs.map(kd => {
-      const kpi = k[kd.key]; if (!kpi) return '';
-      const up = kpi.direction === 'up';
-      return `<div class="kpi-card">
-        <div class="kpi-label">${kd.label}</div>
-        <div class="kpi-value">${kpi.value}</div>
-        <div class="kpi-trend ${up?'up':'down'}">${up?'↑':'↓'} ${kpi.trend} <span>vs last period</span></div>
-      </div>`;
-    }).join('');
+  const tempSelect = document.getElementById('template-select');
+  const themeSelect = document.getElementById('theme-select');
+
+  // Load saved preferences
+  const savedTheme = localStorage.getItem('ai_ba_theme') || 'dark';
+  const savedTemplate = localStorage.getItem('ai_ba_template') || 'exec';
+  
+  if (themeSelect) themeSelect.value = savedTheme;
+  if (tempSelect) tempSelect.value = savedTemplate;
+
+  let dashData = null;
+
+  // Render function that rebuilds the dashboard layout and re-draws charts
+  function render(templateId) {
+    if (!dashData) return;
+    const k = dashData.kpis, c = dashData.charts;
+
+    let kpiHtml = '';
+    let chartsHtml = '';
+
+    if (templateId === 'exec') {
+      // 1. Executive Summary: All KPIs, Trends, Categories, Regions, and Products
+      const kpis = ['revenue', 'profit', 'orders', 'customers', 'profit_margin'];
+      kpiHtml = buildKpis(kpis, k);
+      chartsHtml = `
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Revenue Trend</div><div class="card-subtitle">Monthly</div></div>
+            <div class="card-body" style="padding-top:0"><div style="height:220px"><canvas id="chart-trend"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Revenue by Region</div></div>
+            <div class="card-body" style="padding-top:0"><div style="height:220px"><canvas id="chart-region"></canvas></div></div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Category Share</div></div>
+            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-cat"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Top 10 Products</div></div>
+            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-prod"></canvas></div></div>
+          </div>
+        </div>`;
+    } else if (templateId === 'sales') {
+      // 2. Sales & Operations: Focus on orders, revenues, and geographic details (State breakdown)
+      const kpis = ['revenue', 'orders', 'profit_margin'];
+      kpiHtml = buildKpis(kpis, k);
+      chartsHtml = `
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-header"><div class="card-title">Revenue Trend</div><div class="card-subtitle">Monthly</div></div>
+          <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-trend"></canvas></div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Top State Performers</div></div>
+            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-state"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Sales Volume by Region</div></div>
+            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-region"></canvas></div></div>
+          </div>
+        </div>`;
+    } else if (templateId === 'product') {
+      // 3. Product Performance: Focus on revenue vs profit scatter, category share, and top products
+      const kpis = ['revenue', 'profit', 'profit_margin'];
+      kpiHtml = buildKpis(kpis, k);
+      chartsHtml = `
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Category Share</div></div>
+            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-cat"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Top 10 Product Sales</div></div>
+            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-prod"></canvas></div></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-header"><div class="card-title">Revenue vs Profit Analysis</div><div class="card-subtitle">Product Breakdown</div></div>
+          <div class="card-body" style="padding-top:0"><div style="height:260px"><canvas id="chart-scatter"></canvas></div></div>
+        </div>`;
+    }
 
     root.innerHTML = `
-      <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)">${kpiHtml}</div>
+      <div class="kpi-grid" style="grid-template-columns: repeat(${kpisCount(templateId)}, 1fr)">${kpiHtml}</div>
+      ${chartsHtml}
+    `;
 
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Revenue Trend</div><div class="card-subtitle">Monthly</div></div>
-          <div class="card-body" style="padding-top:0"><div style="height:220px"><canvas id="chart-trend"></canvas></div></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Revenue by Region</div></div>
-          <div class="card-body" style="padding-top:0"><div style="height:220px"><canvas id="chart-region"></canvas></div></div>
-        </div>
-      </div>
+    // Render corresponding charts conditionally based on DOM elements availability
+    if (document.getElementById('chart-trend')) {
+      makeLineChart('chart-trend', c.revenue_trend.labels, c.revenue_trend.values);
+    }
+    if (document.getElementById('chart-region')) {
+      makeBarChart('chart-region', c.regional.labels, c.regional.values);
+    }
+    if (document.getElementById('chart-cat')) {
+      makeDoughnutChart('chart-cat', c.category.labels, c.category.values);
+    }
+    if (document.getElementById('chart-prod')) {
+      makeBarChart('chart-prod', c.products.labels, c.products.values, true);
+    }
+    if (document.getElementById('chart-state')) {
+      makeBarChart('chart-state', c.state.labels, c.state.values);
+    }
+    if (document.getElementById('chart-scatter')) {
+      makeScatterChart('chart-scatter', c.scatter.revenue, c.scatter.profit, c.scatter.labels);
+    }
+  }
 
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Category Share</div></div>
-          <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-cat"></canvas></div></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Top 10 Products</div></div>
-          <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-prod"></canvas></div></div>
-        </div>
-      </div>
+  function kpisCount(templateId) {
+    if (templateId === 'exec') return 5;
+    return 3;
+  }
 
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-header"><div class="card-title">Revenue vs Profit by Product</div><div class="card-subtitle">Scatter analysis</div></div>
-        <div class="card-body" style="padding-top:0"><div style="height:260px"><canvas id="chart-scatter"></canvas></div></div>
-      </div>`;
+  function buildKpis(keys, kpiData) {
+    const kpiDefs = {
+      revenue: { label: 'Total Revenue' },
+      profit: { label: 'Net Profit' },
+      orders: { label: 'Total Orders' },
+      customers: { label: 'Unique Customers' },
+      profit_margin: { label: 'Profit Margin' }
+    };
+    return keys.map(key => {
+      const kd = kpiData[key]; if (!kd) return '';
+      const def = kpiDefs[key];
+      const up = kd.direction === 'up';
+      return `
+        <div class="kpi-card">
+          <div class="kpi-label">${def.label}</div>
+          <div class="kpi-value">${kd.value}</div>
+          <div class="kpi-trend ${up ? 'up' : 'down'}">${up ? '↑' : '↓'} ${kd.trend} <span>vs last period</span></div>
+        </div>`;
+    }).join('');
+  }
 
-    makeLineChart('chart-trend', c.revenue_trend.labels, c.revenue_trend.values);
-    makeBarChart('chart-region', c.regional.labels, c.regional.values);
-    makeDoughnutChart('chart-cat', c.category.labels, c.category.values);
-    makeBarChart('chart-prod', c.products.labels, c.products.values, true);
-    makeScatterChart('chart-scatter', c.scatter.revenue, c.scatter.profit, c.scatter.labels);
-
-  } catch(e) {
+  // Load and cache dataset details
+  try {
+    dashData = await API.get(`/api/dashboard?session_id=${sid}`);
+    render(savedTemplate);
+  } catch (e) {
     root.innerHTML = `<div class="alert alert-danger">${e.message} — <a href="/upload.html" style="color:inherit">upload a dataset first</a></div>`;
+    return;
+  }
+
+  // Template Change Handler
+  if (tempSelect) {
+    tempSelect.addEventListener('change', (e) => {
+      const template = e.target.value;
+      localStorage.setItem('ai_ba_template', template);
+      render(template);
+    });
+  }
+
+  // Theme Change Handler
+  if (themeSelect) {
+    themeSelect.addEventListener('change', (e) => {
+      const theme = e.target.value;
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('ai_ba_theme', theme);
+      // Re-render the current template to apply new colors to charts
+      const activeTemplate = localStorage.getItem('ai_ba_template') || 'exec';
+      render(activeTemplate);
+    });
   }
 });
 </script>

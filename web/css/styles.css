@@ -7,6 +7,7 @@
   --bg-active: #1a1a1a;
   --border: #222222;
   --border-subtle: #1a1a1a;
+  --border-hover: #2a2a2a;
   --accent: #7c3aed;
   --accent-hover: #6d28d9;
   --accent-muted: rgba(124, 58, 237, 0.12);
@@ -27,6 +28,48 @@
   --radius-sm: 5px;
   --radius: 8px;
   --radius-lg: 12px;
+}
+
+html[data-theme="light-corporate"] {
+  --bg: #f8fafc;
+  --bg-elevated: #ffffff;
+  --bg-hover: #f1f5f9;
+  --bg-active: #e2e8f0;
+  --border: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --border-hover: #cbd5e1;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-muted: rgba(37, 99, 235, 0.08);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #94a3b8;
+  --text-muted: #cbd5e1;
+  --green: #10b981;
+  --green-muted: rgba(16, 185, 129, 0.08);
+  --red: #ef4444;
+  --red-muted: rgba(239, 68, 68, 0.08);
+}
+
+html[data-theme="pastel-soft"] {
+  --bg: #faf7f2;
+  --bg-elevated: #ffffff;
+  --bg-hover: #fcfbf9;
+  --bg-active: #f3efe6;
+  --border: #e9e3d5;
+  --border-subtle: #f5f2eb;
+  --border-hover: #dcd4c7;
+  --accent: #d97706;
+  --accent-hover: #b45309;
+  --accent-muted: rgba(217, 119, 6, 0.08);
+  --text-primary: #2d261e;
+  --text-secondary: #6e6150;
+  --text-tertiary: #b0a390;
+  --text-muted: #dcd4c7;
+  --green: #10b981;
+  --green-muted: rgba(16, 185, 129, 0.08);
+  --red: #f43f5e;
+  --red-muted: rgba(244, 63, 94, 0.08);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -182,7 +225,7 @@ html, body {
 .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
 .card-title { font-size: 13px; font-weight: 600; }
 .card-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-.card:not(.no-hover):hover { border-color: #2a2a2a; }
+.card:not(.no-hover):hover { border-color: var(--border-hover); }
 
 /* ─── KPI Cards ─────────────────────────────────────────────── */
 .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
@@ -193,7 +236,7 @@ html, body {
   padding: 18px 20px;
   transition: border-color 0.15s;
 }
-.kpi-card:hover { border-color: #2a2a2a; }
+.kpi-card:hover { border-color: var(--border-hover); }
 .kpi-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 10px; }
 .kpi-value { font-size: 26px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; margin-bottom: 6px; }
 .kpi-trend { font-size: 11px; font-weight: 500; display: flex; align-items: center; gap: 4px; }
