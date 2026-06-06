@@ -13,10 +13,27 @@ router = APIRouter()
 
 
 def _find_col(df, keywords):
-    for col in df.columns:
-        if any(k in col.lower() for k in keywords):
-            return col
+    for k in keywords:
+        for col in df.columns:
+            if k in col.lower():
+                return col
     return None
+
+
+def _clean_numeric(df, col):
+    if not col:
+        return None
+    if pd.api.types.is_numeric_dtype(df[col]):
+        return col
+    try:
+        cleaned = df[col].astype(str).str.replace(r'[^\d.-]', '', regex=True)
+        converted = pd.to_numeric(cleaned, errors='coerce')
+        if converted.notnull().any():
+            df[col] = converted
+            return col
+    except Exception:
+        pass
+    return col
 
 
 @router.get("/dashboard")
@@ -28,14 +45,30 @@ async def get_dashboard(session_id: str = Query(...)):
         df = load_df(session_id)
 
         rev_col = _find_col(df, ["revenue", "sales", "amount", "price"])
-        prof_col = _find_col(df, ["profit"])
-        date_col = _find_col(df, ["date"])
-        region_col = _find_col(df, ["region"])
-        state_col = _find_col(df, ["state"])
-        cat_col = _find_col(df, ["category", "cat"])
-        prod_col = _find_col(df, ["product", "item"])
+        prof_col = _find_col(df, ["profit", "margin", "gain"])
+        date_col = _find_col(df, ["date", "time", "timestamp"])
+        region_col = _find_col(df, ["region", "territory", "country", "city", "location", "geo", "market"])
+        state_col = _find_col(df, ["state", "province"])
+        cat_col = _find_col(df, ["category", "cat", "productline", "line", "type", "class", "group"])
+        prod_col = _find_col(df, ["productcode", "productname", "product", "item", "title"])
         order_col = _find_col(df, ["order_id", "order"])
         cust_col = _find_col(df, ["customer_id", "customer", "cust"])
+
+        # Resolve collisions between category and product columns
+        if cat_col == prod_col and cat_col is not None:
+            remaining_cols = [c for c in df.columns if c != cat_col]
+            prod_col = next((c for c in remaining_cols if any(k in c.lower() for k in ["productcode", "product", "item", "title"])), cat_col)
+
+        # Ensure numeric columns are cleaned and converted if necessary
+        if rev_col:
+            rev_col = _clean_numeric(df, rev_col)
+        if prof_col:
+            prof_col = _clean_numeric(df, prof_col)
+        else:
+            # Auto-generate virtual profit (25% of revenue) if missing
+            if rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
+                df["_virtual_profit"] = df[rev_col] * 0.25
+                prof_col = "_virtual_profit"
 
         # ---- KPIs ----
         total_revenue = float(df[rev_col].sum()) if rev_col and pd.api.types.is_numeric_dtype(df[rev_col]) else 0
@@ -89,7 +122,7 @@ async def get_dashboard(session_id: str = Query(...)):
 
         # ---- Profit vs Revenue Scatter ----
         scatter_chart = {"revenue": [], "profit": [], "labels": []}
-        if rev_col and prof_col and prod_col:
+        if rev_col and prof_col and prod_col and pd.api.types.is_numeric_dtype(df[rev_col]) and pd.api.types.is_numeric_dtype(df[prof_col]):
             sc = df.groupby(prod_col)[[rev_col, prof_col]].sum().reset_index().head(20)
             scatter_chart = {
                 "labels": sc[prod_col].tolist(),
