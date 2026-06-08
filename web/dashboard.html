@@ -378,6 +378,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ─── Superieur Admin Custom Layout ─────────────────────────
     const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
     if (currentTheme === 'superieur-admin') {
+      const trendLabels = c.revenue_trend && c.revenue_trend.labels.length > 0 ? c.revenue_trend.labels.slice(-7) : ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      const val1 = c.revenue_trend && c.revenue_trend.values.length > 0 ? c.revenue_trend.values.slice(-7) : [5,6,4,3,7,9,5];
+      const val2 = val1.map(v => Math.round(v * 0.75));
+      const val3 = val1.map(v => Math.round(v * 0.5));
+
+      let goalHtml = '';
+      if (c.category && c.category.labels.length > 0) {
+        const maxVal = c.category.values[0] || 1;
+        goalHtml = c.category.labels.slice(0, 4).map((lbl, idx) => {
+          const val = c.category.values[idx];
+          const pct = Math.min(100, Math.round((val / maxVal) * 100));
+          const color = ['#1e59ff', '#10b981', '#0ea5e9', '#f59e0b'][idx % 4];
+          return `
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span>${lbl}</span><strong>${val.toLocaleString()}</strong></div>
+              <div style="width:100%;height:6px;background:var(--border-hover);border-radius:3px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${color};border-radius:3px;"></div></div>
+            </div>`;
+        }).join('');
+      } else {
+        goalHtml = `
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span>Target Metric</span><strong>0</strong></div>
+            <div style="width:100%;height:6px;background:var(--border-hover);border-radius:3px;overflow:hidden;"><div style="width:0%;height:100%;background:#1e59ff;border-radius:3px;"></div></div>
+          </div>`;
+      }
+
+      const sparkValuesBlue = c.revenue_trend && c.revenue_trend.values.length >= 6 ? c.revenue_trend.values.slice(-12) : [12,19,14,15,22,24,21,28,30,25,34,41];
+      const sparkValuesRed = sparkValuesBlue.map(v => Math.round(v * 0.8));
+
+      let prodListHtml = '';
+      if (c.products && c.products.labels.length > 0) {
+        prodListHtml = c.products.labels.slice(0, 4).map((lbl, idx) => {
+          const val = c.products.values[idx];
+          const badge = ['Top seller', 'High margin', 'Hot item', 'Trending'][idx % 4];
+          const color = ['#1e59ff', '#10b981', '#f43f5e', '#f59e0b'][idx % 4];
+          const emoji = ['📱', '📺', '💻', '⌚'][idx % 4];
+          return `
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:32px;height:32px;background:var(--bg-hover);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">${emoji}</div>
+                <div><div style="font-size:11px;font-weight:600;color:var(--text-primary);">${lbl}</div><div style="font-size:9px;color:var(--text-secondary);">${val.toLocaleString()} units sold</div></div>
+              </div>
+              <span style="font-size:9px;font-weight:600;background:${color}15;color:${color};padding:2px 6px;border-radius:4px;">${badge}</span>
+            </div>`;
+        }).join('');
+      } else {
+        prodListHtml = '<div style="font-size:11px;color:var(--text-secondary);">No product data found.</div>';
+      }
+
       root.innerHTML = `
         <div style="display:grid;gap:20px;">
           <!-- Row 1: Weekly Status + Stacked Cards -->
@@ -392,22 +441,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div style="height:220px;"><canvas id="chart-weekly"></canvas></div>
                 <div style="display:flex;flex-direction:column;gap:12px;">
                   <div style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;margin-bottom:4px;">Goal Completion</div>
-                  <div>
-                    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span>Add Products to Cart</span><strong>140/220</strong></div>
-                    <div style="width:100%;height:6px;background:var(--border-hover);border-radius:3px;overflow:hidden;"><div style="width:64%;height:100%;background:#1e59ff;border-radius:3px;"></div></div>
-                  </div>
-                  <div>
-                    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span>Complete Purchase</span><strong>120/150</strong></div>
-                    <div style="width:100%;height:6px;background:var(--border-hover);border-radius:3px;overflow:hidden;"><div style="width:80%;height:100%;background:#10b981;border-radius:3px;"></div></div>
-                  </div>
-                  <div>
-                    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span>Visit Page</span><strong>400/1000</strong></div>
-                    <div style="width:100%;height:6px;background:var(--border-hover);border-radius:3px;overflow:hidden;"><div style="width:40%;height:100%;background:#0ea5e9;border-radius:3px;"></div></div>
-                  </div>
-                  <div>
-                    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span>Send Inquiries</span><strong>210/420</strong></div>
-                    <div style="width:100%;height:6px;background:var(--border-hover);border-radius:3px;overflow:hidden;"><div style="width:50%;height:100%;background:#f59e0b;border-radius:3px;"></div></div>
-                  </div>
+                  ${goalHtml}
                 </div>
               </div>
               <!-- Bottom summary -->
@@ -418,19 +452,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                   <div style="font-size:10px;color:var(--green);font-weight:600;">↑ ${k.revenue ? k.revenue.trend : '0%'}</div>
                 </div>
                 <div>
-                  <div style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;font-weight:500;">Total Cost</div>
-                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin:2px 0;">$2,376.90</div>
-                  <div style="font-size:10px;color:var(--green);font-weight:600;">↑ 12%</div>
-                </div>
-                <div>
-                  <div style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;font-weight:500;">Total Profit</div>
+                  <div style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;font-weight:500;">Net Profit</div>
                   <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin:2px 0;">${k.profit ? k.profit.value : '$0'}</div>
                   <div style="font-size:10px;color:var(--green);font-weight:600;">↑ ${k.profit ? k.profit.trend : '0%'}</div>
                 </div>
                 <div>
-                  <div style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;font-weight:500;">Goal Completions</div>
-                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin:2px 0;">1,000</div>
-                  <div style="font-size:10px;color:var(--red);font-weight:600;">↓ 20%</div>
+                  <div style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;font-weight:500;">Total Orders</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin:2px 0;">${k.orders ? k.orders.value : '0'}</div>
+                  <div style="font-size:10px;color:var(--green);font-weight:600;">↑ ${k.orders ? k.orders.trend : '0%'}</div>
+                </div>
+                <div>
+                  <div style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;font-weight:500;">Total Customers</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin:2px 0;">${k.customers ? k.customers.value : '0'}</div>
+                  <div style="font-size:10px;color:var(--green);font-weight:600;">↑ ${k.customers ? k.customers.trend : '0%'}</div>
                 </div>
               </div>
             </div>
@@ -440,19 +474,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                   <div>
                     <div style="font-size:11px;opacity:0.8;text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Sales Volume</div>
-                    <div style="font-size:20px;font-weight:700;margin-top:4px;">41,458,245</div>
+                    <div style="font-size:20px;font-weight:700;margin-top:4px;">${k.revenue ? k.revenue.value : '0'}</div>
                   </div>
-                  <span style="font-size:10px;background:rgba(255,255,255,0.15);padding:2px 6px;border-radius:10px;">+2% Today</span>
+                  <span style="font-size:10px;background:rgba(255,255,255,0.15);padding:2px 6px;border-radius:10px;">↑ ${k.revenue ? k.revenue.trend : '0%'}</span>
                 </div>
                 <div style="height:55px;margin-top:10px;"><canvas id="chart-superieur-blue"></canvas></div>
               </div>
               <div style="background:#f43f5e;color:#fff;padding:20px;border-radius:var(--radius);display:flex;flex-direction:column;justify-content:space-between;flex:1;box-shadow:0 4px 20px rgba(244,63,94,0.15);">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                   <div>
-                    <div style="font-size:11px;opacity:0.8;text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Active LTV</div>
-                    <div style="font-size:20px;font-weight:700;margin-top:4px;">458,185</div>
+                    <div style="font-size:11px;opacity:0.8;text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Active Profit</div>
+                    <div style="font-size:20px;font-weight:700;margin-top:4px;">${k.profit ? k.profit.value : '0'}</div>
                   </div>
-                  <span style="font-size:10px;background:rgba(255,255,255,0.15);padding:2px 6px;border-radius:10px;">+3% Today</span>
+                  <span style="font-size:10px;background:rgba(255,255,255,0.15);padding:2px 6px;border-radius:10px;">↑ ${k.profit ? k.profit.trend : '0%'}</span>
                 </div>
                 <div style="height:55px;margin-top:10px;"><canvas id="chart-superieur-red"></canvas></div>
               </div>
@@ -467,8 +501,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                   <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0;">Earnings</h4>
                   <span style="font-size:10px;color:var(--text-secondary);">Monthly Total</span>
                 </div>
-                <div style="font-size:24px;font-weight:700;color:var(--text-primary);">$45,215.22</div>
-                <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">↑ 7.4% vs last month</div>
+                <div style="font-size:24px;font-weight:700;color:var(--text-primary);">${k.profit ? k.profit.value : '$0'}</div>
+                <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">↑ ${k.profit ? k.profit.trend : '0%'} vs last period</div>
               </div>
               <div style="height:100px;margin-top:15px;"><canvas id="chart-superieur-earnings"></canvas></div>
             </div>
@@ -476,50 +510,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="card" style="padding:20px;display:flex;flex-direction:column;">
               <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0 0 14px 0;">Recently Top Products</h4>
               <div style="display:flex;flex-direction:column;gap:12px;flex:1;justify-content:center;">
-                <div style="display:flex;align-items:center;justify-content:space-between;">
-                  <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:32px;height:32px;background:var(--bg-hover);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">📱</div>
-                    <div><div style="font-size:11px;font-weight:600;color:var(--text-primary);">iPhone 12 Pro</div><div style="font-size:9px;color:var(--text-secondary);">128GB Pacific Blue</div></div>
-                  </div>
-                  <span style="font-size:9px;font-weight:600;background:rgba(30,89,255,0.08);color:#1e59ff;padding:2px 6px;border-radius:4px;">Top seller</span>
-                </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;">
-                  <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:32px;height:32px;background:var(--bg-hover);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">📺</div>
-                    <div><div style="font-size:11px;font-weight:600;color:var(--text-primary);">Apple TV 4K</div><div style="font-size:9px;color:var(--text-secondary);">64GB HDR Vision</div></div>
-                  </div>
-                  <span style="font-size:9px;font-weight:600;background:rgba(16,185,129,0.08);color:#10b981;padding:2px 6px;border-radius:4px;">High margin</span>
-                </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;">
-                  <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:32px;height:32px;background:var(--bg-hover);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">💻</div>
-                    <div><div style="font-size:11px;font-weight:600;color:var(--text-primary);">MacBook Air M1</div><div style="font-size:9px;color:var(--text-secondary);">8GB RAM 256GB SSD</div></div>
-                  </div>
-                  <span style="font-size:9px;font-weight:600;background:rgba(244,63,94,0.08);color:#f43f5e;padding:2px 6px;border-radius:4px;">Hot item</span>
-                </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;">
-                  <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:32px;height:32px;background:var(--bg-hover);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">⌚</div>
-                    <div><div style="font-size:11px;font-weight:600;color:var(--text-primary);">Apple Watch S7</div><div style="font-size:9px;color:var(--text-secondary);">45mm GPS Cellular</div></div>
-                  </div>
-                  <span style="font-size:9px;font-weight:600;background:rgba(245,158,11,0.08);color:#f59e0b;padding:2px 6px;border-radius:4px;">Trending</span>
-                </div>
+                ${prodListHtml}
               </div>
             </div>
             <!-- Visitors Map -->
             <div class="card" style="padding:20px;display:flex;flex-direction:column;">
-              <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0 0 8px 0;">Visitors</h4>
+              <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0 0 8px 0;">Visitors Map</h4>
               <div style="flex:1;display:flex;align-items:center;justify-content:center;position:relative;">
                 <svg viewBox="0 0 1000 480" style="width:100%;height:auto;">
                   <style>@keyframes mapPulse{0%,100%{r:14;opacity:0.25}50%{r:20;opacity:0.1}}</style>
-                  <!-- Simplified continent shapes -->
                   <path d="M150,60 L280,55 L300,100 L280,140 L250,170 L210,180 L180,200 L150,180 L130,140 L120,100 Z" fill="var(--text-tertiary)" opacity="0.25"/>
                   <path d="M190,220 L240,210 L260,230 L280,310 L260,370 L230,390 L210,340 L200,280 Z" fill="var(--text-tertiary)" opacity="0.25"/>
                   <path d="M420,60 L580,50 L620,70 L600,180 L500,200 L440,150 Z" fill="var(--text-tertiary)" opacity="0.25"/>
                   <path d="M580,50 L850,60 L900,200 L780,260 L680,230 L620,170 L620,70 Z" fill="var(--text-tertiary)" opacity="0.25"/>
                   <path d="M480,220 L580,210 L620,250 L600,340 L560,360 L510,330 L480,270 Z" fill="var(--text-tertiary)" opacity="0.25"/>
                   <path d="M760,300 L880,310 L870,400 L790,420 L750,380 Z" fill="var(--text-tertiary)" opacity="0.25"/>
-                  <!-- Glowing pins -->
                   <circle cx="210" cy="120" r="5" fill="#10b981"/><circle cx="210" cy="120" r="14" fill="#10b981" opacity="0.25" style="animation:mapPulse 2s infinite;"/>
                   <circle cx="240" cy="300" r="4" fill="#1e59ff"/><circle cx="240" cy="300" r="12" fill="#1e59ff" opacity="0.25"/>
                   <circle cx="500" cy="130" r="6" fill="#10b981"/><circle cx="500" cy="130" r="16" fill="#10b981" opacity="0.25" style="animation:mapPulse 2s 0.5s infinite;"/>
@@ -531,20 +536,83 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         </div>
       `;
-      // Initialize Superieur charts
-      makeGroupedBarChart('chart-weekly',
-        ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
-        [5,6,4,3,7,9,5],[4,3,2,2,5,4,3],[3,4,3,2,5,6,4]);
-      makeSuperieurSparkline('chart-superieur-blue',
-        [12,19,14,15,22,24,21,28,30,25,34,41],'#ffffff','bar');
-      makeSuperieurSparkline('chart-superieur-red',
-        [30,32,28,35,33,40,38,44,42,48,46,50],'#ffffff','line');
-      makeSuperieurSparkline('chart-superieur-earnings',
-        [20,25,18,22,30,28,35,40,38,45,42,50,48,55,52,60],'#1e59ff','bar');
+      makeGroupedBarChart('chart-weekly', trendLabels, val1, val2, val3);
+      makeSuperieurSparkline('chart-superieur-blue', sparkValuesBlue, '#ffffff', 'bar');
+      makeSuperieurSparkline('chart-superieur-red', sparkValuesRed, '#ffffff', 'line');
+      makeSuperieurSparkline('chart-superieur-earnings', val1, '#1e59ff', 'bar');
       return;
     }
 
     if (currentTheme === 'study-admin') {
+      let activityHtml = '';
+      if (c.category && c.category.labels.length > 0) {
+        activityHtml = c.category.labels.slice(0, 3).map((lbl, idx) => {
+          const val = c.category.values[idx];
+          const time = ['10:00', '14:30', '12:00'][idx % 3];
+          const day = ['Today', 'Tomorrow', 'Friday'][idx % 3];
+          const color = ['#f97316', '#2563eb', '#ef4444'][idx % 3];
+          const type = ['Mentoring', 'Online Course', 'Workshop'][idx % 3];
+          return `
+            <div style="display:flex;gap:12px;align-items:flex-start;">
+              <div style="display:flex;flex-direction:column;align-items:center;min-width:60px;">
+                <span style="font-size:10px;font-weight:700;color:${color};text-transform:uppercase;">${day}</span>
+                <span style="font-size:12px;color:var(--text-secondary);">${time}</span>
+              </div>
+              <div style="background:var(--bg-hover);padding:10px 14px;border-radius:var(--radius);flex:1;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:var(--text-primary);">${lbl}</div>
+                  <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                    <span style="font-size:10px;background:var(--border);padding:1px 6px;border-radius:4px;color:var(--text-secondary);">${val.toLocaleString()} records</span>
+                  </div>
+                </div>
+                <span style="font-size:10px;font-weight:600;color:${color};background:${color}15;padding:3px 8px;border-radius:4px;">${type}</span>
+              </div>
+            </div>`;
+        }).join('');
+      } else {
+        activityHtml = '<div style="font-size:11px;color:var(--text-secondary);">No activity found.</div>';
+      }
+
+      let sessionsHtml = '';
+      if (c.products && c.products.labels.length > 0) {
+        sessionsHtml = c.products.labels.slice(0, 2).map((lbl, idx) => {
+          const val = c.products.values[idx];
+          const color = ['#ef4444', '#2563eb'][idx % 2];
+          return `
+            <div style="border-left:3px solid ${color};background:var(--bg-hover);padding:12px;border-radius:0 var(--radius) var(--radius) 0;display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <div style="font-size:12px;font-weight:600;color:var(--text-primary);">${lbl}</div>
+                <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">Volume: ${val.toLocaleString()} units</div>
+              </div>
+              <button style="width:28px;height:28px;border-radius:50%;background:#1e293b;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;">➔</button>
+            </div>`;
+        }).join('');
+      } else {
+        sessionsHtml = '<div style="font-size:11px;color:var(--text-secondary);">No sessions scheduled.</div>';
+      }
+
+      let lecturesHtml = '';
+      if (c.regional && c.regional.labels.length > 0) {
+        lecturesHtml = c.regional.labels.slice(0, 2).map((lbl, idx) => {
+          const val = c.regional.values[idx];
+          const color = ['#f97316', '#2563eb'][idx % 2];
+          const emoji = ['🎬', '📹'][idx % 2];
+          return `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-subtle);">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;background:${color}15;color:${color};border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">${emoji}</div>
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:var(--text-primary);">${lbl} Region</div>
+                  <div style="font-size:10px;color:var(--text-secondary);">Sales: ${val.toLocaleString()}</div>
+                </div>
+              </div>
+              <span style="color:var(--text-secondary);font-size:12px;">➔</span>
+            </div>`;
+        }).join('');
+      } else {
+        lecturesHtml = '<div style="font-size:11px;color:var(--text-secondary);">No lecture details found.</div>';
+      }
+
       root.innerHTML = `
         <div style="display:grid;gap:20px;">
           <!-- Row 1: Your Overview (3 cards with progress bars) -->
@@ -554,15 +622,15 @@ document.addEventListener('DOMContentLoaded', async () => {
               <div style="display:flex;align-items:center;gap:12px;">
                 <div style="width:40px;height:40px;border-radius:50%;background:rgba(37,99,235,0.08);color:#2563eb;display:flex;align-items:center;justify-content:center;font-size:20px;">🎓</div>
                 <div>
-                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);">${c.category.labels.length || 12} Courses</div>
-                  <div style="font-size:11px;color:var(--text-secondary);">In Progress</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);">${c.category && c.category.labels ? c.category.labels.length : 0} Categories</div>
+                  <div style="font-size:11px;color:var(--text-secondary);">Active Groups</div>
                 </div>
               </div>
               <div style="width:100%;height:6px;background:var(--border-hover);border-radius:3px;overflow:hidden;margin-top:8px;">
-                <div style="width:60%;height:100%;background:#2563eb;border-radius:3px;"></div>
+                <div style="width:75%;height:100%;background:#2563eb;border-radius:3px;"></div>
               </div>
               <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-secondary);">
-                <span>Progress</span><strong>60%</strong>
+                <span>Progress Index</span><strong>75%</strong>
               </div>
             </div>
             <!-- Lessons card -->
@@ -570,15 +638,15 @@ document.addEventListener('DOMContentLoaded', async () => {
               <div style="display:flex;align-items:center;gap:12px;">
                 <div style="width:40px;height:40px;border-radius:50%;background:rgba(249,115,22,0.08);color:#f97316;display:flex;align-items:center;justify-content:center;font-size:20px;">📚</div>
                 <div>
-                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);">${k.orders ? k.orders.value : '9'} Lessons</div>
-                  <div style="font-size:11px;color:var(--text-secondary);">In Progress</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);">${k.orders ? k.orders.value : '0'} Orders</div>
+                  <div style="font-size:11px;color:var(--text-secondary);">Total volume</div>
                 </div>
               </div>
               <div style="width:100%;height:6px;background:var(--border-hover);border-radius:3px;overflow:hidden;margin-top:8px;">
-                <div style="width:45%;height:100%;background:#f97316;border-radius:3px;"></div>
+                <div style="width:85%;height:100%;background:#f97316;border-radius:3px;"></div>
               </div>
               <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-secondary);">
-                <span>Progress</span><strong>45%</strong>
+                <span>Target completion</span><strong>85%</strong>
               </div>
             </div>
             <!-- Mentoring card -->
@@ -586,15 +654,15 @@ document.addEventListener('DOMContentLoaded', async () => {
               <div style="display:flex;align-items:center;gap:12px;">
                 <div style="width:40px;height:40px;border-radius:50%;background:rgba(239,68,68,0.08);color:#ef4444;display:flex;align-items:center;justify-content:center;font-size:20px;">💬</div>
                 <div>
-                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);">${k.customers ? k.customers.value : '7'} Mentoring</div>
-                  <div style="font-size:11px;color:var(--text-secondary);">This Month</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);">${k.customers ? k.customers.value : '0'} Customers</div>
+                  <div style="font-size:11px;color:var(--text-secondary);">Active Client Base</div>
                 </div>
               </div>
               <div style="width:100%;height:6px;background:var(--border-hover);border-radius:3px;overflow:hidden;margin-top:8px;">
-                <div style="width:30%;height:100%;background:#ef4444;border-radius:3px;"></div>
+                <div style="width:90%;height:100%;background:#ef4444;border-radius:3px;"></div>
               </div>
               <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-secondary);">
-                <span>Progress</span><strong>30%</strong>
+                <span>Retention rate</span><strong>90%</strong>
               </div>
             </div>
           </div>
@@ -607,14 +675,14 @@ document.addEventListener('DOMContentLoaded', async () => {
               <div class="card" style="padding:20px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                   <div>
-                    <h4 style="font-size:24px;font-weight:700;color:var(--text-primary);margin:0;">267hr</h4>
-                    <span style="font-size:11px;color:var(--text-secondary);">Your study time this week</span>
+                    <h4 style="font-size:24px;font-weight:700;color:var(--text-primary);margin:0;">${k.orders ? k.orders.value : '267'}</h4>
+                    <span style="font-size:11px;color:var(--text-secondary);">Total transactions logged</span>
                   </div>
-                  <select class="input" style="width:100px;padding:3px 8px;font-size:11px;height:auto;"><option>This Week</option></select>
+                  <select class="input" style="width:100px;padding:3px 8px;font-size:11px;height:auto;"><option>Full dataset</option></select>
                 </div>
                 <div style="height:200px;margin-bottom:16px;"><canvas id="chart-study-stats"></canvas></div>
                 <div style="display:flex;gap:10px;">
-                  <button class="btn btn-secondary btn-sm" style="flex:1;background:rgba(37,99,235,0.06);color:#2563eb;border:none;font-weight:600;"><span style="margin-right:4px;">📥</span> Download Progress</button>
+                  <button class="btn btn-secondary btn-sm" id="study-btn-download" style="flex:1;background:rgba(37,99,235,0.06);color:#2563eb;border:none;font-weight:600;"><span style="margin-right:4px;">📥</span> Download Log</button>
                   <button class="btn btn-secondary btn-sm" style="flex:1;background:rgba(37,99,235,0.06);color:#2563eb;border:none;font-weight:600;"><span style="margin-right:4px;">🤝</span> Invite Friends</button>
                 </div>
               </div>
@@ -623,54 +691,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               <div class="card" style="padding:20px;">
                 <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:16px;">Main Activity</h4>
                 <div style="display:flex;flex-direction:column;gap:16px;max-height:260px;overflow-y:auto;padding-right:5px;">
-                  <!-- Item 1 -->
-                  <div style="display:flex;gap:12px;align-items:flex-start;">
-                    <div style="display:flex;flex-direction:column;align-items:center;min-width:60px;">
-                      <span style="font-size:10px;font-weight:700;color:#f97316;text-transform:uppercase;">Today</span>
-                      <span style="font-size:12px;color:var(--text-secondary);">10:00</span>
-                    </div>
-                    <div style="background:var(--bg-hover);padding:10px 14px;border-radius:var(--radius);flex:1;display:flex;justify-content:space-between;align-items:center;">
-                      <div>
-                        <div style="font-size:12px;font-weight:600;color:var(--text-primary);">How to target the Industrial new leads?</div>
-                        <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
-                          <span style="font-size:10px;background:var(--border);padding:1px 6px;border-radius:4px;color:var(--text-secondary);">John Doe</span>
-                        </div>
-                      </div>
-                      <span style="font-size:10px;font-weight:600;color:#2563eb;background:rgba(37,99,235,0.08);padding:3px 8px;border-radius:4px;">Mentoring</span>
-                    </div>
-                  </div>
-                  <!-- Item 2 -->
-                  <div style="display:flex;gap:12px;align-items:flex-start;">
-                    <div style="display:flex;flex-direction:column;align-items:center;min-width:60px;">
-                      <span style="font-size:10px;font-weight:700;color:#2563eb;text-transform:uppercase;">Tomorrow</span>
-                      <span style="font-size:12px;color:var(--text-secondary);">14:30</span>
-                    </div>
-                    <div style="background:var(--bg-hover);padding:10px 14px;border-radius:var(--radius);flex:1;display:flex;justify-content:space-between;align-items:center;">
-                      <div>
-                        <div style="font-size:12px;font-weight:600;color:var(--text-primary);">Examine white the production about Facebook's (Meta event)</div>
-                        <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
-                          <span style="font-size:10px;background:var(--border);padding:1px 6px;border-radius:4px;color:var(--text-secondary);">Jane Doe</span>
-                        </div>
-                      </div>
-                      <span style="font-size:10px;font-weight:600;color:#10b981;background:rgba(16,185,129,0.08);padding:3px 8px;border-radius:4px;">Online Course</span>
-                    </div>
-                  </div>
-                  <!-- Item 3 -->
-                  <div style="display:flex;gap:12px;align-items:flex-start;">
-                    <div style="display:flex;flex-direction:column;align-items:center;min-width:60px;">
-                      <span style="font-size:10px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">Friday</span>
-                      <span style="font-size:12px;color:var(--text-secondary);">12:00</span>
-                    </div>
-                    <div style="background:var(--bg-hover);padding:10px 14px;border-radius:var(--radius);flex:1;display:flex;justify-content:space-between;align-items:center;">
-                      <div>
-                        <div style="font-size:12px;font-weight:600;color:var(--text-primary);">Strategic planning & resource allocation models</div>
-                        <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
-                          <span style="font-size:10px;background:var(--border);padding:1px 6px;border-radius:4px;color:var(--text-secondary);">Mike Ross</span>
-                        </div>
-                      </div>
-                      <span style="font-size:10px;font-weight:600;color:#ef4444;background:rgba(239,68,68,0.08);padding:3px 8px;border-radius:4px;">Workshop</span>
-                    </div>
-                  </div>
+                  ${activityHtml}
                 </div>
               </div>
             </div>
@@ -684,31 +705,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   <a href="#" style="font-size:11px;color:#2563eb;text-decoration:none;font-weight:500;">View All</a>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:12px;">
-                  <!-- Session 1 -->
-                  <div style="border-left:3px solid #ef4444;background:var(--bg-hover);padding:12px;border-radius:0 var(--radius) var(--radius) 0;display:flex;justify-content:space-between;align-items:center;">
-                    <div>
-                      <div style="font-size:12px;font-weight:600;color:var(--text-primary);">Speakwaves English</div>
-                      <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">Thu, 24 Oct - 10 AM</div>
-                      <div style="display:flex;gap:4px;margin-top:6px;">
-                        <span style="width:20px;height:20px;border-radius:50%;background:#cbd5e1;font-size:9px;display:flex;align-items:center;justify-content:center;">👨‍💼</span>
-                        <span style="width:20px;height:20px;border-radius:50%;background:#94a3b8;font-size:9px;display:flex;align-items:center;justify-content:center;">👩‍💼</span>
-                        <span style="width:20px;height:20px;border-radius:50%;background:#64748b;font-size:9px;display:flex;align-items:center;justify-content:center;">👨‍💻</span>
-                      </div>
-                    </div>
-                    <button style="width:28px;height:28px;border-radius:50%;background:#1e293b;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;">➔</button>
-                  </div>
-                  <!-- Session 2 -->
-                  <div style="border-left:3px solid #2563eb;background:var(--bg-hover);padding:12px;border-radius:0 var(--radius) var(--radius) 0;display:flex;justify-content:space-between;align-items:center;">
-                    <div>
-                      <div style="font-size:12px;font-weight:600;color:var(--text-primary);">Marketing 101.</div>
-                      <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">Thu, 24 Oct - 12 PM</div>
-                      <div style="display:flex;gap:4px;margin-top:6px;">
-                        <span style="width:20px;height:20px;border-radius:50%;background:#cbd5e1;font-size:9px;display:flex;align-items:center;justify-content:center;">👩‍🏫</span>
-                        <span style="width:20px;height:20px;border-radius:50%;background:#94a3b8;font-size:9px;display:flex;align-items:center;justify-content:center;">👨‍🎓</span>
-                      </div>
-                    </div>
-                    <button style="width:28px;height:28px;border-radius:50%;background:#1e293b;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;">➔</button>
-                  </div>
+                  ${sessionsHtml}
                 </div>
               </div>
 
@@ -719,28 +716,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   <a href="#" style="font-size:11px;color:#2563eb;text-decoration:none;font-weight:500;">View All</a>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:10px;">
-                  <!-- Lecture 1 -->
-                  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-subtle);">
-                    <div style="display:flex;align-items:center;gap:10px;">
-                      <div style="width:36px;height:36px;background:rgba(249,115,22,0.08);color:#f97316;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">🎬</div>
-                      <div>
-                        <div style="font-size:12px;font-weight:600;color:var(--text-primary);">English - Grammar</div>
-                        <div style="font-size:10px;color:var(--text-secondary);">8:00 AM, 1h 15m</div>
-                      </div>
-                    </div>
-                    <span style="color:var(--text-secondary);font-size:12px;">➔</span>
-                  </div>
-                  <!-- Lecture 2 -->
-                  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;">
-                    <div style="display:flex;align-items:center;gap:10px;">
-                      <div style="width:36px;height:36px;background:rgba(37,99,235,0.08);color:#2563eb;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">📹</div>
-                      <div>
-                        <div style="font-size:12px;font-weight:600;color:var(--text-primary);">Beginner Math Test</div>
-                        <div style="font-size:10px;color:var(--text-secondary);">10:30 AM, 2h 30m</div>
-                      </div>
-                    </div>
-                    <span style="color:var(--text-secondary);font-size:12px;">➔</span>
-                  </div>
+                  ${lecturesHtml}
                 </div>
               </div>
             </div>
@@ -748,11 +724,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
       `;
 
-      // Initialize Study Stats Chart (renders dynamic/virtual data trend if available)
+      // Setup log download handler
+      const studyDownload = document.getElementById('study-btn-download');
+      if (studyDownload) {
+        studyDownload.addEventListener('click', () => {
+          const csvContent = "data:text/csv;charset=utf-8,Category,Value\n" + c.category.labels.map((lbl, idx) => `"${lbl}",${c.category.values[idx]}`).join("\n");
+          const encodedUri = encodeURI(csvContent);
+          const link = document.createElement("a");
+          link.setAttribute("href", encodedUri);
+          link.setAttribute("download", "study_progress.csv");
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        });
+      }
+
       const ctx = document.getElementById('chart-study-stats');
       if (ctx) {
-        const labels = c.revenue_trend.labels.length > 0 ? c.revenue_trend.labels : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        const values = c.revenue_trend.values.length > 0 ? c.revenue_trend.values.map(v => Math.min(50, Math.max(5, Math.round(v % 40 + 5)))) : [15, 25, 45, 30, 8, 20];
+        const labels = c.revenue_trend && c.revenue_trend.labels.length > 0 ? c.revenue_trend.labels : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const values = c.revenue_trend && c.revenue_trend.values.length > 0 ? c.revenue_trend.values : [15, 25, 45, 30, 8, 20];
         new Chart(ctx, {
           type: 'line',
           data: {
@@ -784,6 +774,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (currentTheme === 'server-admin') {
+      let msgHtml = '';
+      if (c.category && c.category.labels.length > 0) {
+        msgHtml = c.category.labels.slice(0, 2).map((lbl, idx) => {
+          const val = c.category.values[idx];
+          const time = ['10:30 AM', '09:15 AM'][idx % 2];
+          const name = ['System Alert', 'Order Handler'][idx % 2];
+          const emoji = ['👨‍💻', '👩‍💼'][idx % 2];
+          return `
+            <div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:1px solid var(--border-subtle);">
+              <div style="width:32px;height:32px;border-radius:50%;background:var(--border);font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${emoji}</div>
+              <div style="flex:1;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:11px;font-weight:600;color:var(--text-primary);">${name} (${lbl})</span>
+                  <span style="font-size:9px;color:var(--text-secondary);">${time}</span>
+                </div>
+                <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;line-height:1.3;">Detected ${val.toLocaleString()} transactions. System capacity nominal.</div>
+              </div>
+            </div>`;
+        }).join('');
+      } else {
+        msgHtml = '<div style="font-size:11px;color:var(--text-secondary);">No alerts.</div>';
+      }
+
       root.innerHTML = `
         <div style="display:grid;gap:20px;">
           <!-- Server Load Card -->
@@ -831,12 +844,12 @@ document.addEventListener('DOMContentLoaded', async () => {
               </div>
               <div style="font-size:24px;opacity:0.6;">🛒</div>
             </div>
-            <!-- Block 4: Server Uptime -->
+            <!-- Block 4: Uptime/Margin -->
             <div style="background:#ea580c;color:#ffffff;padding:18px;border-radius:var(--radius);display:flex;align-items:center;justify-content:space-between;">
               <div>
-                <div style="font-size:11px;opacity:0.8;font-weight:600;text-transform:uppercase;">Server Uptime</div>
-                <div style="font-size:24px;font-weight:700;margin:4px 0 2px 0;">98.4%</div>
-                <div style="font-size:10px;font-weight:600;">↑ 2.1% vs last month</div>
+                <div style="font-size:11px;opacity:0.8;font-weight:600;text-transform:uppercase;">Uptime Index</div>
+                <div style="font-size:24px;font-weight:700;margin:4px 0 2px 0;">${k.profit_margin ? k.profit_margin.value : '98.4%'}</div>
+                <div style="font-size:10px;font-weight:600;">↑ ${k.profit_margin ? k.profit_margin.trend : '2.1%'} vs last month</div>
               </div>
               <div style="font-size:24px;opacity:0.6;">☁️</div>
             </div>
@@ -860,32 +873,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             <!-- Messages Log -->
             <div class="card" style="padding:20px;display:flex;flex-direction:column;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-                <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0;">Messages</h4>
+                <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0;">System Messages</h4>
                 <a href="#" style="font-size:11px;color:#0284c7;text-decoration:none;font-weight:500;">View All</a>
               </div>
               <div style="display:flex;flex-direction:column;gap:12px;flex:1;justify-content:center;">
-                <!-- Msg 1 -->
-                <div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:1px solid var(--border-subtle);">
-                  <div style="width:32px;height:32px;border-radius:50%;background:#cbd5e1;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">👨‍💻</div>
-                  <div style="flex:1;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                      <span style="font-size:11px;font-weight:600;color:var(--text-primary);">John</span>
-                      <span style="font-size:9px;color:var(--text-secondary);">10:30 AM</span>
-                    </div>
-                    <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;line-height:1.3;">Hello! I have a question about my recent order. Can you help me?</div>
-                  </div>
-                </div>
-                <!-- Msg 2 -->
-                <div style="display:flex;gap:10px;align-items:flex-start;">
-                  <div style="width:32px;height:32px;border-radius:50%;background:#94a3b8;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">👩‍💼</div>
-                  <div style="flex:1;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                      <span style="font-size:11px;font-weight:600;color:var(--text-primary);">Sarah</span>
-                      <span style="font-size:9px;color:var(--text-secondary);">09:15 AM</span>
-                    </div>
-                    <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;line-height:1.3;">Thanks for the update! Everything looks good.</div>
-                  </div>
-                </div>
+                ${msgHtml}
               </div>
             </div>
 
@@ -908,8 +900,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Initialize Server Load Chart
       const loadCtx = document.getElementById('chart-server-load');
       if (loadCtx) {
-        const labels = c.revenue_trend.labels.length > 0 ? c.revenue_trend.labels : ['May 01', 'May 05', 'May 09', 'May 13', 'May 17', 'May 21', 'May 25', 'May 29', 'May 31'];
-        const values = c.revenue_trend.values.length > 0 ? c.revenue_trend.values.map(v => Math.min(100, Math.max(10, Math.round(v % 80 + 10)))) : [15, 30, 48, 70, 52, 40, 62, 55, 80];
+        const labels = c.revenue_trend && c.revenue_trend.labels.length > 0 ? c.revenue_trend.labels : ['May 01', 'May 05', 'May 09', 'May 13', 'May 17', 'May 21', 'May 25', 'May 29', 'May 31'];
+        const values = c.revenue_trend && c.revenue_trend.values.length > 0 ? c.revenue_trend.values : [15, 30, 48, 70, 52, 40, 62, 55, 80];
         new Chart(loadCtx, {
           type: 'line',
           data: {
@@ -932,7 +924,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             plugins: { legend: { display: false } },
             scales: {
               x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } },
-              y: { max: 100, grid: { borderDash: [4, 4] }, ticks: { font: { family: 'Inter', size: 10 } } }
+              y: { grid: { borderDash: [4, 4] }, ticks: { font: { family: 'Inter', size: 10 } } }
             }
           }
         });
@@ -941,11 +933,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Initialize Sales Overview Chart (Red Line Area Chart)
       const salesCtx = document.getElementById('chart-server-sales');
       if (salesCtx) {
-        const values = c.revenue_trend.values.length >= 7 ? c.revenue_trend.values.slice(-7) : [12, 19, 10, 15, 8, 22, 14];
+        const values = c.revenue_trend && c.revenue_trend.values.length >= 7 ? c.revenue_trend.values.slice(-7) : [12, 19, 10, 15, 8, 22, 14];
         new Chart(salesCtx, {
           type: 'line',
           data: {
-            labels: ['1', '5', '10', '15', '20', '25', '30'],
+            labels: ['1', '2', '3', '4', '5', '6', '7'],
             datasets: [{
               data: values,
               borderColor: '#ef4444',
@@ -970,71 +962,273 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    let kpiHtml = '';
     let chartsHtml = '';
 
+    // Generate heuristic insights
+    function getHeuristicInsights(kpiData, chartData) {
+      const list = [];
+      if (kpiData.revenue && kpiData.revenue.raw > 0) {
+        list.push(`📊 <strong>Overall Metrics</strong>: Total performance value calculated is <strong>${kpiData.revenue.value}</strong>.`);
+      }
+      if (chartData.category && chartData.category.labels.length > 0) {
+        list.push(`🔥 <strong>Category Dominance</strong>: Category <strong>${chartData.category.labels[0]}</strong> holds the primary position.`);
+      }
+      if (chartData.regional && chartData.regional.labels.length > 0) {
+        list.push(`🌍 <strong>Geographic Focus</strong>: <strong>${chartData.regional.labels[0]}</strong> region stands out as the primary location.`);
+      }
+      if (chartData.revenue_trend && chartData.revenue_trend.labels.length > 0) {
+        list.push(`📅 <strong>Seasonality Peak</strong>: Performance peaks indicate cyclical demand that requires planned preparation.`);
+      }
+      if (list.length === 0) {
+        list.push("💡 Dataset processed successfully. No clear high-level trends detected.");
+      }
+      return list;
+    }
+
+    const insights = getHeuristicInsights(k, c);
+
     if (templateId === 'exec') {
-      const kpis = ['revenue', 'profit', 'orders', 'customers', 'profit_margin'];
-      kpiHtml = buildKpis(kpis, k);
       chartsHtml = `
+        <!-- Main Trend + Gauge Row -->
+        <div style="display:grid;grid-template-columns: 2.2fr 1fr; gap: 20px; margin-bottom: 20px;">
+          <div class="card" style="padding:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0;">Primary Performance Trend</h4>
+            </div>
+            <div style="height:220px;"><canvas id="chart-main-trend"></canvas></div>
+          </div>
+          <div class="card" style="padding:20px;display:flex;flex-direction:column;justify-content:space-between;">
+            <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0 0 10px 0;">Target Progress</h4>
+            <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+              <div style="font-size:36px;font-weight:700;color:var(--accent);">${k.profit_margin ? k.profit_margin.value : '74.8%'}</div>
+              <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">Performance Index</div>
+              <div style="width:100%;height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:16px;">
+                <div style="width:${k.profit_margin ? parseFloat(k.profit_margin.value) || 75 : 75}%;height:100%;background:var(--accent);border-radius:4px;"></div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:12px;">
+              <span style="color:var(--text-secondary);">Growth: MoM</span>
+              <strong style="color:var(--green);">+12.4%</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="kpi-grid" style="grid-template-columns: repeat(5, 1fr); margin-bottom: 20px;">
+          ${buildKpis(['revenue', 'profit', 'orders', 'customers', 'profit_margin'], k)}
+        </div>
+
         <!-- Secondary Charts Grid -->
-        <div class="grid-2">
-          <div class="card">
+        <div class="grid-2" style="margin-bottom: 20px;">
+          <div class="card" style="padding:20px;">
             <div class="card-header"><div class="card-title">Category Share</div></div>
             <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-cat"></canvas></div></div>
           </div>
-          <div class="card">
+          <div class="card" style="padding:20px;">
             <div class="card-header"><div class="card-title">Top 10 Products</div></div>
             <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-prod"></canvas></div></div>
           </div>
-        </div>`;
+        </div>
+
+        <!-- AI Insights & Recommendations -->
+        <div class="grid-2">
+          <div class="card" style="padding:20px;">
+            <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">Auto AI Insights Panel</h4>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              ${insights.map(ins => `<div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:12px;">${ins}</div>`).join('')}
+            </div>
+          </div>
+          <div class="card" style="padding:20px;">
+            <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">Tactical Recommendations</h4>
+            <ul style="padding-left:16px;font-size:12px;color:var(--text-secondary);line-height:1.6;display:flex;flex-direction:column;gap:6px;">
+              <li><strong>Inventory/Capacity Allocation</strong>: Match supply chain capabilities to peak months detected by trends.</li>
+              <li><strong>Focused Marketing</strong>: Redirect marketing budget to support primary geographic zones.</li>
+              <li><strong>Cross-Selling Opportunities</strong>: Introduce special bundles linking underperforming segments to primary categories.</li>
+            </ul>
+          </div>
+        </div>
+      `;
     } else if (templateId === 'sales') {
-      const kpis = ['revenue', 'orders', 'profit_margin'];
-      kpiHtml = buildKpis(kpis, k);
       chartsHtml = `
+        <!-- Top bar search & status -->
+        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:12px 20px;margin-bottom:20px;gap:16px;">
+          <input type="text" id="pbi-search" placeholder="🔍 Search Category / Product..." class="input" style="max-width:300px;font-size:12px;padding:6px 12px;margin:0;" />
+          <div style="font-size:11px;color:var(--text-secondary);">Filtered Status: <strong style="color:var(--accent);">${c.revenue_trend.values.length} Monthly points</strong></div>
+        </div>
+
+        <!-- Cumulative volume trend -->
+        <div class="card" style="padding:20px;margin-bottom:20px;">
+          <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">Overall Cumulative Volume Trend</h4>
+          <div style="height:220px;"><canvas id="chart-cumulative-trend"></canvas></div>
+        </div>
+
+        <!-- 4 KPI Cards -->
+        <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+          ${buildKpis(['revenue', 'orders', 'customers', 'profit_margin'], k)}
+        </div>
+
+        <!-- Sales breakdown + AI insights -->
         <div class="grid-2">
-          <div class="card">
-            <div class="card-header"><div class="card-title">Top State Performers</div></div>
-            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-state"></canvas></div></div>
+          <div class="card" style="padding:20px;">
+            <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">Sales Overview Breakdown</h4>
+            <div style="height:240px;"><canvas id="chart-sales-breakdown"></canvas></div>
           </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">Sales Volume by Region</div></div>
-            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-region2"></canvas></div></div>
+          <div class="card" style="padding:20px;">
+            <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">Power BI AI Insights</h4>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              ${insights.slice(0, 3).map(ins => `<div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:12px;">${ins}</div>`).join('')}
+            </div>
           </div>
-        </div>`;
+        </div>
+      `;
     } else if (templateId === 'product') {
-      const kpis = ['revenue', 'profit', 'profit_margin'];
-      kpiHtml = buildKpis(kpis, k);
       chartsHtml = `
+        <!-- Top row 4 cards -->
+        <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+          <div class="kpi-card">
+            <div class="kpi-label">Study / Activity Hours</div>
+            <div class="kpi-value">${k.revenue ? k.revenue.value : '0'}</div>
+            <div class="kpi-trend up">↑ 1.4hr <span>vs target</span></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Lessons Completed</div>
+            <div class="kpi-value">${k.orders ? k.orders.value : '0'}</div>
+            <div class="kpi-trend up">↑ 3 units <span>completed</span></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Mentoring Sessions</div>
+            <div class="kpi-value">${k.customers ? k.customers.value : '0'}</div>
+            <div class="kpi-trend up">↑ This month</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Completion Index</div>
+            <div class="kpi-value">86%</div>
+            <div class="kpi-trend up">↑ 5% <span>vs target</span></div>
+          </div>
+        </div>
+
+        <!-- Middle Section -->
+        <div style="display:grid;grid-template-columns: 1fr 2fr 1fr; gap: 20px; margin-bottom: 20px;">
+          <!-- Left: Daily activity schedule panel -->
+          <div class="card" style="padding:20px;display:flex;flex-direction:column;justify-content:space-between;">
+            <div>
+              <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">Daily Activity Panel</h4>
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:11px;color:var(--text-secondary);">
+                <div>• <strong>English - Grammar</strong> <span style="color:var(--green)">8:00 AM (1h 15m)</span></div>
+                <div>• <strong>Beginner Math Test</strong> <span style="color:var(--green)">10:30 AM (2h 30m)</span></div>
+                <div>• <strong>Marketing Basics</strong> <span>Tomorrow (1h 00m)</span></div>
+                <div>• <strong>Group Project Sync</strong> <span>Friday (45m)</span></div>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-sm" style="width:100%;margin-top:16px;justify-content:center;">Invite Friends</button>
+          </div>
+
+          <!-- Middle: statistics line chart -->
+          <div class="card" style="padding:20px;">
+            <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">Learning Statistics</h4>
+            <div style="height:200px;"><canvas id="chart-learning-stats"></canvas></div>
+          </div>
+
+          <!-- Right: category counts progress bars -->
+          <div class="card" style="padding:20px;">
+            <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">Subject Categories</h4>
+            <div id="edu-categories" style="display:flex;flex-direction:column;gap:12px;"></div>
+          </div>
+        </div>
+
+        <!-- Bottom row -->
         <div class="grid-2">
-          <div class="card">
-            <div class="card-header"><div class="card-title">Category Share</div></div>
-            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-cat"></canvas></div></div>
+          <div class="card" style="padding:20px;display:flex;flex-direction:column;justify-content:space-between;">
+            <div>
+              <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">Downloads & Logs</h4>
+              <p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;">Export learning summaries, progress indexes, and study log files.</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-download-logs" style="justify-content:center;">Download Study Log CSV</button>
           </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">Top 10 Product Sales</div></div>
-            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-prod"></canvas></div></div>
+          <div class="card" style="padding:20px;">
+            <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">Productivity Insights</h4>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              ${insights.map(ins => `<div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:11px;">${ins}</div>`).join('')}
+            </div>
           </div>
-        </div>`;
+        </div>
+      `;
     }
 
-    root.innerHTML = `
-      <div class="kpi-grid" style="grid-template-columns: repeat(${kpisCount(templateId)}, 1fr)">${kpiHtml}</div>
-      ${chartsHtml}
-    `;
+    root.innerHTML = chartsHtml;
 
-    // Draw secondary charts
-    if (document.getElementById('chart-cat')) {
-      makeDoughnutChart('chart-cat', c.category.labels, c.category.values);
-    }
-    if (document.getElementById('chart-prod')) {
-      makeBarChart('chart-prod', c.products.labels, c.products.values, true);
-    }
-    if (document.getElementById('chart-state')) {
-      makeBarChart('chart-state', c.state.labels, c.state.values);
-    }
-    if (document.getElementById('chart-region2')) {
-      makeBarChart('chart-region2', c.regional.labels, c.regional.values);
+    // Draw charts based on template ID
+    if (templateId === 'exec') {
+      if (document.getElementById('chart-main-trend')) {
+        makeLineChart('chart-main-trend', c.revenue_trend.labels, c.revenue_trend.values);
+      }
+      if (document.getElementById('chart-cat')) {
+        makeDoughnutChart('chart-cat', c.category.labels, c.category.values);
+      }
+      if (document.getElementById('chart-prod')) {
+        makeBarChart('chart-prod', c.products.labels, c.products.values, true);
+      }
+    } else if (templateId === 'sales') {
+      if (document.getElementById('chart-cumulative-trend')) {
+        makeLineChart('chart-cumulative-trend', c.revenue_trend.labels, c.revenue_trend.values);
+      }
+      if (document.getElementById('chart-sales-breakdown')) {
+        makeBarChart('chart-sales-breakdown', c.category.labels, c.category.values);
+      }
+      // Add live search listener
+      const pbiSearch = document.getElementById('pbi-search');
+      if (pbiSearch) {
+        pbiSearch.addEventListener('input', (e) => {
+          const query = e.target.value.toLowerCase();
+          const filteredLabels = [];
+          const filteredValues = [];
+          c.category.labels.forEach((lbl, idx) => {
+            if (lbl.toLowerCase().includes(query)) {
+              filteredLabels.push(lbl);
+              filteredValues.push(c.category.values[idx]);
+            }
+          });
+          makeBarChart('chart-sales-breakdown', filteredLabels, filteredValues);
+        });
+      }
+    } else if (templateId === 'product') {
+      if (document.getElementById('chart-learning-stats')) {
+        makeLineChart('chart-learning-stats', c.revenue_trend.labels, c.revenue_trend.values);
+      }
+      // Populate subject categories list with progress bars
+      const eduCatContainer = document.getElementById('edu-categories');
+      if (eduCatContainer && c.category && c.category.labels.length > 0) {
+        const maxVal = c.category.values[0] || 1;
+        eduCatContainer.innerHTML = c.category.labels.slice(0, 4).map((lbl, idx) => {
+          const val = c.category.values[idx];
+          const percent = Math.min(100, Math.round((val / maxVal) * 100));
+          return `
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;">
+                <span><strong>${lbl}</strong></span>
+                <span>${val.toLocaleString()} logs</span>
+              </div>
+              <div style="width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+                <div style="width:${percent}%;height:100%;background:var(--accent);border-radius:3px;"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+      // Add download CSV handler
+      const btnDownload = document.getElementById('btn-download-logs');
+      if (btnDownload) {
+        btnDownload.addEventListener('click', () => {
+          const csvContent = "data:text/csv;charset=utf-8,Category,Value\n" + c.category.labels.map((lbl, idx) => `"${lbl}",${c.category.values[idx]}`).join("\n");
+          const encodedUri = encodeURI(csvContent);
+          const link = document.createElement("a");
+          link.setAttribute("href", encodedUri);
+          link.setAttribute("download", "study_progress.csv");
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        });
+      }
     }
   }
 
