@@ -6,10 +6,52 @@
   <link rel="stylesheet" href="/css/styles.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script>
-    // Apply theme immediately to prevent screen flashing
-    const savedTheme = localStorage.getItem('ai_ba_theme') || 'dark';
+    const savedTheme = localStorage.getItem('ai_ba_theme') || 'light-corporate';
     document.documentElement.setAttribute('data-theme', savedTheme);
   </script>
+  <style>
+    .viz-selector {
+      display: flex; flex-direction: column; gap: 2px;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 16px 12px 12px 12px;
+      min-width: 200px;
+    }
+    .viz-selector-title {
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--text-secondary);
+      padding: 0 8px 8px 8px; margin-bottom: 4px;
+    }
+    .viz-option {
+      display: block;
+      padding: 9px 12px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 500; color: var(--text-secondary);
+      cursor: pointer; transition: all 0.15s ease; border: none;
+      background: transparent; text-align: left; width: 100%;
+    }
+    .viz-option:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .viz-option.active {
+      background: var(--accent-muted); color: var(--accent);
+      font-weight: 600;
+    }
+    .viz-option .viz-icon {
+      width: 22px; height: 22px; display: flex; align-items: center;
+      justify-content: center; font-size: 15px; flex-shrink: 0;
+    }
+
+    .chart-area {
+      flex: 1; min-width: 0;
+    }
+
+    .viz-layout {
+      display: flex; gap: 16px; align-items: stretch;
+    }
+
+    @media (max-width: 768px) {
+      .viz-layout { flex-direction: column; }
+      .viz-selector { flex-direction: row; overflow-x: auto; min-width: 0; }
+      .viz-option { white-space: nowrap; }
+    }
+  </style>
 </head>
 <body>
 <div class="layout">
@@ -26,7 +68,7 @@
       <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div>
           <h1 class="page-title">Executive Dashboard</h1>
-          <p class="page-subtitle">Step 4 of 6 — KPIs, trends, and breakdowns.</p>
+          <p class="page-subtitle">Step 5 of 7 — KPIs, trends, and breakdowns.</p>
         </div>
       </div>
 
@@ -47,6 +89,21 @@
               <option value="dark">Sleek Dark</option>
               <option value="light-corporate">Light Corporate</option>
               <option value="pastel-soft">Pastel Soft</option>
+              <option value="material-admin">Material Admin</option>
+              <option value="crypto-admin">Crypto Admin</option>
+              <option value="medi-admin">Medi Admin</option>
+              <option value="minimal-pro">Minimal Pro</option>
+              <option value="soft-material">Soft Material</option>
+              <option value="aone-admin">Aone Admin</option>
+              <option value="alfa-admin">Alfa Admin</option>
+              <option value="rubyx-admin">Rubyx Admin</option>
+              <option value="pixel-admin">Pixel Admin</option>
+              <option value="powerbi-admin">Power BI Admin</option>
+              <option value="crmi-admin">CRMi Admin</option>
+              <option value="gilded-admin">Gilded Admin</option>
+              <option value="superieur-admin">Superieur Admin</option>
+              <option value="study-admin">Study Admin</option>
+              <option value="server-admin">Server Admin</option>
             </select>
           </div>
         </div>
@@ -55,7 +112,242 @@
         </div>
       </div>
 
+      <!-- Visual UI Template Gallery -->
+      <div style="background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:24px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+          <div>
+            <h3 style="font-size:13px; font-weight:700; color:var(--text-primary);">Dashboard UI Template Selector</h3>
+            <p style="font-size:11px; color:var(--text-secondary); margin-top:2px;">Select a design style below. The dashboard shell and chart color palettes will update dynamically.</p>
+          </div>
+          <button id="toggle-gallery-btn" class="btn btn-ghost btn-sm" style="font-size:11px; padding:2px 8px; height:auto; min-height:0;">Collapse ▲</button>
+        </div>
+        
+        <div id="gallery-container" class="template-grid">
+          <!-- Sleek Dark -->
+          <div class="tmpl-card" data-theme-val="dark">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#7c3aed;"></span>
+              <span class="tmpl-dot" style="background:#2563eb;"></span>
+              <span class="tmpl-dot" style="background:#059669;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Sleek Dark</div>
+              <div class="tmpl-desc">Classic dark neon accent dashboard.</div>
+            </div>
+          </div>
+          <!-- Light Corporate -->
+          <div class="tmpl-card" data-theme-val="light-corporate">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#2563eb;"></span>
+              <span class="tmpl-dot" style="background:#4f46e5;"></span>
+              <span class="tmpl-dot" style="background:#0d9488;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Light Corporate</div>
+              <div class="tmpl-desc">Clean white workspace with royal blue accents.</div>
+            </div>
+          </div>
+          <!-- Pastel Soft -->
+          <div class="tmpl-card" data-theme-val="pastel-soft">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#e19584;"></span>
+              <span class="tmpl-dot" style="background:#e2a3c7;"></span>
+              <span class="tmpl-dot" style="background:#93b7be;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Pastel Soft</div>
+              <div class="tmpl-desc">Soft warm tones and natural earth palette.</div>
+            </div>
+          </div>
+          <!-- Material Admin -->
+          <div class="tmpl-card" data-theme-val="material-admin">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#3f51b5;"></span>
+              <span class="tmpl-dot" style="background:#009688;"></span>
+              <span class="tmpl-dot" style="background:#ff9800;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Material Admin</div>
+              <div class="tmpl-desc">Material design with Indigo and Teal palette.</div>
+            </div>
+          </div>
+          <!-- Crypto Admin -->
+          <div class="tmpl-card" data-theme-val="crypto-admin">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#00e5a0;"></span>
+              <span class="tmpl-dot" style="background:#ff4d6a;"></span>
+              <span class="tmpl-dot" style="background:#ffb000;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Crypto Admin</div>
+              <div class="tmpl-desc">Deep cyber blue canvas with bright neon curves.</div>
+            </div>
+          </div>
+          <!-- Medi Admin -->
+          <div class="tmpl-card" data-theme-val="medi-admin">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#00a8a8;"></span>
+              <span class="tmpl-dot" style="background:#10b981;"></span>
+              <span class="tmpl-dot" style="background:#3b82f6;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Medi Admin</div>
+              <div class="tmpl-desc">Teal clinical healthcare palette with rounded cards.</div>
+            </div>
+          </div>
+          <!-- Minimal Pro -->
+          <div class="tmpl-card" data-theme-val="minimal-pro">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#111111;"></span>
+              <span class="tmpl-dot" style="background:#555555;"></span>
+              <span class="tmpl-dot" style="background:#999999;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Minimal Pro</div>
+              <div class="tmpl-desc">Monochrome grids, thin outlines, high contrast.</div>
+            </div>
+          </div>
+          <!-- Soft Material -->
+          <div class="tmpl-card" data-theme-val="soft-material">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#8b5cf6;"></span>
+              <span class="tmpl-dot" style="background:#ff7e67;"></span>
+              <span class="tmpl-dot" style="background:#34d399;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Soft Material</div>
+              <div class="tmpl-desc">Pastel gradients, extra rounded soft shadows.</div>
+            </div>
+          </div>
+          <!-- Aone Admin -->
+          <div class="tmpl-card" data-theme-val="aone-admin">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#38bdf8;"></span>
+              <span class="tmpl-dot" style="background:#34d399;"></span>
+              <span class="tmpl-dot" style="background:#f87171;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Aone Admin</div>
+              <div class="tmpl-desc">Modern dark corporate theme with sky accents.</div>
+            </div>
+          </div>
+          <!-- Alfa Admin -->
+          <div class="tmpl-card" data-theme-val="alfa-admin">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#b45309;"></span>
+              <span class="tmpl-dot" style="background:#65a30d;"></span>
+              <span class="tmpl-dot" style="background:#dc2626;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Alfa Admin</div>
+              <div class="tmpl-desc">Warm amber and beige earthtones dashboard.</div>
+            </div>
+          </div>
+          <!-- Rubyx Admin -->
+          <div class="tmpl-card" data-theme-val="rubyx-admin">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#4f46e5;"></span>
+              <span class="tmpl-dot" style="background:#10b981;"></span>
+              <span class="tmpl-dot" style="background:#ef4444;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Rubyx Admin</div>
+              <div class="tmpl-desc">Clean design featuring deep royal indigo panels.</div>
+            </div>
+          </div>
+          <!-- Pixel Admin -->
+          <div class="tmpl-card" data-theme-val="pixel-admin">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#e11d48;"></span>
+              <span class="tmpl-dot" style="background:#059669;"></span>
+              <span class="tmpl-dot" style="background:#3b82f6;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Pixel Admin</div>
+              <div class="tmpl-desc">Light corporate structure with ruby red triggers.</div>
+            </div>
+          </div>
+          <!-- Power BI Admin -->
+          <div class="tmpl-card" data-theme-val="powerbi-admin">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#f2c811;"></span>
+              <span class="tmpl-dot" style="background:#107c10;"></span>
+              <span class="tmpl-dot" style="background:#d13438;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Power BI Admin</div>
+              <div class="tmpl-desc">Microsoft enterprise metrics style with gold header.</div>
+            </div>
+          </div>
+          <!-- CRMi Admin -->
+          <div class="tmpl-card" data-theme-val="crmi-admin">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#5ce1e6;"></span>
+              <span class="tmpl-dot" style="background:#64ffda;"></span>
+              <span class="tmpl-dot" style="background:#ff6b8a;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">CRMi Admin</div>
+              <div class="tmpl-desc">Dark navy CRM template with bright neon charts.</div>
+            </div>
+          </div>
+          <!-- Gilded Admin -->
+          <div class="tmpl-card" data-theme-val="gilded-admin">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#a67c52;"></span>
+              <span class="tmpl-dot" style="background:#6b8e23;"></span>
+              <span class="tmpl-dot" style="background:#c0392b;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Gilded Admin</div>
+              <div class="tmpl-desc">Elegant champagne tones and luxury highlights.</div>
+            </div>
+          </div>
+          <!-- Superieur Admin -->
+          <div class="tmpl-card" data-theme-val="superieur-admin">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#1e59ff;"></span>
+              <span class="tmpl-dot" style="background:#10b981;"></span>
+              <span class="tmpl-dot" style="background:#f43f5e;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Superieur Admin</div>
+              <div class="tmpl-desc">Royal blue header with weekly goals and sparkline widgets.</div>
+            </div>
+          </div>
+          <!-- Study Admin -->
+          <div class="tmpl-card" data-theme-val="study-admin">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#2563eb;"></span>
+              <span class="tmpl-dot" style="background:#f97316;"></span>
+              <span class="tmpl-dot" style="background:#ef4444;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Study Admin</div>
+              <div class="tmpl-desc">Clean e-learning space with progress rings, activity timeline, and stats.</div>
+            </div>
+          </div>
+          <!-- Server Admin -->
+          <div class="tmpl-card" data-theme-val="server-admin">
+            <div class="tmpl-dot-group">
+              <span class="tmpl-dot" style="background:#0284c7;"></span>
+              <span class="tmpl-dot" style="background:#0d9488;"></span>
+              <span class="tmpl-dot" style="background:#7c3aed;"></span>
+            </div>
+            <div>
+              <div class="tmpl-name">Server Admin</div>
+              <div class="tmpl-desc">Server metrics panel with colored KPI blocks and system logs.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div id="dash-root"><div class="loading-state"><div class="spinner"></div><span>Building dashboard…</span></div></div>
+      
+      <div style="margin-top:24px;display:flex;gap:8px;">
+        <a href="/visualize.html" class="btn btn-ghost btn-sm">← Back to Visualize</a>
+        <a href="/insights.html" class="btn btn-primary btn-sm">Continue to Insights →</a>
+      </div>
     </div>
   </div>
 </div>
@@ -71,7 +363,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const tempSelect = document.getElementById('template-select');
   const themeSelect = document.getElementById('theme-select');
 
-  // Load saved preferences
   const savedTheme = localStorage.getItem('ai_ba_theme') || 'dark';
   const savedTemplate = localStorage.getItem('ai_ba_template') || 'exec';
   
@@ -80,29 +371,613 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let dashData = null;
 
-  // Render function that rebuilds the dashboard layout and re-draws charts
   function render(templateId) {
     if (!dashData) return;
     const k = dashData.kpis, c = dashData.charts;
+
+    // ─── Superieur Admin Custom Layout ─────────────────────────
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    if (currentTheme === 'superieur-admin') {
+      root.innerHTML = `
+        <div style="display:grid;gap:20px;">
+          <!-- Row 1: Weekly Status + Stacked Cards -->
+          <div style="display:grid;grid-template-columns:2.2fr 1fr;gap:20px;">
+            <!-- Weekly Status -->
+            <div class="card" style="padding:20px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0;">Weekly Status</h4>
+                <span style="font-size:11px;color:var(--text-secondary);">Sales Report</span>
+              </div>
+              <div style="display:grid;grid-template-columns:2fr 1.1fr;gap:20px;align-items:center;">
+                <div style="height:220px;"><canvas id="chart-weekly"></canvas></div>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                  <div style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;margin-bottom:4px;">Goal Completion</div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span>Add Products to Cart</span><strong>140/220</strong></div>
+                    <div style="width:100%;height:6px;background:var(--border-hover);border-radius:3px;overflow:hidden;"><div style="width:64%;height:100%;background:#1e59ff;border-radius:3px;"></div></div>
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span>Complete Purchase</span><strong>120/150</strong></div>
+                    <div style="width:100%;height:6px;background:var(--border-hover);border-radius:3px;overflow:hidden;"><div style="width:80%;height:100%;background:#10b981;border-radius:3px;"></div></div>
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span>Visit Page</span><strong>400/1000</strong></div>
+                    <div style="width:100%;height:6px;background:var(--border-hover);border-radius:3px;overflow:hidden;"><div style="width:40%;height:100%;background:#0ea5e9;border-radius:3px;"></div></div>
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span>Send Inquiries</span><strong>210/420</strong></div>
+                    <div style="width:100%;height:6px;background:var(--border-hover);border-radius:3px;overflow:hidden;"><div style="width:50%;height:100%;background:#f59e0b;border-radius:3px;"></div></div>
+                  </div>
+                </div>
+              </div>
+              <!-- Bottom summary -->
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border);margin-top:20px;padding-top:16px;gap:12px;text-align:center;">
+                <div>
+                  <div style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;font-weight:500;">Total Revenue</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin:2px 0;">${k.revenue ? k.revenue.value : '$0'}</div>
+                  <div style="font-size:10px;color:var(--green);font-weight:600;">↑ ${k.revenue ? k.revenue.trend : '0%'}</div>
+                </div>
+                <div>
+                  <div style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;font-weight:500;">Total Cost</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin:2px 0;">$2,376.90</div>
+                  <div style="font-size:10px;color:var(--green);font-weight:600;">↑ 12%</div>
+                </div>
+                <div>
+                  <div style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;font-weight:500;">Total Profit</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin:2px 0;">${k.profit ? k.profit.value : '$0'}</div>
+                  <div style="font-size:10px;color:var(--green);font-weight:600;">↑ ${k.profit ? k.profit.trend : '0%'}</div>
+                </div>
+                <div>
+                  <div style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;font-weight:500;">Goal Completions</div>
+                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin:2px 0;">1,000</div>
+                  <div style="font-size:10px;color:var(--red);font-weight:600;">↓ 20%</div>
+                </div>
+              </div>
+            </div>
+            <!-- Right Column: Blue + Red Widget Cards -->
+            <div style="display:flex;flex-direction:column;gap:20px;">
+              <div style="background:#1e59ff;color:#fff;padding:20px;border-radius:var(--radius);display:flex;flex-direction:column;justify-content:space-between;flex:1;box-shadow:0 4px 20px rgba(30,89,255,0.15);">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                  <div>
+                    <div style="font-size:11px;opacity:0.8;text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Sales Volume</div>
+                    <div style="font-size:20px;font-weight:700;margin-top:4px;">41,458,245</div>
+                  </div>
+                  <span style="font-size:10px;background:rgba(255,255,255,0.15);padding:2px 6px;border-radius:10px;">+2% Today</span>
+                </div>
+                <div style="height:55px;margin-top:10px;"><canvas id="chart-superieur-blue"></canvas></div>
+              </div>
+              <div style="background:#f43f5e;color:#fff;padding:20px;border-radius:var(--radius);display:flex;flex-direction:column;justify-content:space-between;flex:1;box-shadow:0 4px 20px rgba(244,63,94,0.15);">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                  <div>
+                    <div style="font-size:11px;opacity:0.8;text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Active LTV</div>
+                    <div style="font-size:20px;font-weight:700;margin-top:4px;">458,185</div>
+                  </div>
+                  <span style="font-size:10px;background:rgba(255,255,255,0.15);padding:2px 6px;border-radius:10px;">+3% Today</span>
+                </div>
+                <div style="height:55px;margin-top:10px;"><canvas id="chart-superieur-red"></canvas></div>
+              </div>
+            </div>
+          </div>
+          <!-- Row 2: Earnings + Top Products + Visitors -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:20px;">
+            <!-- Earnings -->
+            <div class="card" style="padding:20px;display:flex;flex-direction:column;justify-content:space-between;">
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                  <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0;">Earnings</h4>
+                  <span style="font-size:10px;color:var(--text-secondary);">Monthly Total</span>
+                </div>
+                <div style="font-size:24px;font-weight:700;color:var(--text-primary);">$45,215.22</div>
+                <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">↑ 7.4% vs last month</div>
+              </div>
+              <div style="height:100px;margin-top:15px;"><canvas id="chart-superieur-earnings"></canvas></div>
+            </div>
+            <!-- Recently Top Products -->
+            <div class="card" style="padding:20px;display:flex;flex-direction:column;">
+              <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0 0 14px 0;">Recently Top Products</h4>
+              <div style="display:flex;flex-direction:column;gap:12px;flex:1;justify-content:center;">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:32px;height:32px;background:var(--bg-hover);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">📱</div>
+                    <div><div style="font-size:11px;font-weight:600;color:var(--text-primary);">iPhone 12 Pro</div><div style="font-size:9px;color:var(--text-secondary);">128GB Pacific Blue</div></div>
+                  </div>
+                  <span style="font-size:9px;font-weight:600;background:rgba(30,89,255,0.08);color:#1e59ff;padding:2px 6px;border-radius:4px;">Top seller</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:32px;height:32px;background:var(--bg-hover);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">📺</div>
+                    <div><div style="font-size:11px;font-weight:600;color:var(--text-primary);">Apple TV 4K</div><div style="font-size:9px;color:var(--text-secondary);">64GB HDR Vision</div></div>
+                  </div>
+                  <span style="font-size:9px;font-weight:600;background:rgba(16,185,129,0.08);color:#10b981;padding:2px 6px;border-radius:4px;">High margin</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:32px;height:32px;background:var(--bg-hover);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">💻</div>
+                    <div><div style="font-size:11px;font-weight:600;color:var(--text-primary);">MacBook Air M1</div><div style="font-size:9px;color:var(--text-secondary);">8GB RAM 256GB SSD</div></div>
+                  </div>
+                  <span style="font-size:9px;font-weight:600;background:rgba(244,63,94,0.08);color:#f43f5e;padding:2px 6px;border-radius:4px;">Hot item</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:32px;height:32px;background:var(--bg-hover);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">⌚</div>
+                    <div><div style="font-size:11px;font-weight:600;color:var(--text-primary);">Apple Watch S7</div><div style="font-size:9px;color:var(--text-secondary);">45mm GPS Cellular</div></div>
+                  </div>
+                  <span style="font-size:9px;font-weight:600;background:rgba(245,158,11,0.08);color:#f59e0b;padding:2px 6px;border-radius:4px;">Trending</span>
+                </div>
+              </div>
+            </div>
+            <!-- Visitors Map -->
+            <div class="card" style="padding:20px;display:flex;flex-direction:column;">
+              <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0 0 8px 0;">Visitors</h4>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;position:relative;">
+                <svg viewBox="0 0 1000 480" style="width:100%;height:auto;">
+                  <style>@keyframes mapPulse{0%,100%{r:14;opacity:0.25}50%{r:20;opacity:0.1}}</style>
+                  <!-- Simplified continent shapes -->
+                  <path d="M150,60 L280,55 L300,100 L280,140 L250,170 L210,180 L180,200 L150,180 L130,140 L120,100 Z" fill="var(--text-tertiary)" opacity="0.25"/>
+                  <path d="M190,220 L240,210 L260,230 L280,310 L260,370 L230,390 L210,340 L200,280 Z" fill="var(--text-tertiary)" opacity="0.25"/>
+                  <path d="M420,60 L580,50 L620,70 L600,180 L500,200 L440,150 Z" fill="var(--text-tertiary)" opacity="0.25"/>
+                  <path d="M580,50 L850,60 L900,200 L780,260 L680,230 L620,170 L620,70 Z" fill="var(--text-tertiary)" opacity="0.25"/>
+                  <path d="M480,220 L580,210 L620,250 L600,340 L560,360 L510,330 L480,270 Z" fill="var(--text-tertiary)" opacity="0.25"/>
+                  <path d="M760,300 L880,310 L870,400 L790,420 L750,380 Z" fill="var(--text-tertiary)" opacity="0.25"/>
+                  <!-- Glowing pins -->
+                  <circle cx="210" cy="120" r="5" fill="#10b981"/><circle cx="210" cy="120" r="14" fill="#10b981" opacity="0.25" style="animation:mapPulse 2s infinite;"/>
+                  <circle cx="240" cy="300" r="4" fill="#1e59ff"/><circle cx="240" cy="300" r="12" fill="#1e59ff" opacity="0.25"/>
+                  <circle cx="500" cy="130" r="6" fill="#10b981"/><circle cx="500" cy="130" r="16" fill="#10b981" opacity="0.25" style="animation:mapPulse 2s 0.5s infinite;"/>
+                  <circle cx="780" cy="170" r="7" fill="#f43f5e"/><circle cx="780" cy="170" r="18" fill="#f43f5e" opacity="0.25" style="animation:mapPulse 2s 1s infinite;"/>
+                  <circle cx="830" cy="350" r="5" fill="#f59e0b"/><circle cx="830" cy="350" r="14" fill="#f59e0b" opacity="0.25"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      // Initialize Superieur charts
+      makeGroupedBarChart('chart-weekly',
+        ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+        [5,6,4,3,7,9,5],[4,3,2,2,5,4,3],[3,4,3,2,5,6,4]);
+      makeSuperieurSparkline('chart-superieur-blue',
+        [12,19,14,15,22,24,21,28,30,25,34,41],'#ffffff','bar');
+      makeSuperieurSparkline('chart-superieur-red',
+        [30,32,28,35,33,40,38,44,42,48,46,50],'#ffffff','line');
+      makeSuperieurSparkline('chart-superieur-earnings',
+        [20,25,18,22,30,28,35,40,38,45,42,50,48,55,52,60],'#1e59ff','bar');
+      return;
+    }
+
+    if (currentTheme === 'study-admin') {
+      root.innerHTML = `
+        <div style="display:grid;gap:20px;">
+          <!-- Row 1: Your Overview (3 cards with progress bars) -->
+          <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:20px;">
+            <!-- Courses card -->
+            <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:40px;height:40px;border-radius:50%;background:rgba(37,99,235,0.08);color:#2563eb;display:flex;align-items:center;justify-content:center;font-size:20px;">🎓</div>
+                <div>
+                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);">${c.category.labels.length || 12} Courses</div>
+                  <div style="font-size:11px;color:var(--text-secondary);">In Progress</div>
+                </div>
+              </div>
+              <div style="width:100%;height:6px;background:var(--border-hover);border-radius:3px;overflow:hidden;margin-top:8px;">
+                <div style="width:60%;height:100%;background:#2563eb;border-radius:3px;"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-secondary);">
+                <span>Progress</span><strong>60%</strong>
+              </div>
+            </div>
+            <!-- Lessons card -->
+            <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:40px;height:40px;border-radius:50%;background:rgba(249,115,22,0.08);color:#f97316;display:flex;align-items:center;justify-content:center;font-size:20px;">📚</div>
+                <div>
+                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);">${k.orders ? k.orders.value : '9'} Lessons</div>
+                  <div style="font-size:11px;color:var(--text-secondary);">In Progress</div>
+                </div>
+              </div>
+              <div style="width:100%;height:6px;background:var(--border-hover);border-radius:3px;overflow:hidden;margin-top:8px;">
+                <div style="width:45%;height:100%;background:#f97316;border-radius:3px;"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-secondary);">
+                <span>Progress</span><strong>45%</strong>
+              </div>
+            </div>
+            <!-- Mentoring card -->
+            <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:40px;height:40px;border-radius:50%;background:rgba(239,68,68,0.08);color:#ef4444;display:flex;align-items:center;justify-content:center;font-size:20px;">💬</div>
+                <div>
+                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);">${k.customers ? k.customers.value : '7'} Mentoring</div>
+                  <div style="font-size:11px;color:var(--text-secondary);">This Month</div>
+                </div>
+              </div>
+              <div style="width:100%;height:6px;background:var(--border-hover);border-radius:3px;overflow:hidden;margin-top:8px;">
+                <div style="width:30%;height:100%;background:#ef4444;border-radius:3px;"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-secondary);">
+                <span>Progress</span><strong>30%</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 2: Left (Main Activity + Statistics) + Right (Sessions + Lectures) -->
+          <div style="display:grid;grid-template-columns:2.2fr 1fr;gap:20px;">
+            <!-- Left Side Grid -->
+            <div style="display:flex;flex-direction:column;gap:20px;">
+              <!-- Statistics -->
+              <div class="card" style="padding:20px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                  <div>
+                    <h4 style="font-size:24px;font-weight:700;color:var(--text-primary);margin:0;">267hr</h4>
+                    <span style="font-size:11px;color:var(--text-secondary);">Your study time this week</span>
+                  </div>
+                  <select class="input" style="width:100px;padding:3px 8px;font-size:11px;height:auto;"><option>This Week</option></select>
+                </div>
+                <div style="height:200px;margin-bottom:16px;"><canvas id="chart-study-stats"></canvas></div>
+                <div style="display:flex;gap:10px;">
+                  <button class="btn btn-secondary btn-sm" style="flex:1;background:rgba(37,99,235,0.06);color:#2563eb;border:none;font-weight:600;"><span style="margin-right:4px;">📥</span> Download Progress</button>
+                  <button class="btn btn-secondary btn-sm" style="flex:1;background:rgba(37,99,235,0.06);color:#2563eb;border:none;font-weight:600;"><span style="margin-right:4px;">🤝</span> Invite Friends</button>
+                </div>
+              </div>
+
+              <!-- Main Activity -->
+              <div class="card" style="padding:20px;">
+                <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:16px;">Main Activity</h4>
+                <div style="display:flex;flex-direction:column;gap:16px;max-height:260px;overflow-y:auto;padding-right:5px;">
+                  <!-- Item 1 -->
+                  <div style="display:flex;gap:12px;align-items:flex-start;">
+                    <div style="display:flex;flex-direction:column;align-items:center;min-width:60px;">
+                      <span style="font-size:10px;font-weight:700;color:#f97316;text-transform:uppercase;">Today</span>
+                      <span style="font-size:12px;color:var(--text-secondary);">10:00</span>
+                    </div>
+                    <div style="background:var(--bg-hover);padding:10px 14px;border-radius:var(--radius);flex:1;display:flex;justify-content:space-between;align-items:center;">
+                      <div>
+                        <div style="font-size:12px;font-weight:600;color:var(--text-primary);">How to target the Industrial new leads?</div>
+                        <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                          <span style="font-size:10px;background:var(--border);padding:1px 6px;border-radius:4px;color:var(--text-secondary);">John Doe</span>
+                        </div>
+                      </div>
+                      <span style="font-size:10px;font-weight:600;color:#2563eb;background:rgba(37,99,235,0.08);padding:3px 8px;border-radius:4px;">Mentoring</span>
+                    </div>
+                  </div>
+                  <!-- Item 2 -->
+                  <div style="display:flex;gap:12px;align-items:flex-start;">
+                    <div style="display:flex;flex-direction:column;align-items:center;min-width:60px;">
+                      <span style="font-size:10px;font-weight:700;color:#2563eb;text-transform:uppercase;">Tomorrow</span>
+                      <span style="font-size:12px;color:var(--text-secondary);">14:30</span>
+                    </div>
+                    <div style="background:var(--bg-hover);padding:10px 14px;border-radius:var(--radius);flex:1;display:flex;justify-content:space-between;align-items:center;">
+                      <div>
+                        <div style="font-size:12px;font-weight:600;color:var(--text-primary);">Examine white the production about Facebook's (Meta event)</div>
+                        <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                          <span style="font-size:10px;background:var(--border);padding:1px 6px;border-radius:4px;color:var(--text-secondary);">Jane Doe</span>
+                        </div>
+                      </div>
+                      <span style="font-size:10px;font-weight:600;color:#10b981;background:rgba(16,185,129,0.08);padding:3px 8px;border-radius:4px;">Online Course</span>
+                    </div>
+                  </div>
+                  <!-- Item 3 -->
+                  <div style="display:flex;gap:12px;align-items:flex-start;">
+                    <div style="display:flex;flex-direction:column;align-items:center;min-width:60px;">
+                      <span style="font-size:10px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">Friday</span>
+                      <span style="font-size:12px;color:var(--text-secondary);">12:00</span>
+                    </div>
+                    <div style="background:var(--bg-hover);padding:10px 14px;border-radius:var(--radius);flex:1;display:flex;justify-content:space-between;align-items:center;">
+                      <div>
+                        <div style="font-size:12px;font-weight:600;color:var(--text-primary);">Strategic planning & resource allocation models</div>
+                        <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                          <span style="font-size:10px;background:var(--border);padding:1px 6px;border-radius:4px;color:var(--text-secondary);">Mike Ross</span>
+                        </div>
+                      </div>
+                      <span style="font-size:10px;font-weight:600;color:#ef4444;background:rgba(239,68,68,0.08);padding:3px 8px;border-radius:4px;">Workshop</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Side (Sessions + Lectures) -->
+            <div style="display:flex;flex-direction:column;gap:20px;">
+              <!-- Upcoming/Virtual Sessions -->
+              <div class="card" style="padding:20px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                  <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0;">Upcoming/Virtual Sessions</h4>
+                  <a href="#" style="font-size:11px;color:#2563eb;text-decoration:none;font-weight:500;">View All</a>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                  <!-- Session 1 -->
+                  <div style="border-left:3px solid #ef4444;background:var(--bg-hover);padding:12px;border-radius:0 var(--radius) var(--radius) 0;display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                      <div style="font-size:12px;font-weight:600;color:var(--text-primary);">Speakwaves English</div>
+                      <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">Thu, 24 Oct - 10 AM</div>
+                      <div style="display:flex;gap:4px;margin-top:6px;">
+                        <span style="width:20px;height:20px;border-radius:50%;background:#cbd5e1;font-size:9px;display:flex;align-items:center;justify-content:center;">👨‍💼</span>
+                        <span style="width:20px;height:20px;border-radius:50%;background:#94a3b8;font-size:9px;display:flex;align-items:center;justify-content:center;">👩‍💼</span>
+                        <span style="width:20px;height:20px;border-radius:50%;background:#64748b;font-size:9px;display:flex;align-items:center;justify-content:center;">👨‍💻</span>
+                      </div>
+                    </div>
+                    <button style="width:28px;height:28px;border-radius:50%;background:#1e293b;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;">➔</button>
+                  </div>
+                  <!-- Session 2 -->
+                  <div style="border-left:3px solid #2563eb;background:var(--bg-hover);padding:12px;border-radius:0 var(--radius) var(--radius) 0;display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                      <div style="font-size:12px;font-weight:600;color:var(--text-primary);">Marketing 101.</div>
+                      <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">Thu, 24 Oct - 12 PM</div>
+                      <div style="display:flex;gap:4px;margin-top:6px;">
+                        <span style="width:20px;height:20px;border-radius:50%;background:#cbd5e1;font-size:9px;display:flex;align-items:center;justify-content:center;">👩‍🏫</span>
+                        <span style="width:20px;height:20px;border-radius:50%;background:#94a3b8;font-size:9px;display:flex;align-items:center;justify-content:center;">👨‍🎓</span>
+                      </div>
+                    </div>
+                    <button style="width:28px;height:28px;border-radius:50%;background:#1e293b;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;">➔</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Lectures -->
+              <div class="card" style="padding:20px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                  <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0;">Lectures</h4>
+                  <a href="#" style="font-size:11px;color:#2563eb;text-decoration:none;font-weight:500;">View All</a>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  <!-- Lecture 1 -->
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-subtle);">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      <div style="width:36px;height:36px;background:rgba(249,115,22,0.08);color:#f97316;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">🎬</div>
+                      <div>
+                        <div style="font-size:12px;font-weight:600;color:var(--text-primary);">English - Grammar</div>
+                        <div style="font-size:10px;color:var(--text-secondary);">8:00 AM, 1h 15m</div>
+                      </div>
+                    </div>
+                    <span style="color:var(--text-secondary);font-size:12px;">➔</span>
+                  </div>
+                  <!-- Lecture 2 -->
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      <div style="width:36px;height:36px;background:rgba(37,99,235,0.08);color:#2563eb;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">📹</div>
+                      <div>
+                        <div style="font-size:12px;font-weight:600;color:var(--text-primary);">Beginner Math Test</div>
+                        <div style="font-size:10px;color:var(--text-secondary);">10:30 AM, 2h 30m</div>
+                      </div>
+                    </div>
+                    <span style="color:var(--text-secondary);font-size:12px;">➔</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Initialize Study Stats Chart (renders dynamic/virtual data trend if available)
+      const ctx = document.getElementById('chart-study-stats');
+      if (ctx) {
+        const labels = c.revenue_trend.labels.length > 0 ? c.revenue_trend.labels : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const values = c.revenue_trend.values.length > 0 ? c.revenue_trend.values.map(v => Math.min(50, Math.max(5, Math.round(v % 40 + 5)))) : [15, 25, 45, 30, 8, 20];
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: values,
+              borderColor: '#2563eb',
+              backgroundColor: 'rgba(37, 99, 235, 0.06)',
+              fill: true,
+              tension: 0.4,
+              pointRadius: 4,
+              pointBackgroundColor: '#2563eb',
+              pointHoverRadius: 6,
+              borderWidth: 2.5
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } },
+              y: { grid: { borderDash: [4, 4] }, ticks: { font: { family: 'Inter', size: 10 } } }
+            }
+          }
+        });
+      }
+      return;
+    }
+
+    if (currentTheme === 'server-admin') {
+      root.innerHTML = `
+        <div style="display:grid;gap:20px;">
+          <!-- Server Load Card -->
+          <div class="card" style="padding:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div>
+                <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0;">Server Load (Avg)</h4>
+                <span style="font-size:11px;color:var(--text-secondary);">Operational metrics & server stress logs</span>
+              </div>
+              <div style="display:flex;gap:4px;background:var(--bg-hover);padding:3px;border-radius:6px;border:1px solid var(--border);">
+                <button class="btn btn-sm btn-ghost" style="padding:3px 8px;font-size:10px;min-height:0;">Day</button>
+                <button class="btn btn-sm btn-ghost" style="padding:3px 8px;font-size:10px;min-height:0;">Week</button>
+                <button class="btn btn-sm" style="padding:3px 8px;font-size:10px;min-height:0;background:#0d9488;color:#fff;border:none;">Month</button>
+              </div>
+            </div>
+            <div style="height:220px;"><canvas id="chart-server-load"></canvas></div>
+          </div>
+
+          <!-- KPI Cards Block (4 blocks side by side with custom backgrounds) -->
+          <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;">
+            <!-- Block 1: Total Users -->
+            <div style="background:#e0f2fe;color:#0369a1;padding:18px;border-radius:var(--radius);display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-size:11px;opacity:0.8;font-weight:600;text-transform:uppercase;">Total Users</div>
+                <div style="font-size:24px;font-weight:700;margin:4px 0 2px 0;">${k.customers ? k.customers.value : '8,256'}</div>
+                <div style="font-size:10px;font-weight:600;">↑ ${k.customers ? k.customers.trend : '12.5%'} vs last month</div>
+              </div>
+              <div style="font-size:24px;opacity:0.6;">👤</div>
+            </div>
+            <!-- Block 2: Total Revenue -->
+            <div style="background:#0d9488;color:#ffffff;padding:18px;border-radius:var(--radius);display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-size:11px;opacity:0.8;font-weight:600;text-transform:uppercase;">Total Revenue</div>
+                <div style="font-size:24px;font-weight:700;margin:4px 0 2px 0;">${k.revenue ? k.revenue.value : '$23,600'}</div>
+                <div style="font-size:10px;font-weight:600;">↑ ${k.revenue ? k.revenue.trend : '8.3%'} vs last month</div>
+              </div>
+              <div style="font-size:24px;opacity:0.6;">💵</div>
+            </div>
+            <!-- Block 3: Total Orders -->
+            <div style="background:#7c3aed;color:#ffffff;padding:18px;border-radius:var(--radius);display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-size:11px;opacity:0.8;font-weight:600;text-transform:uppercase;">Total Orders</div>
+                <div style="font-size:24px;font-weight:700;margin:4px 0 2px 0;">${k.orders ? k.orders.value : '1,846'}</div>
+                <div style="font-size:10px;font-weight:600;">↑ ${k.orders ? k.orders.trend : '15.7%'} vs last month</div>
+              </div>
+              <div style="font-size:24px;opacity:0.6;">🛒</div>
+            </div>
+            <!-- Block 4: Server Uptime -->
+            <div style="background:#ea580c;color:#ffffff;padding:18px;border-radius:var(--radius);display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-size:11px;opacity:0.8;font-weight:600;text-transform:uppercase;">Server Uptime</div>
+                <div style="font-size:24px;font-weight:700;margin:4px 0 2px 0;">98.4%</div>
+                <div style="font-size:10px;font-weight:600;">↑ 2.1% vs last month</div>
+              </div>
+              <div style="font-size:24px;opacity:0.6;">☁️</div>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Sales Overview + Messages + Grow Your Business -->
+          <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:20px;">
+            <!-- Sales Overview (Red Chart) -->
+            <div class="card" style="padding:20px;display:flex;flex-direction:column;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0;">Sales Overview</h4>
+                <select class="input" style="width:100px;padding:3px 8px;font-size:11px;height:auto;"><option>This Month</option></select>
+              </div>
+              <div>
+                <div style="font-size:22px;font-weight:700;color:var(--text-primary);">${k.profit ? k.profit.value : '$12,546'}</div>
+                <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">↑ ${k.profit ? k.profit.trend : '18.2%'} vs last month</div>
+              </div>
+              <div style="height:120px;margin-top:15px;"><canvas id="chart-server-sales"></canvas></div>
+            </div>
+
+            <!-- Messages Log -->
+            <div class="card" style="padding:20px;display:flex;flex-direction:column;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0;">Messages</h4>
+                <a href="#" style="font-size:11px;color:#0284c7;text-decoration:none;font-weight:500;">View All</a>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:12px;flex:1;justify-content:center;">
+                <!-- Msg 1 -->
+                <div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:1px solid var(--border-subtle);">
+                  <div style="width:32px;height:32px;border-radius:50%;background:#cbd5e1;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">👨‍💻</div>
+                  <div style="flex:1;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <span style="font-size:11px;font-weight:600;color:var(--text-primary);">John</span>
+                      <span style="font-size:9px;color:var(--text-secondary);">10:30 AM</span>
+                    </div>
+                    <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;line-height:1.3;">Hello! I have a question about my recent order. Can you help me?</div>
+                  </div>
+                </div>
+                <!-- Msg 2 -->
+                <div style="display:flex;gap:10px;align-items:flex-start;">
+                  <div style="width:32px;height:32px;border-radius:50%;background:#94a3b8;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">👩‍💼</div>
+                  <div style="flex:1;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <span style="font-size:11px;font-weight:600;color:var(--text-primary);">Sarah</span>
+                      <span style="font-size:9px;color:var(--text-secondary);">09:15 AM</span>
+                    </div>
+                    <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;line-height:1.3;">Thanks for the update! Everything looks good.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Grow Your Business CTA -->
+            <div style="background:#1e293b;color:#ffffff;border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid #334155;">
+              <div>
+                <h4 style="font-size:15px;font-weight:700;margin-bottom:8px;">Grow Your Business</h4>
+                <p style="font-size:11px;color:#94a3b8;line-height:1.5;">Get deeper insights with advanced analytics tools and customized reporting mechanisms.</p>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;margin:12px 0;">
+                <div style="width:32px;height:32px;border-radius:50%;background:#334155;display:flex;align-items:center;justify-content:center;font-size:14px;border:1px solid #475569;">👨‍💼</div>
+                <div style="width:32px;height:32px;border-radius:50%;background:#334155;display:flex;align-items:center;justify-content:center;font-size:14px;border:1px solid #475569;">👩‍💼</div>
+              </div>
+              <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center;background:#0284c7;border-color:#0284c7;font-weight:600;">Learn More</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Initialize Server Load Chart
+      const loadCtx = document.getElementById('chart-server-load');
+      if (loadCtx) {
+        const labels = c.revenue_trend.labels.length > 0 ? c.revenue_trend.labels : ['May 01', 'May 05', 'May 09', 'May 13', 'May 17', 'May 21', 'May 25', 'May 29', 'May 31'];
+        const values = c.revenue_trend.values.length > 0 ? c.revenue_trend.values.map(v => Math.min(100, Math.max(10, Math.round(v % 80 + 10)))) : [15, 30, 48, 70, 52, 40, 62, 55, 80];
+        new Chart(loadCtx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: values,
+              borderColor: '#0284c7',
+              backgroundColor: 'rgba(2, 132, 199, 0.06)',
+              fill: true,
+              tension: 0.35,
+              pointRadius: 3,
+              pointBackgroundColor: '#0284c7',
+              pointHoverRadius: 6,
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } },
+              y: { max: 100, grid: { borderDash: [4, 4] }, ticks: { font: { family: 'Inter', size: 10 } } }
+            }
+          }
+        });
+      }
+
+      // Initialize Sales Overview Chart (Red Line Area Chart)
+      const salesCtx = document.getElementById('chart-server-sales');
+      if (salesCtx) {
+        const values = c.revenue_trend.values.length >= 7 ? c.revenue_trend.values.slice(-7) : [12, 19, 10, 15, 8, 22, 14];
+        new Chart(salesCtx, {
+          type: 'line',
+          data: {
+            labels: ['1', '5', '10', '15', '20', '25', '30'],
+            datasets: [{
+              data: values,
+              borderColor: '#ef4444',
+              backgroundColor: 'rgba(239, 68, 68, 0.06)',
+              fill: true,
+              tension: 0.4,
+              pointRadius: 0,
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { display: false },
+              y: { display: false }
+            }
+          }
+        });
+      }
+      return;
+    }
 
     let kpiHtml = '';
     let chartsHtml = '';
 
     if (templateId === 'exec') {
-      // 1. Executive Summary: All KPIs, Trends, Categories, Regions, and Products
       const kpis = ['revenue', 'profit', 'orders', 'customers', 'profit_margin'];
       kpiHtml = buildKpis(kpis, k);
       chartsHtml = `
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-header"><div class="card-title">Revenue Trend</div><div class="card-subtitle">Monthly</div></div>
-            <div class="card-body" style="padding-top:0"><div style="height:220px"><canvas id="chart-trend"></canvas></div></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">Revenue by Region</div></div>
-            <div class="card-body" style="padding-top:0"><div style="height:220px"><canvas id="chart-region"></canvas></div></div>
-          </div>
-        </div>
+        <!-- Secondary Charts Grid -->
         <div class="grid-2">
           <div class="card">
             <div class="card-header"><div class="card-title">Category Share</div></div>
@@ -114,14 +989,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         </div>`;
     } else if (templateId === 'sales') {
-      // 2. Sales & Operations: Focus on orders, revenues, and geographic details (State breakdown)
       const kpis = ['revenue', 'orders', 'profit_margin'];
       kpiHtml = buildKpis(kpis, k);
       chartsHtml = `
-        <div class="card" style="margin-bottom:14px;">
-          <div class="card-header"><div class="card-title">Revenue Trend</div><div class="card-subtitle">Monthly</div></div>
-          <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-trend"></canvas></div></div>
-        </div>
         <div class="grid-2">
           <div class="card">
             <div class="card-header"><div class="card-title">Top State Performers</div></div>
@@ -129,11 +999,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
           <div class="card">
             <div class="card-header"><div class="card-title">Sales Volume by Region</div></div>
-            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-region"></canvas></div></div>
+            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-region2"></canvas></div></div>
           </div>
         </div>`;
     } else if (templateId === 'product') {
-      // 3. Product Performance: Focus on revenue vs profit scatter, category share, and top products
       const kpis = ['revenue', 'profit', 'profit_margin'];
       kpiHtml = buildKpis(kpis, k);
       chartsHtml = `
@@ -146,10 +1015,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="card-header"><div class="card-title">Top 10 Product Sales</div></div>
             <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-prod"></canvas></div></div>
           </div>
-        </div>
-        <div class="card" style="margin-bottom:14px;">
-          <div class="card-header"><div class="card-title">Revenue vs Profit Analysis</div><div class="card-subtitle">Product Breakdown</div></div>
-          <div class="card-body" style="padding-top:0"><div style="height:260px"><canvas id="chart-scatter"></canvas></div></div>
         </div>`;
     }
 
@@ -158,13 +1023,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       ${chartsHtml}
     `;
 
-    // Render corresponding charts conditionally based on DOM elements availability
-    if (document.getElementById('chart-trend')) {
-      makeLineChart('chart-trend', c.revenue_trend.labels, c.revenue_trend.values);
-    }
-    if (document.getElementById('chart-region')) {
-      makeBarChart('chart-region', c.regional.labels, c.regional.values);
-    }
+    // Draw secondary charts
     if (document.getElementById('chart-cat')) {
       makeDoughnutChart('chart-cat', c.category.labels, c.category.values);
     }
@@ -174,8 +1033,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (document.getElementById('chart-state')) {
       makeBarChart('chart-state', c.state.labels, c.state.values);
     }
-    if (document.getElementById('chart-scatter')) {
-      makeScatterChart('chart-scatter', c.scatter.revenue, c.scatter.profit, c.scatter.labels);
+    if (document.getElementById('chart-region2')) {
+      makeBarChart('chart-region2', c.regional.labels, c.regional.values);
     }
   }
 
@@ -205,7 +1064,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     }).join('');
   }
 
-  // Load and cache dataset details
+  // Set initial active gallery card
+  function selectActiveGalleryCard(theme) {
+    const cards = document.querySelectorAll('.tmpl-card');
+    cards.forEach(card => {
+      if (card.getAttribute('data-theme-val') === theme) {
+        card.classList.add('active');
+      } else {
+        card.classList.remove('active');
+      }
+    });
+  }
+  selectActiveGalleryCard(savedTheme);
+
+  // Load data
   try {
     dashData = await API.get(`/api/dashboard?session_id=${sid}`);
     render(savedTemplate);
@@ -224,22 +1096,46 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Theme Change Handler
+  function updateTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('ai_ba_theme', theme);
+    if (themeSelect) themeSelect.value = theme;
+    selectActiveGalleryCard(theme);
+    const activeTemplate = localStorage.getItem('ai_ba_template') || 'exec';
+    render(activeTemplate);
+  }
+
   if (themeSelect) {
     themeSelect.addEventListener('change', (e) => {
-      const theme = e.target.value;
-      document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('ai_ba_theme', theme);
-      // Re-render the current template to apply new colors to charts
-      const activeTemplate = localStorage.getItem('ai_ba_template') || 'exec';
-      render(activeTemplate);
+      updateTheme(e.target.value);
     });
   }
 
-  // Listen for global theme toggling via header button
+  // Card Clicks theme selector
+  document.querySelectorAll('.tmpl-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const themeVal = card.getAttribute('data-theme-val');
+      updateTheme(themeVal);
+    });
+  });
+
+  // Toggle Gallery Button
+  const toggleBtn = document.getElementById('toggle-gallery-btn');
+  const galleryContainer = document.getElementById('gallery-container');
+  if (toggleBtn && galleryContainer) {
+    toggleBtn.addEventListener('click', () => {
+      if (galleryContainer.style.display === 'none') {
+        galleryContainer.style.display = 'grid';
+        toggleBtn.textContent = 'Collapse ▲';
+      } else {
+        galleryContainer.style.display = 'none';
+        toggleBtn.textContent = 'Expand ▼';
+      }
+    });
+  }
+
   window.addEventListener('theme-changed', (e) => {
-    if (themeSelect) themeSelect.value = e.detail.theme;
-    const activeTemplate = localStorage.getItem('ai_ba_template') || 'exec';
-    render(activeTemplate);
+    updateTheme(e.detail.theme);
   });
 });
 </script>
