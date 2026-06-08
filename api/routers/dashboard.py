@@ -136,6 +136,50 @@ async def get_dashboard(session_id: str = Query(...)):
             sg = df.groupby(state_col)[rev_col].sum().sort_values(ascending=False).head(15)
             state_chart = {"labels": sg.index.tolist(), "values": [round(float(v), 2) for v in sg.values]}
 
+        # ---- Pie Chart (category share) ----
+        pie_chart = {"labels": [], "values": []}
+        if cat_col and rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
+            pg = df.groupby(cat_col)[rev_col].sum().sort_values(ascending=False)
+            pie_chart = {"labels": pg.index.tolist(), "values": [round(float(v), 2) for v in pg.values]}
+
+        # ---- Heatmap (Region × Category → Revenue) ----
+        heatmap_chart = {"x_labels": [], "y_labels": [], "matrix": []}
+        dim1 = region_col or state_col
+        dim2 = cat_col
+        if dim1 and dim2 and rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
+            pivot = df.pivot_table(
+                values=rev_col, index=dim1, columns=dim2,
+                aggfunc="sum", fill_value=0
+            )
+            # Limit to top 10 rows for readability
+            row_totals = pivot.sum(axis=1).sort_values(ascending=False)
+            pivot = pivot.loc[row_totals.head(10).index]
+            heatmap_chart = {
+                "x_labels": pivot.columns.tolist(),
+                "y_labels": pivot.index.tolist(),
+                "matrix": [[round(float(v), 2) for v in row] for row in pivot.values],
+            }
+
+        # ---- Bubble Chart (per-product: revenue, profit, order count) ----
+        bubble_chart = []
+        if prod_col and rev_col and prof_col:
+            try:
+                agg_cols = {rev_col: "sum", prof_col: "sum"}
+                if order_col:
+                    agg_cols[order_col] = "count"
+                bubble_df = df.groupby(prod_col).agg(agg_cols).reset_index()
+                bubble_df = bubble_df.sort_values(rev_col, ascending=False).head(15)
+
+                for _, row in bubble_df.iterrows():
+                    bubble_chart.append({
+                        "x": round(float(row[rev_col]), 2),
+                        "y": round(float(row[prof_col]), 2),
+                        "r": int(row[order_col]) if order_col else int(row[rev_col] / 100),
+                        "label": str(row[prod_col]),
+                    })
+            except Exception:
+                pass
+
         return JSONResponse({
             "kpis": kpis,
             "charts": {
@@ -145,6 +189,9 @@ async def get_dashboard(session_id: str = Query(...)):
                 "products": product_chart,
                 "scatter": scatter_chart,
                 "state": state_chart,
+                "pie": pie_chart,
+                "heatmap": heatmap_chart,
+                "bubble": bubble_chart,
             },
             "columns": {
                 "revenue": rev_col,

@@ -15,67 +15,61 @@ agent = DataCleaningAgent()
 
 @router.get("/clean/preview")
 async def clean_preview(session_id: str = Query(...)):
-    """Return data quality metrics without modifying the dataset."""
+    """Return comprehensive data quality metrics without modifying the dataset."""
     if not session_exists(session_id):
         raise HTTPException(status_code=404, detail="Session not found.")
     try:
         df = load_df(session_id)
-        result = agent.analyze_data_quality(df)
-
-        missing_by_col = {
-            col: int(df[col].isnull().sum())
-            for col in df.columns
-            if df[col].isnull().sum() > 0
-        }
-        missing_pct_by_col = {
-            col: round(df[col].isnull().mean() * 100, 2)
-            for col in missing_by_col
-        }
-
-        return JSONResponse({
-            "total_rows": len(df),
-            "total_columns": len(df.columns),
-            "total_missing": int(df.isnull().sum().sum()),
-            "duplicate_rows": int(df.duplicated().sum()),
-            "missing_by_column": missing_by_col,
-            "missing_pct_by_column": missing_pct_by_col,
-            "completeness_pct": round((1 - df.isnull().mean().mean()) * 100, 2),
-        })
+        report = agent.analyze_data_quality(df)
+        return JSONResponse(report)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/clean/apply")
 async def clean_apply(session_id: str = Query(...)):
-    """Apply auto-cleaning (drop duplicates + median/mode imputation) and save."""
+    """Run the full 15-step auto-cleaning pipeline and save the cleaned dataset."""
     if not session_exists(session_id):
         raise HTTPException(status_code=404, detail="Session not found.")
     try:
         df = load_df(session_id)
         before_rows = len(df)
+        before_cols = len(df.columns)
         before_missing = int(df.isnull().sum().sum())
 
-        # Drop duplicates
-        df = df.drop_duplicates()
+        cleaned_df, change_log = agent.full_clean(df)
 
-        # Impute missing
-        for col in df.columns:
-            if df[col].isnull().any():
-                if pd.api.types.is_numeric_dtype(df[col]):
-                    df[col] = df[col].fillna(df[col].median())
-                else:
-                    mode_val = df[col].mode()
-                    df[col] = df[col].fillna(mode_val[0] if not mode_val.empty else "Unknown")
-
-        save_df(session_id, df)
+        save_df(session_id, cleaned_df)
 
         return JSONResponse({
             "success": True,
             "rows_before": before_rows,
-            "rows_after": len(df),
-            "duplicates_removed": before_rows - len(df),
+            "rows_after": len(cleaned_df),
+            "cols_before": before_cols,
+            "cols_after": len(cleaned_df.columns),
             "missing_before": before_missing,
-            "missing_after": int(df.isnull().sum().sum()),
+            "missing_after": int(cleaned_df.isnull().sum().sum()),
+            "change_log": change_log,
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/clean/ml-prep")
+async def clean_ml_prep(session_id: str = Query(...)):
+    """Apply ML preparation steps (encode categoricals + scale numericals)."""
+    if not session_exists(session_id):
+        raise HTTPException(status_code=404, detail="Session not found.")
+    try:
+        df = load_df(session_id)
+        prepared_df, change_log = agent.ml_prep(df)
+        save_df(session_id, prepared_df)
+
+        return JSONResponse({
+            "success": True,
+            "change_log": change_log,
+            "columns": len(prepared_df.columns),
+            "rows": len(prepared_df),
         })
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
