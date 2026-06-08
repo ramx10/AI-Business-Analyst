@@ -23,7 +23,7 @@
     <div class="page-content">
       <div class="page-header">
         <h1 class="page-title">Schema Analysis</h1>
-        <p class="page-subtitle">Step 2 of 6 — Column types, distributions, and structural overview.</p>
+        <p class="page-subtitle">Step 2 of 7 — Column types, distributions, and structural overview.</p>
       </div>
       <div id="schema-root"><div class="loading-state"><div class="spinner"></div><span>Analyzing schema…</span></div></div>
       <div style="margin-top:20px;display:flex;gap:8px;">
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div class="grid-2">
         <div class="card">
           <div class="card-header"><div class="card-title">Column Schema</div><div class="card-subtitle">${d.total_columns} columns detected</div></div>
-          <div class="table-wrap">
+          <div class="table-wrap" style="max-height:320px;overflow-y:auto;">
             <table><thead><tr><th>Name</th><th>Type</th><th>Unique Values</th><th>Group</th></tr></thead>
             <tbody>${rows}</tbody></table>
           </div>

@@ -25,9 +25,9 @@
       <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
         <div>
           <h1 class="page-title">Business Insights</h1>
-          <p class="page-subtitle">Step 5 of 6 — AI-generated trends, risks, and recommendations via Llama 3.3.</p>
+          <p class="page-subtitle">Step 6 of 7 — AI-generated trends, risks, and recommendations via Llama 3.3.</p>
         </div>
-        <button class="btn btn-primary" id="generate-btn">⚡ Generate Insights</button>
+        <button class="btn btn-primary" id="generate-btn">Generate Insights</button>
       </div>
 
       <div id="insights-root">
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>`;
     } catch(e) {
       root.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
-    } finally { btn.disabled = false; btn.textContent = '⚡ Regenerate'; }
+    } finally { btn.disabled = false; btn.textContent = 'Regenerate'; }
   });
 });
 </script>

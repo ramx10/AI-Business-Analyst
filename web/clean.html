@@ -5,9 +5,60 @@
   <title>Data Cleaning — AI Business Analyst</title>
   <link rel="stylesheet" href="/css/styles.css"/>
   <script>
-    const savedTheme = localStorage.getItem('ai_ba_theme') || 'dark';
+    const savedTheme = localStorage.getItem('ai_ba_theme') || 'light-corporate';
     document.documentElement.setAttribute('data-theme', savedTheme);
   </script>
+  <style>
+    .step-log { list-style: none; padding: 0; margin: 0; }
+    .step-log li {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+      font-size: 12.5px; line-height: 1.55;
+    }
+    .step-log li:last-child { border-bottom: none; }
+    .step-num {
+      flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+      background: var(--accent); color: #fff; font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-title { font-weight: 600; color: var(--text-primary); }
+    .step-detail { color: var(--text-secondary); margin-top: 2px; }
+    .step-detail code { background: var(--bg); padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+
+    .issue-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: var(--radius);
+      font-size: 11px; font-weight: 600;
+      background: var(--bg); border: 1px solid var(--border);
+      margin: 3px;
+    }
+    .issue-tag.warn { color: var(--orange, #e67e22); border-color: currentColor; }
+    .issue-tag.danger { color: var(--red); border-color: currentColor; }
+    .issue-tag.info { color: var(--accent); border-color: currentColor; }
+    .issue-tag .issue-count {
+      background: currentColor; color: var(--bg-elevated);
+      width: 18px; height: 18px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 10px;
+    }
+
+    .pipeline-desc {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 6px; font-size: 11.5px; color: var(--text-secondary); margin-bottom: 16px;
+    }
+    .pipeline-desc span {
+      padding: 6px 10px; background: var(--bg); border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    .pipeline-desc span b { color: var(--text-primary); }
+
+    .ml-section {
+      margin-top: 20px; padding: 16px; background: var(--bg);
+      border-radius: var(--radius); border: 1px solid var(--border);
+    }
+    .ml-section h4 { margin: 0 0 8px; font-size: 13px; }
+    .ml-section p { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+  </style>
 </head>
 <body>
 <div class="layout">
@@ -23,9 +74,9 @@
     <div class="page-content">
       <div class="page-header">
         <h1 class="page-title">Data Cleaning</h1>
-        <p class="page-subtitle">Step 3 of 6 — Quality metrics and automated cleaning.</p>
+        <p class="page-subtitle">Step 3 of 7 — Comprehensive quality analysis and 15-step automated cleaning pipeline.</p>
       </div>
-      <div id="clean-root"><div class="loading-state"><div class="spinner"></div><span>Analyzing quality…</span></div></div>
+      <div id="clean-root"><div class="loading-state"><div class="spinner"></div><span>Analyzing data quality…</span></div></div>
     </div>
   </div>
 </div>
@@ -38,9 +89,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function load() {
     try {
-      const d = await API.get(`/api/clean/preview?session_id=${sid}`);
-      const isClean = d.total_missing === 0 && d.duplicate_rows === 0;
+      const d = await API.get(`/api/clean/preview?session_id=${sid}&_t=${Date.now()}`);
+      const totalIssues = d.total_missing + d.duplicate_rows +
+        (d.type_issues?.length || 0) +
+        Object.keys(d.whitespace_issues || {}).length +
+        Object.values(d.outlier_counts || {}).reduce((a,b) => a+b, 0) +
+        (d.removable_columns?.length || 0) +
+        Object.keys(d.cat_inconsistencies || {}).length +
+        Object.keys(d.validation_issues || {}).length;
 
+      const isClean = totalIssues === 0;
+
+      // Build issue tags
+      const tags = [];
+      if (d.total_missing > 0)
+        tags.push(`<span class="issue-tag danger">Missing Values <span class="issue-count">${d.total_missing}</span></span>`);
+      if (d.duplicate_rows > 0)
+        tags.push(`<span class="issue-tag danger">Duplicates <span class="issue-count">${d.duplicate_rows}</span></span>`);
+      if (d.type_issues?.length > 0)
+        tags.push(`<span class="issue-tag warn">Type Issues <span class="issue-count">${d.type_issues.length}</span></span>`);
+      if (Object.keys(d.whitespace_issues || {}).length > 0)
+        tags.push(`<span class="issue-tag info">Whitespace <span class="issue-count">${Object.values(d.whitespace_issues).reduce((a,b)=>a+b,0)}</span></span>`);
+      const outlierTotal = Object.values(d.outlier_counts || {}).reduce((a,b) => a+b, 0);
+      if (outlierTotal > 0)
+        tags.push(`<span class="issue-tag warn">Outliers <span class="issue-count">${outlierTotal}</span></span>`);
+      if (d.removable_columns?.length > 0)
+        tags.push(`<span class="issue-tag info">Removable Cols <span class="issue-count">${d.removable_columns.length}</span></span>`);
+      if (Object.keys(d.cat_inconsistencies || {}).length > 0)
+        tags.push(`<span class="issue-tag warn">Inconsistencies <span class="issue-count">${Object.keys(d.cat_inconsistencies).length}</span></span>`);
+      if (Object.keys(d.validation_issues || {}).length > 0)
+        tags.push(`<span class="issue-tag danger">Invalid Values <span class="issue-count">${Object.keys(d.validation_issues).length}</span></span>`);
+
+      // Missing values table rows
       const missingRows = Object.keys(d.missing_by_column).length
         ? Object.entries(d.missing_by_column).map(([col,cnt]) => `
             <tr>
@@ -56,7 +136,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         : `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-secondary)">No missing values detected.</td></tr>`;
 
       root.innerHTML = `
-        <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+        <!-- KPI Cards -->
+        <div class="kpi-grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-bottom:20px;">
           <div class="kpi-card">
             <div class="kpi-label">Completeness</div>
             <div class="kpi-value" style="color:${d.completeness_pct>95?'var(--green)':'var(--red)'}">${d.completeness_pct}%</div>
@@ -67,8 +148,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="kpi-value" style="color:${d.total_missing>0?'var(--red)':'var(--green)'}">${d.total_missing.toLocaleString()}</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Duplicate Rows</div>
+            <div class="kpi-label">Duplicates</div>
             <div class="kpi-value" style="color:${d.duplicate_rows>0?'var(--red)':'var(--green)'}">${d.duplicate_rows.toLocaleString()}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Outliers</div>
+            <div class="kpi-value" style="color:${outlierTotal>0?'var(--orange, #e67e22)':'var(--green)'}">${outlierTotal.toLocaleString()}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Type Issues</div>
+            <div class="kpi-value" style="color:${(d.type_issues?.length||0)>0?'var(--orange, #e67e22)':'var(--green)'}">${d.type_issues?.length || 0}</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-label">Total Rows</div>
@@ -76,52 +165,149 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         </div>
 
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-header"><div class="card-title">Missing Values by Column</div></div>
-            <div class="table-wrap">
-              <table><thead><tr><th>Column</th><th>Missing</th><th>%</th><th>Distribution</th></tr></thead>
-              <tbody>${missingRows}</tbody></table>
-            </div>
+        <!-- Detected Issues -->
+        ${tags.length > 0 ? `
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header"><div class="card-title">Detected Issues</div></div>
+          <div class="card-body" style="display:flex;flex-wrap:wrap;gap:4px;">
+            ${tags.join('')}
           </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">Auto-Clean</div></div>
-            <div class="card-body">
-              ${isClean
-                ? `<div class="alert alert-success" style="margin-bottom:16px">Dataset is already clean — no action needed.</div>`
-                : `<p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.65">
-                    The auto-cleaner will:<br>
-                    &nbsp;• Drop all duplicate rows<br>
-                    &nbsp;• Fill numeric gaps with column <strong>median</strong><br>
-                    &nbsp;• Fill text gaps with column <strong>mode</strong>
-                  </p>
-                  <button class="btn btn-primary" id="clean-btn">Run Auto-Clean</button>`}
-              <div id="clean-status" style="margin-top:12px;"></div>
-              <div style="margin-top:20px;display:flex;gap:8px;">
-                <a href="/schema.html" class="btn btn-ghost btn-sm">← Back</a>
-                <a href="/dashboard.html" class="btn btn-secondary btn-sm">Continue to Dashboard →</a>
-              </div>
+        </div>` : ''}
+
+        <!-- Missing Values Table — full width -->
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header"><div class="card-title">Missing Values by Column</div></div>
+          <div class="table-wrap">
+            <table><thead><tr><th>Column</th><th>Missing</th><th>%</th><th>Distribution</th></tr></thead>
+            <tbody>${missingRows}</tbody></table>
+          </div>
+        </div>
+
+        <!-- Auto-Clean Panel — full width, below Missing Values -->
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header"><div class="card-title">Auto-Clean Pipeline</div></div>
+          <div class="card-body">
+            ${isClean
+              ? `<div class="alert alert-success" style="margin-bottom:16px">Dataset is already clean — no action needed.</div>`
+              : `<p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;line-height:1.5">
+                  The auto-cleaner runs a <strong>10-step pipeline</strong> on your dataset:
+                </p>
+                <div class="pipeline-desc">
+                  <span><b>1.</b> Fix data types</span>
+                  <span><b>2.</b> Fill missing values</span>
+                  <span><b>3.</b> Remove duplicates</span>
+                  <span><b>4.</b> Standardize formats</span>
+                  <span><b>5.</b> Fix inconsistencies</span>
+                  <span><b>6.</b> Drop useless columns</span>
+                  <span><b>7.</b> Cap outliers (IQR)</span>
+                  <span><b>8.</b> Trim whitespace</span>
+                  <span><b>9.</b> Validate values</span>
+                  <span><b>10.</b> Clean column names</span>
+                </div>
+                <button class="btn btn-primary" id="clean-btn" style="width:100%">Run Auto-Clean (10 Steps)</button>`}
+
+            <div id="clean-log" style="margin-top:16px;"></div>
+
+            <div class="ml-section" id="ml-section" style="display:none;">
+              <h4>Prepare for Machine Learning</h4>
+              <p>Optionally encode categorical variables and standardize numerical features for ML pipelines.</p>
+              <button class="btn btn-secondary" id="ml-btn" style="width:100%">Run ML Preparation (Encode + Scale)</button>
+              <div id="ml-log" style="margin-top:12px;"></div>
+            </div>
+
+            <div style="margin-top:20px;display:flex;gap:8px;">
+              <a href="/schema.html" class="btn btn-ghost btn-sm">← Back</a>
+              <a href="/dashboard.html" class="btn btn-secondary btn-sm">Continue to Dashboard →</a>
             </div>
           </div>
         </div>`;
 
+      // Clean button handler
       const btn = document.getElementById('clean-btn');
       if (btn) btn.addEventListener('click', async () => {
         btn.disabled = true; btn.textContent = 'Cleaning…';
+        const logEl = document.getElementById('clean-log');
         try {
           const r = await API.post(`/api/clean/apply?session_id=${sid}`, {});
-          showAlert(document.getElementById('clean-status'), 'success',
-            `Done — removed ${r.duplicates_removed} duplicates, fixed ${r.missing_before} missing values.`);
-          setTimeout(load, 1200);
+
+          // Build the step log + results HTML
+          const stepLogHtml = `
+            <div class="alert alert-success" style="margin-bottom:12px;">
+              Cleaned: ${r.rows_before} → ${r.rows_after} rows, ${r.cols_before} → ${r.cols_after} columns, ${r.missing_before} → ${r.missing_after} missing values
+            </div>
+            <ul class="step-log">
+              ${r.change_log.map(s => `
+                <li>
+                  <span class="step-num">${s.step}</span>
+                  <div>
+                    <div class="step-title">${s.title}</div>
+                    <div class="step-detail">${formatStepDetail(s.details)}</div>
+                  </div>
+                </li>`).join('')}
+            </ul>`;
+
+          // Fade out the current content, reload fresh data, fade back in
+          root.style.transition = 'opacity 0.25s ease';
+          root.style.opacity = '0.3';
+
+          // Re-fetch preview to get updated KPIs, issue tags, etc.
+          await load();
+
+          // After load() re-rendered the DOM, inject the cleaning log
+          const newLogEl = document.getElementById('clean-log');
+          if (newLogEl) newLogEl.innerHTML = stepLogHtml;
+          const mlSec = document.getElementById('ml-section');
+          if (mlSec) mlSec.style.display = 'block';
+          const newBtn = document.getElementById('clean-btn');
+          if (newBtn) newBtn.style.display = 'none';
+
+          // Fade back in
+          requestAnimationFrame(() => { root.style.opacity = '1'; });
+
         } catch(e) {
-          showAlert(document.getElementById('clean-status'), 'danger', e.message);
-          btn.disabled = false; btn.textContent = 'Run Auto-Clean';
+          root.style.opacity = '1';
+          logEl.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+          btn.disabled = false; btn.textContent = 'Run Auto-Clean (10 Steps)';
         }
       });
+
+      // ML Prep button handler
+      const mlBtn = document.getElementById('ml-btn');
+      if (mlBtn) mlBtn.addEventListener('click', async () => {
+        mlBtn.disabled = true; mlBtn.textContent = 'Preparing…';
+        const mlLog = document.getElementById('ml-log');
+        try {
+          const r = await API.post(`/api/clean/ml-prep?session_id=${sid}`, {});
+          mlLog.innerHTML = `
+            <div class="alert alert-success" style="margin-bottom:12px;">
+              ML preparation complete (${r.columns} columns, ${r.rows} rows)
+            </div>
+            <ul class="step-log">
+              ${r.change_log.map(s => `
+                <li>
+                  <span class="step-num">${s.step}</span>
+                  <div>
+                    <div class="step-title">${s.title}</div>
+                    <div class="step-detail">${formatStepDetail(s.details)}</div>
+                  </div>
+                </li>`).join('')}
+            </ul>`;
+        } catch(e) {
+          mlLog.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+          mlBtn.disabled = false; mlBtn.textContent = 'Run ML Preparation (Encode + Scale)';
+        }
+      });
+
     } catch(e) {
       root.innerHTML = `<div class="alert alert-danger">${e.message} — <a href="/upload.html" style="color:inherit">upload a dataset first</a></div>`;
     }
   }
+
+  function formatStepDetail(text) {
+    // Convert backtick-wrapped text to <code> tags
+    return text.replace(/`([^`]+)`/g, '<code>$1</code>');
+  }
+
   load();
 });
 </script>

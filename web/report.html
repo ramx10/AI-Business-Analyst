@@ -25,10 +25,10 @@
       <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
         <div>
           <h1 class="page-title">Executive Report</h1>
-          <p class="page-subtitle">Step 6 of 6 — Full multi-agent supervisor pipeline report.</p>
+          <p class="page-subtitle">Step 7 of 7 — Full multi-agent supervisor pipeline report.</p>
         </div>
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary" id="generate-btn">⚡ Generate Report</button>
+          <button class="btn btn-primary" id="generate-btn">Generate Report</button>
           <button class="btn btn-secondary" id="download-btn" style="display:none">↓ Download .md</button>
         </div>
       </div>
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) {
       pipelineStatus.innerHTML = '<span class="pill pill-red">Failed</span>';
       root.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
-    } finally { genBtn.disabled = false; genBtn.textContent = '⚡ Regenerate'; }
+    } finally { genBtn.disabled = false; genBtn.textContent = 'Regenerate'; }
   });
 
   dlBtn.addEventListener('click', () => {
