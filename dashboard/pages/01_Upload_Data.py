@@ -25,60 +25,77 @@ Upload your business dataset (CSV format) to begin the automated analysis pipeli
 st.subheader("💡 No Data? Try Our Demo Dataset")
 if st.button("🚀 Load Sample Sales Dataset", type="primary", use_container_width=True):
     np.random.seed(42)
-    n_rows = 1500
+    n_rows = 2823
     
-    # Generate random dates
-    start_date = datetime(2025, 1, 1)
-    date_list = [start_date + timedelta(days=int(np.random.randint(0, 365))) for _ in range(n_rows)]
+    start_date = datetime(2024, 1, 1)
+    date_list = [start_date + timedelta(days=int(np.random.randint(0, 730))) for _ in range(n_rows)]
     
-    # Regions & States
-    regions_states = {
-        "North": ["New York", "Ohio", "Michigan", "Pennsylvania"],
-        "South": ["Florida", "Georgia", "North Carolina", "Texas"],
-        "East": ["Massachusetts", "Maryland", "New Jersey"],
-        "West": ["California", "Washington", "Colorado", "Oregon"]
+    sel_regions = np.random.choice(["EMEA", "APAC", "Japan"], n_rows, p=[0.80, 0.12, 0.08])
+    
+    categories = [
+        "Classic Cars", "Vintage Cars", "Motorcycles", 
+        "Trucks and Buses", "Planes", "Ships", "Trains"
+    ]
+    cat_p = [0.35, 0.22, 0.12, 0.11, 0.10, 0.07, 0.03]
+    sel_cats = np.random.choice(categories, n_rows, p=cat_p)
+    
+    prod_pool = {
+        "Classic Cars": ["S18_3232", "S10_1949", "S12_1108", "S18_2238", "S24_2887"],
+        "Vintage Cars": ["S18_1342", "S18_2709", "S24_2011", "S24_3151"],
+        "Motorcycles": ["S10_4698", "S12_2823", "S18_2625"],
+        "Trucks and Buses": ["S12_1666", "S18_1097"],
+        "Planes": ["S18_1662", "S24_3976"],
+        "Ships": ["S700_2824", "S720_1697"],
+        "Trains": ["S32_3207", "S50_1392"]
     }
-    regions = list(regions_states.keys())
-    selected_regions = np.random.choice(regions, n_rows)
-    selected_states = [np.random.choice(regions_states[r]) for r in selected_regions]
+    sel_prods = [np.random.choice(prod_pool[c]) for c in sel_cats]
     
-    # Categories & Products
-    cats_prods = {
-        "Technology": ["Laptop", "Smartphone", "Tablet", "Monitor", "Keyboard"],
-        "Office Supplies": ["Paper Reams", "Gel Pens", "Notebooks", "Calculators"],
-        "Furniture": ["Desk Chair", "Dining Table", "Bookshelf", "Office Desk"]
-    }
-    categories = list(cats_prods.keys())
-    selected_cats = np.random.choice(categories, n_rows, p=[0.4, 0.35, 0.25])
-    selected_prods = [np.random.choice(cats_prods[c]) for c in selected_cats]
+    order_ids = [f"10{100 + np.random.randint(0, 300)}" for _ in range(n_rows)]
     
-    # Revenue & Profit
-    revenue = np.random.normal(4500, 2500, n_rows).clip(300, 25000).round(2)
-    profit = (revenue * np.random.uniform(0.1, 0.45, n_rows)).round(2)
+    customers = [
+        "Land of Toys Inc.", "Reims Collectables", "Mini Gifts Distributors Ltd.", 
+        "Havel & Collectables", "Scandinavian Gift Ideas", "Danish Wholesale Imports"
+    ]
+    sel_customers = np.random.choice(customers, n_rows)
     
-    # IDs
-    cust_ids = [f"C-{np.random.randint(1001, 1250)}" for _ in range(n_rows)]
-    order_ids = [f"O-{np.random.randint(5001, 6200)}" for _ in range(n_rows)]
+    revenue = []
+    for r in sel_regions:
+        if r == "EMEA":
+            val = np.random.normal(2175, 500)
+        elif r == "APAC":
+            val = np.random.normal(2200, 500)
+        else: # Japan
+            val = np.random.normal(2000, 400)
+        revenue.append(round(max(300, val), 2))
+    revenue = np.array(revenue)
     
-    # Construct DataFrame
+    profit = (revenue * np.random.uniform(0.25, 0.35, n_rows)).round(2)
+    
+    postal_codes = []
+    for i in range(n_rows):
+        if len(postal_codes) < 465:
+            postal_codes.append(None)
+        else:
+            postal_codes.append(str(np.random.randint(10000, 99999)))
+    np.random.shuffle(postal_codes)
+    
     sample_df = pd.DataFrame({
         "Date": date_list,
         "Order_ID": order_ids,
-        "Customer_ID": cust_ids,
-        "Region": selected_regions,
-        "State": selected_states,
-        "Product_Category": selected_cats,
-        "Product": selected_prods,
+        "Customer_ID": sel_customers,
+        "Region": sel_regions,
+        "Product_Category": sel_cats,
+        "Product": sel_prods,
         "Revenue": revenue,
-        "Profit": profit
+        "Profit": profit,
+        "PostalCode": postal_codes
     })
     
-    # Sort by Date
     sample_df = sample_df.sort_values("Date").reset_index(drop=True)
     
     st.session_state["df"] = sample_df
     st.balloons()
-    st.success("🎉 Loaded sample retail sales dataset containing 1,500 records!")
+    st.success("🎉 Loaded sample retail sales dataset containing 2,823 records!")
     st.rerun()
 
 st.markdown("<hr style='border-color: rgba(255,255,255,0.05); margin: 30px 0;' />", unsafe_allow_html=True)
