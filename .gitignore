@@ -22,3 +22,7 @@ Thumbs.db
 *.log
 data/sessions/
 reports/report_*.md
+
+# Java build artifacts
+target/
+*.class
