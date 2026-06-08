@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Settings — AI Business Analyst</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+  <script>
+    const savedTheme = localStorage.getItem('ai_ba_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
+  <style>
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 24px;
+    }
+    @media (max-width: 960px) {
+      .settings-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .profile-card {
+      text-align: center;
+      padding: 32px 24px;
+    }
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--bg-hover);
+      border: 2px solid var(--border);
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: var(--text-secondary);
+      object-fit: cover;
+    }
+    .profile-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .profile-email {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: all 0.15s ease;
+    }
+    .history-item:hover {
+      border-color: var(--accent);
+      background: var(--bg-hover);
+    }
+    .history-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .history-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .history-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 12px;
+    }
+    .history-date {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .oauth-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #ffffff;
+      color: #1f1f1f;
+      border: 1px solid #dadce0;
+      padding: 10px 18px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color .218s, border-color .218s, box-shadow .218s;
+      font-family: 'Inter', sans-serif;
+    }
+    .oauth-btn:hover {
+      background-color: #f8f9fa;
+      border-color: #d2e3fc;
+      box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+    }
+    .google-logo {
+      width: 18px;
+      height: 18px;
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-crumb">
+        <span>AI Business Analyst</span><span class="topbar-sep">/</span>
+        <span class="current">Settings</span>
+      </div>
+      <div class="topbar-actions" id="session-badge"></div>
+    </header>
+    <div class="page-content">
+
+      <div class="page-header">
+        <h1 class="page-title">Settings</h1>
+        <p class="page-subtitle">Configure your profile, connect services, and view past dashboard history.</p>
+      </div>
+
+      <div class="settings-grid">
+        <!-- Profile / Auth Panel -->
+        <div class="card no-hover">
+          <div class="card-header">
+            <div class="card-title">User Account</div>
+            <div class="card-subtitle">Google OAuth2 Integration</div>
+          </div>
+          <div class="card-body" id="auth-panel">
+            <!-- Dynamic auth profile content loaded by JavaScript -->
+            <div style="text-align: center; padding: 24px;">
+              <div class="spinner" style="margin: 0 auto 16px;"></div>
+              <span>Checking authentication status...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- History Panel -->
+        <div class="card no-hover">
+          <div class="card-header">
+            <div class="card-title">Dashboard History</div>
+            <div class="card-subtitle">Last 3 generated dashboards</div>
+          </div>
+          <div class="card-body">
+            <div class="history-list" id="history-container">
+              <div style="text-align: center; padding: 24px; color: var(--text-secondary);">
+                <div class="spinner" style="margin: 0 auto 16px;"></div>
+                <span>Retrieving analysis history...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+<script>
+  initSidebar('settings');
+</script>
+</body>
+</html>

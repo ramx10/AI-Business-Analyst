@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Sample dataset
   sampleBtn.addEventListener('click', async () => {
     sampleBtn.disabled = true;
-    sampleBtn.textContent = '⏳ Generating…';
+    sampleBtn.textContent = 'Generating…';
     statusEl.innerHTML = '';
     try {
       const data = await API.post('/api/upload/sample', {});
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     el.innerHTML = `
       <div class="card" style="margin-top:24px;">
         <div class="card-header">
-          <div><div class="card-title">📊 Data Preview</div>
+          <div><div class="card-title">Data Preview</div>
           <div class="card-subtitle">First 5 rows of your dataset</div></div>
         </div>
         <div class="table-wrap"><table><thead><tr>${headerCells}</tr></thead><tbody>${rows}</tbody></table></div>

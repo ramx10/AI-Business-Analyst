@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - AI Business Analyst</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      width: 100vw;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 50%, var(--accent-muted) 0%, transparent 60%),
+                  var(--bg);
+      transition: background 0.3s ease;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+      padding: 40px;
+      border-radius: var(--radius-lg);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .login-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      box-shadow: 0 0 20px var(--accent-muted);
+    }
+
+    .login-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .login-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 11px 16px;
+      font-size: 13px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-muted);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      color: var(--text-tertiary);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin: 24px 0;
+      position: relative;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .divider span {
+      padding: 0 12px;
+      background: var(--bg-elevated);
+      position: relative;
+      z-index: 2;
+    }
+
+    .oauth-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .oauth-btn:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-hover);
+      transform: translateY(-1px);
+    }
+
+    .oauth-btn:active {
+      transform: translateY(0);
+    }
+
+    .google-icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    .guest-btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 13px;
+      font-weight: 650;
+      background: var(--accent);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .guest-btn:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 12px var(--accent-muted);
+      transform: translateY(-1px);
+    }
+
+    .guest-btn:active {
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="login-header">
+      <div class="login-logo">A</div>
+      <h1 class="login-title">AI Business Analyst</h1>
+      <p class="login-subtitle">Transform and clean raw datasets, extract key trends, and generate production-ready dashboards instantly.</p>
+    </div>
+
+    <!-- Toggleable Form (Sign In / Sign Up) -->
+    <div id="auth-form-container">
+      <!-- Standard Login Form -->
+      <form id="login-form" onsubmit="event.preventDefault(); handlePasswordLogin();">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="login-email" class="form-input" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label class="form-label">Password</label>
+          <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="guest-btn">Sign In</button>
+        <button type="button" class="guest-btn" onclick="handleGuestLogin()" style="background: transparent; border: 1px solid var(--border); color: var(--text-primary);">Enter as Guest</button>
+      </form>
+      
+      <!-- Register Form (Hidden by default) -->
+      <form id="register-form" onsubmit="event.preventDefault(); handlePasswordRegister();" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" id="register-name" class="form-input" placeholder="Enter your name" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="register-email" class="form-input" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label class="form-label">Password</label>
+          <input type="password" id="register-password" class="form-input" placeholder="Create a password" required>
+        </div>
+
+        <button type="submit" class="guest-btn">Create Account</button>
+      </form>
+    </div>
+
+    <!-- Switch Mode Link -->
+    <div style="text-align: center; margin-top: 16px; font-size: 13px;">
+      <a href="#" id="toggle-auth-mode" style="color: var(--accent); text-decoration: none; font-weight: 500;">New to AI Business Analyst? Create an account</a>
+    </div>
+
+    <div class="divider"><span>Or Sign In With</span></div>
+
+    <button class="oauth-btn" onclick="handleGoogleLogin()">
+      <svg class="google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.77c-.98.66-2.23 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22-.03-.63z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+      </svg>
+      Sign in with Google
+    </button>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    const toggleLink = document.getElementById('toggle-auth-mode');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    let isRegisterMode = false;
+
+    // Toggle between login and registration forms
+    toggleLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      isRegisterMode = !isRegisterMode;
+      if (isRegisterMode) {
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+        toggleLink.textContent = "Already have an account? Sign in";
+      } else {
+        loginForm.style.display = 'block';
+        registerForm.style.display = 'none';
+        toggleLink.textContent = "New to AI Business Analyst? Create an account";
+      }
+    });
+
+    async function handlePasswordLogin() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      try {
+        const res = await fetch(`${SPRING_BOOT_BACKEND}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          Auth.setToken(data.token);
+          window.location.href = "/index.html";
+        } else {
+          alert(data.error || "Login failed");
+        }
+      } catch (err) {
+        console.error("Login failed", err);
+        alert("Unable to reach authentication server. Please try Guest Mode.");
+      }
+    }
+
+    async function handlePasswordRegister() {
+      const name = document.getElementById('register-name').value;
+      const email = document.getElementById('register-email').value;
+      const password = document.getElementById('register-password').value;
+
+      try {
+        const res = await fetch(`${SPRING_BOOT_BACKEND}/api/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          Auth.setToken(data.token);
+          window.location.href = "/index.html";
+        } else {
+          alert(data.error || "Registration failed");
+        }
+      } catch (err) {
+        console.error("Registration failed", err);
+        alert("Unable to reach authentication server. Please try Guest Mode.");
+      }
+    }
+
+    function handleGoogleLogin() {
+      window.location.href = `${SPRING_BOOT_BACKEND}/oauth2/authorization/google`;
+    }
+
+    async function handleGuestLogin() {
+      try {
+        const email = "guest_user@example.com";
+        const password = "guest_password";
+        // Attempt to login
+        let res = await fetch(`${SPRING_BOOT_BACKEND}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        
+        if (!res.ok) {
+          // If login fails (user doesn't exist), register them
+          res = await fetch(`${SPRING_BOOT_BACKEND}/api/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'Guest User', email, password })
+          });
+        }
+        
+        if (res.ok) {
+          const data = await res.json();
+          Auth.setToken(data.token);
+          window.location.href = "/index.html";
+        } else {
+          alert("Guest login failed.");
+        }
+      } catch (err) {
+        console.error("Guest login failed", err);
+        // Fallback to demo mode if backend is completely unreachable
+        Auth.setToken("guest_user@example.com");
+        window.location.href = "/index.html";
+      }
+    }
+  </script>
+</body>
+</html>
