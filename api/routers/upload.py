@@ -3,112 +3,71 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 import io
-import numpy as np
+from pathlib import Path
+
 import pandas as pd
-from datetime import datetime, timedelta
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 
 from api.session_store import new_session_id, save_df
+from utils.sample_data import generate_sample_sales_df
+from utils.helper import read_excel, read_json, read_parquet
+from utils.large_dataset import estimate_memory
+from utils.lineage import LineageTracker, LineageStep
+from datetime import datetime
 
 router = APIRouter()
 
-
-def _generate_sample_df() -> pd.DataFrame:
-    np.random.seed(42)
-    n = 2823
-    
-    # 1. Date (from 2024-01-01 to 2025-12-31)
-    start = datetime(2024, 1, 1)
-    dates = [start + timedelta(days=int(np.random.randint(0, 730))) for _ in range(n)]
-    
-    # 2. Region / Territory: EMEA, APAC, Japan
-    sel_regions = np.random.choice(["EMEA", "APAC", "Japan"], n, p=[0.80, 0.12, 0.08])
-    
-    # 3. Product Category (Product Line)
-    categories = [
-        "Classic Cars", "Vintage Cars", "Motorcycles", 
-        "Trucks and Buses", "Planes", "Ships", "Trains"
-    ]
-    cat_p = [0.35, 0.22, 0.12, 0.11, 0.10, 0.07, 0.03]
-    sel_cats = np.random.choice(categories, n, p=cat_p)
-    
-    # 4. Products (Product Code)
-    prod_pool = {
-        "Classic Cars": ["S18_3232", "S10_1949", "S12_1108", "S18_2238", "S24_2887"],
-        "Vintage Cars": ["S18_1342", "S18_2709", "S24_2011", "S24_3151"],
-        "Motorcycles": ["S10_4698", "S12_2823", "S18_2625"],
-        "Trucks and Buses": ["S12_1666", "S18_1097"],
-        "Planes": ["S18_1662", "S24_3976"],
-        "Ships": ["S700_2824", "S720_1697"],
-        "Trains": ["S32_3207", "S50_1392"]
-    }
-    sel_prods = [np.random.choice(prod_pool[c]) for c in sel_cats]
-    
-    # 5. Order ID
-    order_ids = [f"10{100 + np.random.randint(0, 300)}" for _ in range(n)]
-    
-    # 6. Customer ID
-    customers = [
-        "Land of Toys Inc.", "Reims Collectables", "Mini Gifts Distributors Ltd.", 
-        "Havel & Collectables", "Scandinavian Gift Ideas", "Danish Wholesale Imports"
-    ]
-    sel_customers = np.random.choice(customers, n)
-    
-    # 7. Revenue (Sales) based on Region
-    revenue = []
-    for r in sel_regions:
-        if r == "EMEA":
-            val = np.random.normal(2175, 500)
-        elif r == "APAC":
-            val = np.random.normal(2200, 500)
-        else: # Japan
-            val = np.random.normal(2000, 400)
-        revenue.append(round(max(300, val), 2))
-    revenue = np.array(revenue)
-    
-    # 8. Profit (about 25% to 35% of Revenue)
-    profit = (revenue * np.random.uniform(0.25, 0.35, n)).round(2)
-    
-    # 9. PostalCode (with exactly 465 missing values!)
-    postal_codes = []
-    for i in range(n):
-        if len(postal_codes) < 465:
-            postal_codes.append(None)
-        else:
-            postal_codes.append(str(np.random.randint(10000, 99999)))
-    np.random.shuffle(postal_codes)
-    
-    df = pd.DataFrame({
-        "Date": dates,
-        "Order_ID": order_ids,
-        "Customer_ID": sel_customers,
-        "Region": sel_regions,
-        "Product_Category": sel_cats,
-        "Product": sel_prods,
-        "Revenue": revenue,
-        "Profit": profit,
-        "PostalCode": postal_codes
-    })
-    return df.sort_values("Date").reset_index(drop=True)
+ALLOWED_EXTENSIONS = {".csv", ".xlsx", ".json", ".parquet"}
 
 
 @router.post("/upload")
-async def upload_csv(file: UploadFile = File(...)):
-    """Accept a CSV file upload, save to session, return session_id."""
-    if not file.filename.endswith(".csv"):
-        raise HTTPException(status_code=400, detail="Only CSV files are supported.")
+async def upload_file(file: UploadFile = File(...)):
+    """Accept a file upload (CSV, Excel, JSON, Parquet), save to session, return session_id."""
+    ext = Path(file.filename).suffix.lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file format '{ext}'. Supported: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
+        )
     try:
         contents = await file.read()
-        df = pd.read_csv(io.BytesIO(contents), encoding_errors="replace")
+        if ext == ".csv":
+            df = pd.read_csv(io.BytesIO(contents), encoding_errors="replace")
+        elif ext == ".xlsx":
+            df = read_excel(io.BytesIO(contents))
+        elif ext == ".json":
+            df = read_json(io.BytesIO(contents))
+        elif ext == ".parquet":
+            df = read_parquet(io.BytesIO(contents))
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported file format.")
         session_id = new_session_id()
         save_df(session_id, df)
+
+        tracker = LineageTracker(session_id)
+        tracker.add_step(LineageStep(
+            step_id="upload",
+            step_name="File Upload",
+            category="upload",
+            description=f"Uploaded {file.filename} ({ext.lstrip('.')})",
+            affected_columns=df.columns.tolist(),
+            rows_before=0,
+            rows_after=len(df),
+            columns_before=0,
+            columns_after=len(df.columns),
+            duration_ms=0,
+            timestamp=datetime.now().isoformat(),
+        ))
+
         return JSONResponse({
             "session_id": session_id,
             "filename": file.filename,
+            "format": ext.lstrip("."),
             "rows": len(df),
             "columns": len(df.columns),
             "column_names": df.columns.tolist(),
+            "memory_mb": round(estimate_memory(df), 2),
             "preview": df.head(5).fillna("").astype(str).to_dict(orient="records"),
         })
     except Exception as e:
@@ -119,15 +78,32 @@ async def upload_csv(file: UploadFile = File(...)):
 async def load_sample():
     """Generate and return a sample retail sales dataset."""
     try:
-        df = _generate_sample_df()
+        df = generate_sample_sales_df()
         session_id = new_session_id()
         save_df(session_id, df)
+
+        tracker = LineageTracker(session_id)
+        tracker.add_step(LineageStep(
+            step_id="upload",
+            step_name="Sample Data Load",
+            category="upload",
+            description="Loaded sample retail sales dataset",
+            affected_columns=df.columns.tolist(),
+            rows_before=0,
+            rows_after=len(df),
+            columns_before=0,
+            columns_after=len(df.columns),
+            duration_ms=0,
+            timestamp=datetime.now().isoformat(),
+        ))
+
         return JSONResponse({
             "session_id": session_id,
             "filename": "sample_retail_sales.csv",
             "rows": len(df),
             "columns": len(df.columns),
             "column_names": df.columns.tolist(),
+            "memory_mb": round(estimate_memory(df), 2),
             "preview": df.head(5).fillna("").astype(str).to_dict(orient="records"),
         })
     except Exception as e:

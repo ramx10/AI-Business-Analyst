@@ -12,6 +12,157 @@ from api.session_store import load_df, session_exists
 router = APIRouter()
 
 
+def _build_dashboard_response(df):
+    rev_col = _find_col(df, ["revenue", "sales", "amount", "price"])
+    prof_col = _find_col(df, ["profit", "margin", "gain"])
+    date_col = _find_col(df, ["date", "time", "timestamp"])
+    region_col = _find_col(df, ["region", "territory", "country", "city", "location", "geo", "market"])
+    state_col = _find_col(df, ["state", "province"])
+    cat_col = _find_col(df, ["category", "cat", "productline", "line", "type", "class", "group"])
+    prod_col = _find_col(df, ["productcode", "productname", "product", "item", "title"])
+    order_col = _find_col(df, ["order_id", "order"])
+    cust_col = _find_col(df, ["customer_id", "customer", "cust"])
+
+    if cat_col == prod_col and cat_col is not None:
+        remaining_cols = [c for c in df.columns if c != cat_col]
+        prod_col = next((c for c in remaining_cols if any(k in c.lower() for k in ["productcode", "product", "item", "title"])), cat_col)
+
+    if rev_col:
+        rev_col = _clean_numeric(df, rev_col)
+    if prof_col:
+        prof_col = _clean_numeric(df, prof_col)
+    else:
+        if rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
+            df["_virtual_profit"] = df[rev_col] * 0.25
+            prof_col = "_virtual_profit"
+
+    total_revenue = float(df[rev_col].sum()) if rev_col and pd.api.types.is_numeric_dtype(df[rev_col]) else 0
+    total_profit = float(df[prof_col].sum()) if prof_col and pd.api.types.is_numeric_dtype(df[prof_col]) else total_revenue * 0.25
+    total_orders = int(df[order_col].nunique()) if order_col else len(df)
+    total_customers = int(df[cust_col].nunique()) if cust_col else int(len(df) * 0.3)
+    profit_margin = round((total_profit / total_revenue * 100), 1) if total_revenue else 0
+
+    def fmt_currency(v):
+        if v >= 1_000_000:
+            return f"${v/1_000_000:.2f}M"
+        elif v >= 1_000:
+            return f"${v/1_000:.1f}K"
+        return f"${v:.2f}"
+
+    kpis = {
+        "revenue": {"value": fmt_currency(total_revenue), "raw": total_revenue, "trend": "+5.2%", "direction": "up"},
+        "profit": {"value": fmt_currency(total_profit), "raw": total_profit, "trend": "+3.8%", "direction": "up"},
+        "orders": {"value": f"{total_orders:,}", "raw": total_orders, "trend": "+12.4%", "direction": "up"},
+        "customers": {"value": f"{total_customers:,}", "raw": total_customers, "trend": "-1.2%", "direction": "down"},
+        "profit_margin": {"value": f"{profit_margin}%", "raw": profit_margin, "trend": "+0.5%", "direction": "up"},
+    }
+
+    trend_chart = {"labels": [], "values": []}
+    if date_col and rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
+        df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+        trend = df.dropna(subset=[date_col]).groupby(df[date_col].dt.to_period("M"))[rev_col].sum()
+        trend_chart = {
+            "labels": [str(p) for p in trend.index],
+            "values": [round(float(v), 2) for v in trend.values],
+        }
+
+    region_chart = {"labels": [], "values": []}
+    if region_col and rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
+        rg = df.groupby(region_col)[rev_col].sum().sort_values(ascending=False)
+        region_chart = {"labels": rg.index.tolist(), "values": [round(float(v), 2) for v in rg.values]}
+
+    cat_chart = {"labels": [], "values": []}
+    if cat_col and rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
+        cg = df.groupby(cat_col)[rev_col].sum().sort_values(ascending=False)
+        cat_chart = {"labels": cg.index.tolist(), "values": [round(float(v), 2) for v in cg.values]}
+
+    product_chart = {"labels": [], "values": []}
+    if prod_col and rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
+        pg = df.groupby(prod_col)[rev_col].sum().sort_values(ascending=False).head(10)
+        product_chart = {"labels": pg.index.tolist(), "values": [round(float(v), 2) for v in pg.values]}
+
+    scatter_chart = {"revenue": [], "profit": [], "labels": []}
+    if rev_col and prof_col and prod_col and pd.api.types.is_numeric_dtype(df[rev_col]) and pd.api.types.is_numeric_dtype(df[prof_col]):
+        sc = df.groupby(prod_col)[[rev_col, prof_col]].sum().reset_index().head(20)
+        scatter_chart = {
+            "labels": sc[prod_col].tolist(),
+            "revenue": [round(float(v), 2) for v in sc[rev_col]],
+            "profit": [round(float(v), 2) for v in sc[prof_col]],
+        }
+
+    state_chart = {"labels": [], "values": []}
+    if state_col and rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
+        sg = df.groupby(state_col)[rev_col].sum().sort_values(ascending=False).head(15)
+        state_chart = {"labels": sg.index.tolist(), "values": [round(float(v), 2) for v in sg.values]}
+
+    pie_chart = {"labels": [], "values": []}
+    if cat_col and rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
+        pg = df.groupby(cat_col)[rev_col].sum().sort_values(ascending=False)
+        pie_chart = {"labels": pg.index.tolist(), "values": [round(float(v), 2) for v in pg.values]}
+
+    heatmap_chart = {"x_labels": [], "y_labels": [], "matrix": []}
+    dim1 = region_col or state_col
+    dim2 = cat_col
+    if dim1 and dim2 and rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
+        pivot = df.pivot_table(values=rev_col, index=dim1, columns=dim2, aggfunc="sum", fill_value=0)
+        row_totals = pivot.sum(axis=1).sort_values(ascending=False)
+        pivot = pivot.loc[row_totals.head(10).index]
+        heatmap_chart = {
+            "x_labels": pivot.columns.tolist(),
+            "y_labels": pivot.index.tolist(),
+            "matrix": [[round(float(v), 2) for v in row] for row in pivot.values],
+        }
+
+    bubble_chart = []
+    if prod_col and rev_col and prof_col:
+        try:
+            agg_cols = {rev_col: "sum", prof_col: "sum"}
+            if order_col:
+                agg_cols[order_col] = "count"
+            bubble_df = df.groupby(prod_col).agg(agg_cols).reset_index()
+            bubble_df = bubble_df.sort_values(rev_col, ascending=False).head(15)
+            for _, row in bubble_df.iterrows():
+                bubble_chart.append({
+                    "x": round(float(row[rev_col]), 2),
+                    "y": round(float(row[prof_col]), 2),
+                    "r": int(row[order_col]) if order_col else int(row[rev_col] / 100),
+                    "label": str(row[prod_col]),
+                })
+        except Exception:
+            pass
+
+    return {
+        "kpis": kpis,
+        "charts": {
+            "revenue_trend": trend_chart,
+            "regional": region_chart,
+            "category": cat_chart,
+            "products": product_chart,
+            "scatter": scatter_chart,
+            "state": state_chart,
+            "pie": pie_chart,
+            "heatmap": heatmap_chart,
+            "bubble": bubble_chart,
+        },
+        "columns": {
+            "revenue": rev_col,
+            "profit": prof_col,
+            "date": date_col,
+            "region": region_col,
+            "category": cat_col,
+            "product": prod_col,
+        }
+    }
+
+
+async def get_dashboard_data(session_id: str) -> dict:
+    """Return dashboard data dict for a session (reused by sharing)."""
+    if not session_exists(session_id):
+        raise HTTPException(status_code=404, detail="Session not found.")
+    df = load_df(session_id)
+    return _build_dashboard_response(df)
+
+
 def _find_col(df, keywords):
     for k in keywords:
         for col in df.columns:
@@ -39,168 +190,51 @@ def _clean_numeric(df, col):
 @router.get("/dashboard")
 async def get_dashboard(session_id: str = Query(...)):
     """Return KPIs + all chart data as JSON for Chart.js rendering."""
+    data = await get_dashboard_data(session_id)
+    return JSONResponse(data)
+
+
+@router.get("/dataset/stats")
+async def get_dataset_stats(session_id: str = Query(...)):
+    """Return basic stats for a session dataset: row count, column names, missing values, duplicates, numeric summary."""
     if not session_exists(session_id):
         raise HTTPException(status_code=404, detail="Session not found.")
     try:
         df = load_df(session_id)
+        numeric_cols = df.select_dtypes(include="number").columns.tolist()
 
-        rev_col = _find_col(df, ["revenue", "sales", "amount", "price"])
-        prof_col = _find_col(df, ["profit", "margin", "gain"])
-        date_col = _find_col(df, ["date", "time", "timestamp"])
-        region_col = _find_col(df, ["region", "territory", "country", "city", "location", "geo", "market"])
-        state_col = _find_col(df, ["state", "province"])
-        cat_col = _find_col(df, ["category", "cat", "productline", "line", "type", "class", "group"])
-        prod_col = _find_col(df, ["productcode", "productname", "product", "item", "title"])
-        order_col = _find_col(df, ["order_id", "order"])
-        cust_col = _find_col(df, ["customer_id", "customer", "cust"])
+        numeric_summary = {}
+        if numeric_cols:
+            desc = df[numeric_cols].describe().round(2).fillna(0)
+            for col in numeric_cols:
+                if col in desc.columns:
+                    s = desc[col]
+                    numeric_summary[col] = {
+                        "count": int(s["count"]),
+                        "mean": float(s["mean"]),
+                        "std": float(s["std"]),
+                        "min": float(s["min"]),
+                        "q1": float(s.get("25%", 0)),
+                        "median": float(s.get("50%", 0)),
+                        "q3": float(s.get("75%", 0)),
+                        "max": float(s["max"]),
+                    }
 
-        # Resolve collisions between category and product columns
-        if cat_col == prod_col and cat_col is not None:
-            remaining_cols = [c for c in df.columns if c != cat_col]
-            prod_col = next((c for c in remaining_cols if any(k in c.lower() for k in ["productcode", "product", "item", "title"])), cat_col)
+        missing_values = {}
+        for col in df.columns:
+            missing_values[col] = int(df[col].isnull().sum())
 
-        # Ensure numeric columns are cleaned and converted if necessary
-        if rev_col:
-            rev_col = _clean_numeric(df, rev_col)
-        if prof_col:
-            prof_col = _clean_numeric(df, prof_col)
-        else:
-            # Auto-generate virtual profit (25% of revenue) if missing
-            if rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
-                df["_virtual_profit"] = df[rev_col] * 0.25
-                prof_col = "_virtual_profit"
-
-        # ---- KPIs ----
-        total_revenue = float(df[rev_col].sum()) if rev_col and pd.api.types.is_numeric_dtype(df[rev_col]) else 0
-        total_profit = float(df[prof_col].sum()) if prof_col and pd.api.types.is_numeric_dtype(df[prof_col]) else total_revenue * 0.25
-        total_orders = int(df[order_col].nunique()) if order_col else len(df)
-        total_customers = int(df[cust_col].nunique()) if cust_col else int(len(df) * 0.3)
-        profit_margin = round((total_profit / total_revenue * 100), 1) if total_revenue else 0
-
-        def fmt_currency(v):
-            if v >= 1_000_000:
-                return f"₹{v/1_000_000:.2f}M"
-            elif v >= 1_000:
-                return f"₹{v/1_000:.1f}K"
-            return f"₹{v:.2f}"
-
-        kpis = {
-            "revenue": {"value": fmt_currency(total_revenue), "raw": total_revenue, "trend": "+5.2%", "direction": "up"},
-            "profit": {"value": fmt_currency(total_profit), "raw": total_profit, "trend": "+3.8%", "direction": "up"},
-            "orders": {"value": f"{total_orders:,}", "raw": total_orders, "trend": "+12.4%", "direction": "up"},
-            "customers": {"value": f"{total_customers:,}", "raw": total_customers, "trend": "-1.2%", "direction": "down"},
-            "profit_margin": {"value": f"{profit_margin}%", "raw": profit_margin, "trend": "+0.5%", "direction": "up"},
-        }
-
-        # ---- Revenue Trend (monthly) ----
-        trend_chart = {"labels": [], "values": []}
-        if date_col and rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
-            df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
-            trend = df.dropna(subset=[date_col]).groupby(df[date_col].dt.to_period("M"))[rev_col].sum()
-            trend_chart = {
-                "labels": [str(p) for p in trend.index],
-                "values": [round(float(v), 2) for v in trend.values],
-            }
-
-        # ---- Regional Bar Chart ----
-        region_chart = {"labels": [], "values": []}
-        if region_col and rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
-            rg = df.groupby(region_col)[rev_col].sum().sort_values(ascending=False)
-            region_chart = {"labels": rg.index.tolist(), "values": [round(float(v), 2) for v in rg.values]}
-
-        # ---- Category Doughnut ----
-        cat_chart = {"labels": [], "values": []}
-        if cat_col and rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
-            cg = df.groupby(cat_col)[rev_col].sum().sort_values(ascending=False)
-            cat_chart = {"labels": cg.index.tolist(), "values": [round(float(v), 2) for v in cg.values]}
-
-        # ---- Top 10 Products ----
-        product_chart = {"labels": [], "values": []}
-        if prod_col and rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
-            pg = df.groupby(prod_col)[rev_col].sum().sort_values(ascending=False).head(10)
-            product_chart = {"labels": pg.index.tolist(), "values": [round(float(v), 2) for v in pg.values]}
-
-        # ---- Profit vs Revenue Scatter ----
-        scatter_chart = {"revenue": [], "profit": [], "labels": []}
-        if rev_col and prof_col and prod_col and pd.api.types.is_numeric_dtype(df[rev_col]) and pd.api.types.is_numeric_dtype(df[prof_col]):
-            sc = df.groupby(prod_col)[[rev_col, prof_col]].sum().reset_index().head(20)
-            scatter_chart = {
-                "labels": sc[prod_col].tolist(),
-                "revenue": [round(float(v), 2) for v in sc[rev_col]],
-                "profit": [round(float(v), 2) for v in sc[prof_col]],
-            }
-
-        # ---- State-level drill down ----
-        state_chart = {"labels": [], "values": []}
-        if state_col and rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
-            sg = df.groupby(state_col)[rev_col].sum().sort_values(ascending=False).head(15)
-            state_chart = {"labels": sg.index.tolist(), "values": [round(float(v), 2) for v in sg.values]}
-
-        # ---- Pie Chart (category share) ----
-        pie_chart = {"labels": [], "values": []}
-        if cat_col and rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
-            pg = df.groupby(cat_col)[rev_col].sum().sort_values(ascending=False)
-            pie_chart = {"labels": pg.index.tolist(), "values": [round(float(v), 2) for v in pg.values]}
-
-        # ---- Heatmap (Region × Category → Revenue) ----
-        heatmap_chart = {"x_labels": [], "y_labels": [], "matrix": []}
-        dim1 = region_col or state_col
-        dim2 = cat_col
-        if dim1 and dim2 and rev_col and pd.api.types.is_numeric_dtype(df[rev_col]):
-            pivot = df.pivot_table(
-                values=rev_col, index=dim1, columns=dim2,
-                aggfunc="sum", fill_value=0
-            )
-            # Limit to top 10 rows for readability
-            row_totals = pivot.sum(axis=1).sort_values(ascending=False)
-            pivot = pivot.loc[row_totals.head(10).index]
-            heatmap_chart = {
-                "x_labels": pivot.columns.tolist(),
-                "y_labels": pivot.index.tolist(),
-                "matrix": [[round(float(v), 2) for v in row] for row in pivot.values],
-            }
-
-        # ---- Bubble Chart (per-product: revenue, profit, order count) ----
-        bubble_chart = []
-        if prod_col and rev_col and prof_col:
-            try:
-                agg_cols = {rev_col: "sum", prof_col: "sum"}
-                if order_col:
-                    agg_cols[order_col] = "count"
-                bubble_df = df.groupby(prod_col).agg(agg_cols).reset_index()
-                bubble_df = bubble_df.sort_values(rev_col, ascending=False).head(15)
-
-                for _, row in bubble_df.iterrows():
-                    bubble_chart.append({
-                        "x": round(float(row[rev_col]), 2),
-                        "y": round(float(row[prof_col]), 2),
-                        "r": int(row[order_col]) if order_col else int(row[rev_col] / 100),
-                        "label": str(row[prod_col]),
-                    })
-            except Exception:
-                pass
+        duplicate_rows = int(df.duplicated().sum())
 
         return JSONResponse({
-            "kpis": kpis,
-            "charts": {
-                "revenue_trend": trend_chart,
-                "regional": region_chart,
-                "category": cat_chart,
-                "products": product_chart,
-                "scatter": scatter_chart,
-                "state": state_chart,
-                "pie": pie_chart,
-                "heatmap": heatmap_chart,
-                "bubble": bubble_chart,
-            },
-            "columns": {
-                "revenue": rev_col,
-                "profit": prof_col,
-                "date": date_col,
-                "region": region_col,
-                "category": cat_col,
-                "product": prod_col,
-            }
+            "row_count": len(df),
+            "column_count": len(df.columns),
+            "column_names": df.columns.tolist(),
+            "missing_values": missing_values,
+            "duplicate_rows": duplicate_rows,
+            "numeric_columns": numeric_cols,
+            "numeric_summary": numeric_summary,
+            "preview": df.head(5).fillna("").astype(str).to_dict(orient="records"),
         })
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
