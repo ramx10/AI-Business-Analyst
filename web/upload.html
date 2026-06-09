@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Upload Data — AI Business Analyst</title>
   <link rel="stylesheet" href="/css/styles.css"/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <script>
     const savedTheme = localStorage.getItem('ai_ba_theme') || 'light-corporate';
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -49,9 +50,9 @@
           <div class="card-body">
             <div class="upload-zone" id="upload-zone">
               <div class="upload-icon">↑</div>
-              <h3>Drag & drop your CSV file here</h3>
-              <p>or click to browse — CSV files only</p>
-              <input type="file" id="file-input" accept=".csv" style="display:none"/>
+              <h3>Drag & drop your file here</h3>
+              <p>or click to browse — CSV, Excel, JSON &amp; Parquet supported</p>
+              <input type="file" id="file-input" accept=".csv,.xlsx,.json,.parquet" style="display:none"/>
             </div>
           </div>
         </div>

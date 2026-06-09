@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Data Cleaning — AI Business Analyst</title>
   <link rel="stylesheet" href="/css/styles.css"/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <script>
     const savedTheme = localStorage.getItem('ai_ba_theme') || 'light-corporate';
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -47,7 +48,7 @@
       gap: 6px; font-size: 11.5px; color: var(--text-secondary); margin-bottom: 16px;
     }
     .pipeline-desc span {
-      padding: 6px 10px; background: var(--bg); border-radius: var(--radius);
+      padding: 8px 12px; background: var(--bg); border-radius: var(--radius);
       border: 1px solid var(--border);
     }
     .pipeline-desc span b { color: var(--text-primary); }
@@ -58,6 +59,70 @@
     }
     .ml-section h4 { margin: 0 0 8px; font-size: 13px; }
     .ml-section p { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+
+    .step-card {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 8px 12px; background: var(--bg);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      margin-bottom: 6px; transition: all 0.15s ease;
+    }
+    .step-card:hover { border-color: var(--accent); }
+    .step-card label { cursor: pointer; flex: 1; display: flex; align-items: flex-start; gap: 10px; margin: 0; }
+    .step-card input[type="checkbox"] { margin-top: 4px; width: 14px; height: 14px; accent-color: var(--accent); flex-shrink: 0; }
+    .step-num-badge {
+      flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+      background: var(--accent); color: #fff; font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 1px;
+    }
+    .step-desc { font-size: 11px; color: var(--text-secondary); margin-top: 2px; line-height: 1.35; }
+    .pipeline-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 720px) { .pipeline-grid { grid-template-columns: 1fr; } }
+    .action-bar {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .action-bar .btn {
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .split-row {
+      display: flex; gap: 20px;
+    }
+    .split-col {
+      flex: 1; min-width: 0;
+    }
+    .scroll-card {
+      height: 525px; display: flex; flex-direction: column;
+      border: 1px solid var(--border); border-radius: 12px;
+      background: var(--bg-elevated);
+    }
+    .scroll-card .card-header {
+      flex-shrink: 0;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+    .scroll-card .card-body {
+      flex: 1; overflow-y: auto; min-height: 0;
+    }
+    .scroll-card .card-body::-webkit-scrollbar { width: 5px; }
+    .scroll-card .card-body::-webkit-scrollbar-track { background: transparent; }
+    .scroll-card .card-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .page-content.has-scroll-cards .page-header {
+      flex-shrink: 0;
+    }
+    .page-content.has-scroll-cards .kpi-grid,
+    .page-content.has-scroll-cards .card:not(.scroll-card) {
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -71,7 +136,7 @@
       </div>
       <div class="topbar-actions" id="session-badge"></div>
     </header>
-    <div class="page-content">
+    <div class="page-content has-scroll-cards">
       <div class="page-header">
         <h1 class="page-title">Data Cleaning</h1>
         <p class="page-subtitle">Step 3 of 7 — Comprehensive quality analysis and 15-step automated cleaning pipeline.</p>
@@ -90,7 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function load() {
     try {
       const d = await API.get(`/api/clean/preview?session_id=${sid}&_t=${Date.now()}`);
-      const totalIssues = d.total_missing + d.duplicate_rows +
+      const totalIssues = d.missing_values + d.duplicate_rows +
         (d.type_issues?.length || 0) +
         Object.keys(d.whitespace_issues || {}).length +
         Object.values(d.outlier_counts || {}).reduce((a,b) => a+b, 0) +
@@ -102,8 +167,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Build issue tags
       const tags = [];
-      if (d.total_missing > 0)
-        tags.push(`<span class="issue-tag danger">Missing Values <span class="issue-count">${d.total_missing}</span></span>`);
+      if (d.missing_values > 0)
+        tags.push(`<span class="issue-tag danger">Missing Values <span class="issue-count">${d.missing_values}</span></span>`);
       if (d.duplicate_rows > 0)
         tags.push(`<span class="issue-tag danger">Duplicates <span class="issue-count">${d.duplicate_rows}</span></span>`);
       if (d.type_issues?.length > 0)
@@ -145,7 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
           <div class="kpi-card">
             <div class="kpi-label">Missing Values</div>
-            <div class="kpi-value" style="color:${d.total_missing>0?'var(--red)':'var(--green)'}">${d.total_missing.toLocaleString()}</div>
+            <div class="kpi-value" style="color:${d.missing_values>0?'var(--red)':'var(--green)'}">${d.missing_values.toLocaleString()}</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-label">Duplicates</div>
@@ -183,89 +248,311 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         </div>
 
-        <!-- Auto-Clean Panel — full width, below Missing Values -->
-        <div class="card" style="margin-bottom:20px;">
-          <div class="card-header"><div class="card-title">Auto-Clean Pipeline</div></div>
-          <div class="card-body">
-            ${isClean
-              ? `<div class="alert alert-success" style="margin-bottom:16px">Dataset is already clean — no action needed.</div>`
-              : `<p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;line-height:1.5">
-                  The auto-cleaner runs a <strong>10-step pipeline</strong> on your dataset:
-                </p>
-                <div class="pipeline-desc">
-                  <span><b>1.</b> Fix data types</span>
-                  <span><b>2.</b> Fill missing values</span>
-                  <span><b>3.</b> Remove duplicates</span>
-                  <span><b>4.</b> Standardize formats</span>
-                  <span><b>5.</b> Fix inconsistencies</span>
-                  <span><b>6.</b> Drop useless columns</span>
-                  <span><b>7.</b> Cap outliers (IQR)</span>
-                  <span><b>8.</b> Trim whitespace</span>
-                  <span><b>9.</b> Validate values</span>
-                  <span><b>10.</b> Clean column names</span>
+        <!-- Split Row: Auto-Clean | Pipeline Builder -->
+        <div class="split-row">
+          <div class="split-col">
+            <div class="scroll-card">
+              <div class="card-header"><div class="card-title">Auto-Clean Pipeline</div></div>
+              <div class="card-body">
+                ${isClean
+                  ? `<div class="alert alert-success" style="margin-bottom:16px">Dataset is already clean — no action needed.</div>`
+                  : `<p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;line-height:1.5">
+                      The auto-cleaner runs a <strong>10-step pipeline</strong> on your dataset:
+                    </p>
+                    <div class="pipeline-desc">
+                      <span><b>1.</b> Fix data types</span>
+                      <span><b>2.</b> Fill missing values</span>
+                      <span><b>3.</b> Remove duplicates</span>
+                      <span><b>4.</b> Standardize formats</span>
+                      <span><b>5.</b> Fix inconsistencies</span>
+                      <span><b>6.</b> Drop useless columns</span>
+                      <span><b>7.</b> Cap outliers (IQR)</span>
+                      <span><b>8.</b> Trim whitespace</span>
+                      <span><b>9.</b> Validate values</span>
+                      <span><b>10.</b> Clean column names</span>
+                    </div>
+                    <button class="btn btn-primary" id="clean-btn" style="width:100%">Run Auto-Clean (10 Steps)</button>`}
+
+                <div id="clean-log" style="margin-top:16px;"></div>
+
+                <div class="ml-section" id="ml-section" style="display:none;">
+                  <h4>Prepare for Machine Learning</h4>
+                  <p>Optionally encode categorical variables and standardize numerical features for ML pipelines.</p>
+                  <button class="btn btn-secondary" id="ml-btn" style="width:100%">Run ML Preparation (Encode + Scale)</button>
+                  <div id="ml-log" style="margin-top:12px;"></div>
                 </div>
-                <button class="btn btn-primary" id="clean-btn" style="width:100%">Run Auto-Clean (10 Steps)</button>`}
 
-            <div id="clean-log" style="margin-top:16px;"></div>
-
-            <div class="ml-section" id="ml-section" style="display:none;">
-              <h4>Prepare for Machine Learning</h4>
-              <p>Optionally encode categorical variables and standardize numerical features for ML pipelines.</p>
-              <button class="btn btn-secondary" id="ml-btn" style="width:100%">Run ML Preparation (Encode + Scale)</button>
-              <div id="ml-log" style="margin-top:12px;"></div>
+                <div style="margin-top:20px;display:flex;gap:8px;">
+                  <a href="/schema.html" class="btn btn-ghost btn-sm">← Back</a>
+                  <a href="/dashboard.html" class="btn btn-secondary btn-sm">Continue to Dashboard →</a>
+                </div>
+              </div>
             </div>
+          </div>
 
-            <div style="margin-top:20px;display:flex;gap:8px;">
-              <a href="/schema.html" class="btn btn-ghost btn-sm">← Back</a>
-              <a href="/dashboard.html" class="btn btn-secondary btn-sm">Continue to Dashboard →</a>
+          <div class="split-col">
+            <div class="scroll-card">
+              <div class="card-header"><div class="card-title">Selective Pipeline Builder</div></div>
+              <div class="card-body">
+                <p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;line-height:1.5;">
+                  Choose individual cleaning steps to run instead of the full auto-clean pipeline.
+                </p>
+                <div class="pipeline-grid" id="pipeline-grid">
+                  <div id="pipeline-col-left"></div>
+                  <div id="pipeline-col-right"></div>
+                </div>
+                <div class="action-bar">
+                  <button class="btn btn-secondary" id="pp-preview-btn">◉ Preview Changes</button>
+                  <button class="btn btn-primary" id="pp-run-btn">⚡ Run Selected</button>
+                  <button class="btn btn-ghost" id="pp-select-all-btn">Select All</button>
+                  <button class="btn btn-ghost" id="pp-deselect-all-btn">Deselect All</button>
+                </div>
+                <div id="pp-output" style="margin-top:16px;"></div>
+              </div>
             </div>
           </div>
         </div>`;
 
-      // Clean button handler
-      const btn = document.getElementById('clean-btn');
-      if (btn) btn.addEventListener('click', async () => {
-        btn.disabled = true; btn.textContent = 'Cleaning…';
-        const logEl = document.getElementById('clean-log');
+      // ─── Pipeline Builder logic ─────────────────────────────────
+      const PIPELINE_STEPS = [
+        { num: 1,  title: "Fix data types",        desc: "Auto-detect and fix numeric/date columns stored as strings" },
+        { num: 2,  title: "Fill missing values",   desc: "Drop rows >50% null, fill remaining with median/mode" },
+        { num: 3,  title: "Remove duplicates",     desc: "Drop fully duplicate rows" },
+        { num: 4,  title: "Standardize formats",   desc: "Title-case categorical columns with few unique values" },
+        { num: 5,  title: "Fix inconsistencies",   desc: "Fuzzy-merge near-duplicate categorical variants" },
+        { num: 6,  title: "Drop useless columns",  desc: "Drop columns >90% null or zero variance" },
+        { num: 7,  title: "Cap outliers (IQR)",    desc: "Clip extreme values using the IQR method" },
+        { num: 8,  title: "Trim whitespace",       desc: "Strip leading/trailing whitespace from string columns" },
+        { num: 9,  title: "Validate values",       desc: "Clamp negative values and unreasonable ages" },
+        { num: 10, title: "Clean column names",    desc: "Convert to lowercase_with_underscores" },
+      ];
+
+      function renderStepCard(step, checked) {
+        return `
+          <div class="step-card">
+            <label>
+              <input type="checkbox" class="pp-step" data-step="${step.num}" ${checked ? 'checked' : ''}>
+              <span style="font-weight:750;color:var(--text-primary);margin-top:1px;margin-right:6px;flex-shrink:0;font-size:13px;">${step.num}.</span>
+              <div style="flex:1;">
+                <div style="font-weight:600;font-size:13px;color:var(--text-primary);line-height:1.45;">${step.title}</div>
+                <div class="step-desc">${step.desc}</div>
+              </div>
+            </label>
+          </div>`;
+      }
+
+      function getSelectedSteps() {
+        return Array.from(document.querySelectorAll('.pp-step:checked')).map(cb => parseInt(cb.dataset.step));
+      }
+
+      function updateSelectiveButtons() {
+        const count = getSelectedSteps().length;
+        const runBtn = document.getElementById('pp-run-btn');
+        const previewBtn = document.getElementById('pp-preview-btn');
+        if (runBtn && previewBtn) {
+          runBtn.textContent = `⚡ Run Selected (${count})`;
+          runBtn.disabled = (count === 0);
+          previewBtn.textContent = `◉ Preview (${count})`;
+          previewBtn.disabled = (count === 0);
+        }
+      }
+
+      const mid = Math.ceil(PIPELINE_STEPS.length / 2);
+      document.getElementById('pipeline-col-left').innerHTML = PIPELINE_STEPS.slice(0, mid).map(s => renderStepCard(s, true)).join('');
+      document.getElementById('pipeline-col-right').innerHTML = PIPELINE_STEPS.slice(mid).map(s => renderStepCard(s, true)).join('');
+
+      // Add change listeners to checkboxes
+      document.querySelectorAll('.pp-step').forEach(cb => {
+        cb.addEventListener('change', updateSelectiveButtons);
+      });
+
+      updateSelectiveButtons();
+
+      document.getElementById('pp-select-all-btn').addEventListener('click', () => {
+        document.querySelectorAll('.pp-step').forEach(cb => cb.checked = true);
+        updateSelectiveButtons();
+      });
+      document.getElementById('pp-deselect-all-btn').addEventListener('click', () => {
+        document.querySelectorAll('.pp-step').forEach(cb => cb.checked = false);
+        updateSelectiveButtons();
+      });
+
+      document.getElementById('pp-preview-btn').addEventListener('click', async () => {
+        const steps = getSelectedSteps();
+        if (steps.length === 0) { alert('Select at least one step.'); return; }
+        const output = document.getElementById('pp-output');
+        output.innerHTML = '<div class="loading-state"><div class="spinner"></div><span>Running preview…</span></div>';
         try {
-          const r = await API.post(`/api/clean/apply?session_id=${sid}`, {});
+          const r = await API.post(`/api/clean/selective?session_id=${sid}&_t=${Date.now()}`, { steps, preview: true });
+          output.innerHTML = `
+            <div class="card" style="margin-top:0;">
+              <div class="card-header"><div class="card-title">Preview — ${r.change_log.length} step(s) will be applied</div></div>
+              <div class="card-body">
+                <div class="alert alert-info" style="margin-bottom:12px;">
+                  ${r.rows_before.toLocaleString()} → ${r.rows_after.toLocaleString()} rows,
+                  ${r.cols_before} → ${r.cols_after} columns
+                </div>
+                <ul class="step-log">
+                  ${r.change_log.map(s => `
+                    <li>
+                      <span class="step-num">${s.step}</span>
+                      <div>
+                        <div class="step-title">${s.title}</div>
+                        <div class="step-detail">${formatStepDetail(s.details)}</div>
+                      </div>
+                    </li>`).join('')}
+                </ul>
+              </div>
+            </div>`;
+        } catch (e) {
+          output.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+        }
+      });
 
-          // Build the step log + results HTML
-          const stepLogHtml = `
-            <div class="alert alert-success" style="margin-bottom:12px;">
-              Cleaned: ${r.rows_before} → ${r.rows_after} rows, ${r.cols_before} → ${r.cols_after} columns, ${r.missing_before} → ${r.missing_after} missing values
-            </div>
-            <ul class="step-log">
-              ${r.change_log.map(s => `
-                <li>
-                  <span class="step-num">${s.step}</span>
-                  <div>
-                    <div class="step-title">${s.title}</div>
-                    <div class="step-detail">${formatStepDetail(s.details)}</div>
-                  </div>
-                </li>`).join('')}
-            </ul>`;
+      document.getElementById('pp-run-btn').addEventListener('click', async () => {
+        const steps = getSelectedSteps();
+        if (steps.length === 0) { alert('Select at least one step.'); return; }
+        const output = document.getElementById('pp-output');
+        output.innerHTML = '<div class="loading-state"><div class="spinner"></div><span>Running pipeline…</span></div>';
+        try {
+          const r = await API.post(`/api/clean/selective?session_id=${sid}&_t=${Date.now()}`, { steps });
+          output.innerHTML = `
+            <div class="card" style="margin-top:0;">
+              <div class="card-header"><div class="card-title">✓ Pipeline Complete — ${r.change_log.length} step(s) applied</div></div>
+              <div class="card-body">
+                <div class="alert alert-success" style="margin-bottom:12px;">
+                  ${r.rows_before.toLocaleString()} → ${r.rows_after.toLocaleString()} rows,
+                  ${r.cols_before} → ${r.cols_after} columns
+                </div>
+                <ul class="step-log">
+                  ${r.change_log.map(s => `
+                    <li>
+                      <span class="step-num">${s.step}</span>
+                      <div>
+                        <div class="step-title">${s.title}</div>
+                        <div class="step-detail">${formatStepDetail(s.details)}</div>
+                      </div>
+                    </li>`).join('')}
+                </ul>
+                <div style="margin-top:16px;">
+                  <a href="/api/clean/download?session_id=${sid}" class="btn btn-primary btn-sm" download>↓ Download Cleaned Dataset</a>
+                  <a href="/dashboard.html" class="btn btn-secondary btn-sm" style="margin-left:8px;">Continue to Dashboard →</a>
+                </div>
+              </div>
+            </div>`;
+          // Re-fetch preview to update KPIs
+          load();
+        } catch (e) {
+          output.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+        }
+      });
 
-          // Fade out the current content, reload fresh data, fade back in
-          root.style.transition = 'opacity 0.25s ease';
-          root.style.opacity = '0.3';
+      // Progress bar element (added to the DOM after the clean button)
+      let progressPollTimer = null;
 
-          // Re-fetch preview to get updated KPIs, issue tags, etc.
-          await load();
+      function createProgressBar() {
+        const container = document.createElement('div');
+        container.id = 'progress-container';
+        container.style.cssText = 'margin-top:16px;display:none;';
+        container.innerHTML = `
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);margin-bottom:4px;">
+            <span id="progress-label">Cleaning…</span>
+            <span id="progress-pct">0%</span>
+          </div>
+          <div style="width:100%;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;">
+            <div id="progress-bar" style="width:0%;height:100%;background:var(--accent);border-radius:4px;transition:width 0.3s ease;"></div>
+          </div>`;
+        return container;
+      }
 
-          // After load() re-rendered the DOM, inject the cleaning log
+      function startProgressPolling(sessionId) {
+        const bar = document.getElementById('progress-bar');
+        const pct = document.getElementById('progress-pct');
+        const label = document.getElementById('progress-label');
+
+        progressPollTimer = setInterval(async () => {
+          try {
+            const p = await API.get(`/api/clean/progress?session_id=${sessionId}`);
+            bar.style.width = p.percent + '%';
+            pct.textContent = p.percent + '%';
+            label.textContent = p.description || 'Cleaning…';
+
+            if (p.percent >= 100 || (p.result && p.result.success)) {
+              clearInterval(progressPollTimer);
+              progressPollTimer = null;
+              document.getElementById('progress-container').style.display = 'none';
+              if (p.result) {
+                showCleanResult(p.result);
+              }
+            } else if (p.error) {
+              clearInterval(progressPollTimer);
+              progressPollTimer = null;
+              document.getElementById('progress-container').style.display = 'none';
+              const logEl = document.getElementById('clean-log');
+              logEl.innerHTML = `<div class="alert alert-danger">${p.error}</div>`;
+              const btn = document.getElementById('clean-btn');
+              if (btn) { btn.disabled = false; btn.textContent = 'Run Auto-Clean (10 Steps)'; }
+            }
+          } catch(e) {
+            // polling error — retry
+          }
+        }, 500);
+      }
+
+      function showCleanResult(r) {
+        const stepLogHtml = `
+          <div class="alert alert-success" style="margin-bottom:12px;">
+            Cleaned: ${r.rows_before} → ${r.rows_after} rows, ${r.cols_before} → ${r.cols_after} columns, ${r.missing_before} → ${r.missing_after} missing values
+          </div>
+          <ul class="step-log">
+            ${r.change_log.map(s => `
+              <li>
+                <span class="step-num">${s.step}</span>
+                <div>
+                  <div class="step-title">${s.title}</div>
+                  <div class="step-detail">${formatStepDetail(s.details)}</div>
+                </div>
+              </li>`).join('')}
+          </ul>`;
+
+        root.style.transition = 'opacity 0.25s ease';
+        root.style.opacity = '0.3';
+
+        // Re-fetch preview for updated KPIs
+        load().then(() => {
           const newLogEl = document.getElementById('clean-log');
           if (newLogEl) newLogEl.innerHTML = stepLogHtml;
           const mlSec = document.getElementById('ml-section');
           if (mlSec) mlSec.style.display = 'block';
           const newBtn = document.getElementById('clean-btn');
           if (newBtn) newBtn.style.display = 'none';
-
-          // Fade back in
           requestAnimationFrame(() => { root.style.opacity = '1'; });
+        });
+      }
 
+      // Clean button handler
+      const btn = document.getElementById('clean-btn');
+      if (btn) btn.addEventListener('click', async () => {
+        btn.disabled = true; btn.textContent = 'Starting…';
+        const logEl = document.getElementById('clean-log');
+        try {
+          // Start async cleaning
+          const resp = await API.post(`/api/clean/start?session_id=${sid}`, {});
+
+          // Show progress bar
+          const existingContainer = document.getElementById('progress-container');
+          if (!existingContainer) {
+            const container = createProgressBar();
+            document.getElementById('clean-log').parentNode.insertBefore(container, document.getElementById('clean-log'));
+          }
+          document.getElementById('progress-container').style.display = 'block';
+          document.getElementById('progress-bar').style.width = '0%';
+          document.getElementById('progress-pct').textContent = '0%';
+          document.getElementById('progress-label').textContent = 'Starting…';
+          btn.textContent = 'Cleaning…';
+
+          startProgressPolling(sid);
         } catch(e) {
-          root.style.opacity = '1';
           logEl.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
           btn.disabled = false; btn.textContent = 'Run Auto-Clean (10 Steps)';
         }

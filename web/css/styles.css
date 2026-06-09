@@ -436,6 +436,13 @@ html[data-theme="server-admin"] {
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+body, .layout, .sidebar, .main, .card, .topbar {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
 html, body {
   font-family: 'Inter', -apple-system, sans-serif;
   background: var(--bg);
@@ -457,14 +464,25 @@ html, body {
 /* ─── Sidebar ───────────────────────────────────────────────── */
 .sidebar {
   width: var(--sidebar-w);
-  min-height: 100vh;
+  height: 100vh;
   background: var(--bg);
   border-right: 1px solid var(--border);
   position: fixed; top: 0; left: 0;
   display: flex; flex-direction: column;
   z-index: 100;
-  overflow-y: auto;
 }
+
+.sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+}
+
+.sidebar-scroll::-webkit-scrollbar { width: 4px; }
+.sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 2px; }
+.sidebar-scroll::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
 
 .sidebar-header {
   height: var(--topbar-h);
@@ -511,6 +529,7 @@ html, body {
   position: absolute; left: 0; top: 0; bottom: 0;
   width: 2px; background: var(--accent); border-radius: 0 2px 2px 0;
 }
+.nav-sym { font-size: 10px; opacity: 0.45; flex-shrink: 0; width: 12px; text-align: center; }
 .nav-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; opacity: 0.7; }
 .nav-badge {
   margin-left: auto;
@@ -787,6 +806,10 @@ tbody tr:hover td { background: var(--bg-hover); }
 /* ─── Fade in ───────────────────────────────────────────────── */
 .page-content { animation: fadein 0.2s ease; }
 @keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
 
 /* ─── Responsive ────────────────────────────────────────────── */
 @media (max-width: 960px) {

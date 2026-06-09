@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Data Visualization — AI Business Analyst</title>
   <link rel="stylesheet" href="/css/styles.css"/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script>
     const savedTheme = localStorage.getItem('ai_ba_theme') || 'light-corporate';
@@ -84,6 +85,8 @@
 
       <div id="viz-root"><div class="loading-state"><div class="spinner"></div><span>Loading visualizations…</span></div></div>
 
+      <div id="export-section"></div>
+
       <div style="margin-top:20px;display:flex;gap:8px;">
         <a href="/clean.html" class="btn btn-ghost btn-sm">← Back to Cleaning</a>
         <a href="/dashboard.html" class="btn btn-primary btn-sm">Continue to Dashboard →</a>
@@ -93,6 +96,7 @@
 </div>
 <script src="/js/app.js"></script>
 <script src="/js/dashboard.js"></script>
+<script src="/js/exports.js"></script>
 <script>
 initSidebar('visualize');
 
@@ -253,6 +257,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (themeSelect) themeSelect.value = e.detail.theme;
     render();
   });
+
+  const exportContainer = document.getElementById('export-section');
+  if (exportContainer) {
+    ExportManager.renderExportSection(exportContainer, sid);
+  }
 });
 </script>
 </body>

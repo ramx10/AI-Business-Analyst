@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Settings — AI Business Analyst</title>
   <link rel="stylesheet" href="/css/styles.css"/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <script>
     const savedTheme = localStorage.getItem('ai_ba_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -113,6 +114,72 @@
       width: 18px;
       height: 18px;
     }
+    .llm-field {
+      margin-bottom: 16px;
+    }
+    .llm-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .llm-field select,
+    .llm-field input[type="password"],
+    .llm-field input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text-primary);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .llm-field select:focus,
+    .llm-field input:focus {
+      border-color: var(--accent);
+    }
+    .llm-api-row {
+      display: flex;
+      gap: 8px;
+    }
+    .llm-api-row input {
+      flex: 1;
+    }
+    .llm-hint {
+      display: block;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+    .llm-hint-ok {
+      color: var(--green, #22c55e);
+    }
+    .llm-hint-warn {
+      color: var(--yellow, #eab308);
+    }
+    .llm-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .llm-status {
+      margin-top: 12px;
+      font-size: 13px;
+      padding: 8px 12px;
+      border-radius: var(--radius);
+    }
+    .llm-status-ok {
+      background: rgba(34, 197, 94, 0.1);
+      color: var(--green, #22c55e);
+    }
+    .llm-status-err {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--red, #ef4444);
+    }
   </style>
 </head>
 <body>
@@ -166,10 +233,25 @@
         </div>
       </div>
 
+      <!-- AI Provider Settings -->
+      <div class="card no-hover" style="margin-top: 24px;">
+        <div class="card-header">
+          <div class="card-title">AI Provider</div>
+          <div class="card-subtitle">Configure which LLM provider powers the analysis agents</div>
+        </div>
+        <div class="card-body" id="llm-settings">
+          <div style="text-align: center; padding: 24px;">
+            <div class="spinner" style="margin: 0 auto 16px;"></div>
+            <span>Loading LLM configuration...</span>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
 <script src="/js/app.js"></script>
+<script src="/js/settings.js"></script>
 <script>
   initSidebar('settings');
 </script>
