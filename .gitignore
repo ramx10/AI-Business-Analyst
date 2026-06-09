@@ -26,3 +26,8 @@ reports/report_*.md
 # Java build artifacts
 target/
 *.class
+
+# User-installed plugins (keep example)
+plugins/
+!plugins/__init__.py
+!plugins/sentiment_plugin.py

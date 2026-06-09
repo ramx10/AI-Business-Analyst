@@ -1,0 +1,68 @@
+version: "3.9"
+
+services:
+  streamlit:
+    build: .
+    container_name: ai-analyst-streamlit
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+    volumes:
+      - ./reports:/app/reports
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - analyst-network
+    restart: unless-stopped
+
+  java-backend:
+    build:
+      context: ./backend-java
+      dockerfile: Dockerfile
+    container_name: ai-analyst-backend
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ai_analyst_db
+      - SPRING_DATASOURCE_USERNAME=ai_analyst
+      - SPRING_DATASOURCE_PASSWORD=ai_analyst_pass
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - analyst-network
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: ai-analyst-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=ai_analyst
+      - POSTGRES_PASSWORD=ai_analyst_pass
+      - POSTGRES_DB=ai_analyst_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_analyst -d ai_analyst_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - analyst-network
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+
+networks:
+  analyst-network:
+    driver: bridge
