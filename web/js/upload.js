@@ -41,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   async function handleFile(file) {
-    if (!file.name.endsWith('.csv')) { showAlert(statusEl, 'warning', 'Please upload a .csv file.'); return; }
     const form = new FormData();
     form.append('file', file);
     showAlert(statusEl, 'info', `Uploading ${file.name}…`);
