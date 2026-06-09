@@ -10,10 +10,9 @@ from agents.kpi_agent import KPIAgent
 from agents.ai_insight_agent import AIInsightAgent
 from dashboard.styles import apply_page_styling
 
-st.set_page_config(layout="wide")
 apply_page_styling()
 
-st.title("📈 Business Insights")
+st.title("↑ Business Insights")
 
 st.markdown("""
 <div style="font-size: 16px; color: #94a3b8; margin-bottom: 25px;">
@@ -23,7 +22,7 @@ AI-generated analysis detailing key business insights, trends, risks, opportunit
 
 with st.sidebar:
     st.subheader("Settings")
-    if st.button("🔄 Clear Insights Cache", type="secondary", use_container_width=True):
+    if st.button("↻ Clear Insights Cache", type="secondary", use_container_width=True):
         st.cache_data.clear()
         st.success("Cache cleared!")
         st.rerun()
@@ -31,48 +30,34 @@ with st.sidebar:
 if "df" not in st.session_state:
     st.markdown("""
     <div class="alert-box" style="border-left-color: #f59e0b;">
-        <span style="font-weight: 600; color: #f59e0b;">⚠️ Warning:</span> 
+        <span style="font-weight: 600; color: #f59e0b;">⚠ Warning:</span> 
         <span style="color: #94a3b8;">Please upload a dataset first under <b>01 Upload Data</b>.</span>
     </div>
     """, unsafe_allow_html=True)
 else:
     df = st.session_state["df"]
 
+    @st.cache_data
+    def _generate_insights(df_local):
+        s_agent = SchemaAgent()
+        c_agent = DataCleaningAgent()
+        k_agent = KPIAgent()
+        ai_agent = AIInsightAgent()
+        s_info = s_agent.analyze_schema(df_local)
+        c_info = c_agent.analyze_data_quality(df_local)
+        k_info = k_agent.generate_kpis(df_local)
+        insights = ai_agent.generate_insights(s_info, c_info, k_info)
+        if insights.startswith("Error:") or "Limit Exceeded" in insights or "Quota Exceeded" in insights:
+            raise RuntimeError(insights)
+        return insights
+
     try:
         with st.spinner("Generating business insights... (Executing Groq inference)"):
-            # We fetch cached function from original module
-            from dashboard.pages.05_Business_Insights import generate_business_insights
-            result = generate_business_insights(df)
-
-        st.success("🎉 Business analysis completed successfully!")
-        
+            result = _generate_insights(df)
+        st.success("✦ Business analysis completed successfully!")
         st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
         st.markdown(result)
         st.markdown("</div>", unsafe_allow_html=True)
-        
-    except Exception as e:
-        # Fallback local definition if module loading has circular import issues
-        @st.cache_data
-        def local_generate(df_local):
-            s_agent = SchemaAgent()
-            c_agent = DataCleaningAgent()
-            k_agent = KPIAgent()
-            ai_agent = AIInsightAgent()
-            s_info = s_agent.analyze_schema(df_local)
-            c_info = c_agent.analyze_data_quality(df_local)
-            k_info = k_agent.generate_kpis(df_local)
-            insights = ai_agent.generate_insights(s_info, c_info, k_info)
-            if insights.startswith("Error:") or "Limit Exceeded" in insights or "Quota Exceeded" in insights:
-                raise RuntimeError(insights)
-            return insights
-
-        try:
-            with st.spinner("Retrying analysis..."):
-                result = local_generate(df)
-            st.success("🎉 Business analysis completed successfully!")
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.markdown(result)
-            st.markdown("</div>", unsafe_allow_html=True)
-        except Exception as err:
-            st.error(f"Analysis failed: {str(err)}")
-            st.info("💡 Try clicking 'Clear Insights Cache' in the sidebar or verifying your Groq API key configuration in .env.")
+    except Exception as err:
+        st.error(f"Analysis failed: {str(err)}")
+        st.info("✦ Try clicking 'Clear Insights Cache' in the sidebar or verifying your Groq API key configuration in .env.")
