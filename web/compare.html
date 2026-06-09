@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Compare Datasets — AI Business Analyst</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    const savedTheme = localStorage.getItem('ai_ba_theme') || 'light-corporate';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-crumb">
+        <span>AI Business Analyst</span><span class="topbar-sep">/</span>
+        <span class="current">Compare Datasets</span>
+      </div>
+      <div class="topbar-actions" id="session-badge"></div>
+    </header>
+    <div class="page-content">
+      <div class="page-header">
+        <h1 class="page-title">Compare Datasets</h1>
+        <p class="page-subtitle">Compare the current dataset against another CSV file.</p>
+      </div>
+
+      <div id="compare-root">
+        <div class="loading-state"><div class="spinner"></div><span>Loading dataset A…</span></div>
+      </div>
+
+      <div id="compare-status"></div>
+
+      <div id="upload-b" style="display:none;">
+        <div class="section">
+          <div class="section-header"><div class="section-title">Upload Dataset B</div></div>
+          <div class="card no-hover">
+            <div class="card-body">
+              <div class="upload-zone" id="upload-zone-b">
+                <div class="upload-icon">↑</div>
+                <h3>Drag & drop CSV file here</h3>
+                <p>or click to browse — CSV only</p>
+                <input type="file" id="file-input-b" accept=".csv" style="display:none"/>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="compare-results" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+<script src="/js/compare.js"></script>
+<script>initSidebar('compare');</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Share Dashboard — AI Business Analyst</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script>
+    const savedTheme = localStorage.getItem('ai_ba_theme') || 'light-corporate';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-crumb">
+        <span>AI Business Analyst</span><span class="topbar-sep">/</span>
+        <span class="current">Share Dashboard</span>
+      </div>
+      <div class="topbar-actions" id="session-badge"></div>
+    </header>
+    <div class="page-content">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div>
+          <h1 class="page-title">Share Dashboard</h1>
+          <p class="page-subtitle">Create shareable links to your dashboard.</p>
+        </div>
+      </div>
+
+      <!-- Create Share Form -->
+      <div class="card" style="padding:20px;margin-bottom:24px;">
+        <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0 0 16px 0;">Create Share Link</h4>
+        <div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;">
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Expiry</label>
+            <select id="share-expiry" class="input" style="width:140px;padding:8px 12px;font-size:13px;">
+              <option value="1h">1 Hour</option>
+              <option value="6h">6 Hours</option>
+              <option value="24h" selected>24 Hours</option>
+              <option value="7d">7 Days</option>
+              <option value="30d">30 Days</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Password (optional)</label>
+            <input type="text" id="share-password" class="input" placeholder="Leave empty for public access" style="width:220px;padding:8px 12px;font-size:13px;">
+          </div>
+          <button class="btn btn-primary" onclick="createShare()" style="padding:8px 24px;">Generate Link</button>
+        </div>
+        <div id="share-result"></div>
+      </div>
+
+      <!-- Active Shares -->
+      <div class="card" style="padding:20px;">
+        <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0 0 16px 0;">Active Shares</h4>
+        <div id="share-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+<script src="/js/dashboard.js"></script>
+<script src="/js/share.js"></script>
+<script>
+initSidebar('share-manage');
+document.addEventListener('DOMContentLoaded', () => {
+  const sid = Session.require(); if (!sid) return;
+  loadShareList();
+});
+</script>
+</body>
+</html>

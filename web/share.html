@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Shared Dashboard — AI Business Analyst</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script>
+    const savedTheme = localStorage.getItem('ai_ba_theme') || 'light-corporate';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
+  <style>
+    body { background: var(--bg); }
+    .layout-shared { min-height: 100vh; display: flex; flex-direction: column; }
+  </style>
+</head>
+<body>
+<div class="layout-shared">
+  <div id="shared-root" class="page-content" style="flex:1;">
+    <div class="loading-state" style="margin-top:80px;"><div class="spinner"></div><span>Loading shared dashboard…</span></div>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+<script src="/js/dashboard.js"></script>
+<script src="/js/share.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  initSharedView();
+});
+</script>
+</body>
+</html>
