@@ -7,11 +7,10 @@ import com.example.analytics.repository.DashboardHistoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
@@ -46,6 +45,29 @@ public class UserController {
         // Return empty list if no history exists
         // (We no longer seed mock data to avoid confusing users)
 
+        return ResponseEntity.ok(history);
+    }
+
+    @PostMapping("/dashboards/history")
+    public ResponseEntity<DashboardHistory> createHistory(@RequestBody Map<String, String> body) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof User)) {
+            return ResponseEntity.status(401).build();
+        }
+        User user = (User) principal;
+
+        String rowCountStr = body.get("rowCount");
+        Integer rowCount = rowCountStr != null ? Integer.parseInt(rowCountStr) : 0;
+
+        DashboardHistory history = new DashboardHistory(
+            user,
+            body.getOrDefault("datasetName", "Unknown"),
+            rowCount,
+            body.getOrDefault("cleaningSummary", ""),
+            body.getOrDefault("kpiSummary", ""),
+            body.getOrDefault("insights", "")
+        );
+        dashboardHistoryRepository.save(history);
         return ResponseEntity.ok(history);
     }
 
