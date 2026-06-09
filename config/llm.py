@@ -1,11 +1,9 @@
-from langchain_groq import ChatGroq
-from dotenv import load_dotenv
-import os
+from config.llm_manager import get_llm, update_config, LLMConfig
 
-load_dotenv()
 
-llm = ChatGroq(
-    model_name="llama-3.3-70b-versatile",
-    groq_api_key=os.getenv("GROQ_API_KEY"),
-    temperature=0.3
-)
+class _LLMProxy:
+    def __getattr__(self, name):
+        return getattr(get_llm(), name)
+
+
+llm = _LLMProxy()
