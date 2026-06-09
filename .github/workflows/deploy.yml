@@ -1,0 +1,56 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_STREAMLIT: ${{ github.repository }}/streamlit
+  IMAGE_BACKEND: ${{ github.repository }}/backend
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Streamlit image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_STREAMLIT }}:${{ github.sha }},${{ env.REGISTRY }}/${{ env.IMAGE_STREAMLIT }}:latest
+
+      - name: Build and push Java backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend-java
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}:${{ github.sha }},${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        run: |
+          echo "Deployment placeholder — replace with actual SSH deploy logic"
+          # Example:
+          # ssh user@server "
+          #   cd /opt/ai-business-analyst &&
+          #   docker compose pull &&
+          #   docker compose up -d --remove-orphans
+          # "

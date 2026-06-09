@@ -1,0 +1,207 @@
+[
+  {
+    "step_id": "upload",
+    "step_name": "File Upload",
+    "category": "upload",
+    "description": "Uploaded sales_data_sample.csv (csv)",
+    "affected_columns": [
+      "ORDERNUMBER",
+      "QUANTITYORDERED",
+      "PRICEEACH",
+      "ORDERLINENUMBER",
+      "SALES",
+      "ORDERDATE",
+      "STATUS",
+      "QTR_ID",
+      "MONTH_ID",
+      "YEAR_ID",
+      "PRODUCTLINE",
+      "MSRP",
+      "PRODUCTCODE",
+      "CUSTOMERNAME",
+      "PHONE",
+      "ADDRESSLINE1",
+      "ADDRESSLINE2",
+      "CITY",
+      "STATE",
+      "POSTALCODE",
+      "COUNTRY",
+      "TERRITORY",
+      "CONTACTLASTNAME",
+      "CONTACTFIRSTNAME",
+      "DEALSIZE"
+    ],
+    "rows_before": 0,
+    "rows_after": 2823,
+    "columns_before": 0,
+    "columns_after": 25,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T11:58:41.963301"
+  },
+  {
+    "step_id": "pii_mask",
+    "step_name": "PII Masking",
+    "category": "pii",
+    "description": "Masked 5646 values across 2 columns",
+    "affected_columns": [
+      "PHONE",
+      "CUSTOMERNAME"
+    ],
+    "rows_before": 2823,
+    "rows_after": 2823,
+    "columns_before": 25,
+    "columns_after": 25,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T11:59:08.273993"
+  },
+  {
+    "step_id": "clean_1",
+    "step_name": "Correct Data Types",
+    "category": "clean",
+    "description": "`POSTALCODE` \u2192 numeric",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 2823,
+    "rows_after": 2823,
+    "columns_before": 25,
+    "columns_after": 25,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:11:46.483090"
+  },
+  {
+    "step_id": "clean_2",
+    "step_name": "Handle Missing Values",
+    "category": "clean",
+    "description": "Filled 4 columns: `ADDRESSLINE2` \u2192 mode ('Level 3'), `STATE` \u2192 mode ('CA'), `POSTALCODE` \u2192 median (44000.00), `TERRITORY` \u2192 mode ('EMEA')",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 2823,
+    "rows_after": 2823,
+    "columns_before": 25,
+    "columns_after": 25,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:11:46.502912"
+  },
+  {
+    "step_id": "clean_3",
+    "step_name": "Remove Duplicate Records",
+    "category": "clean",
+    "description": "No duplicates found",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 2823,
+    "rows_after": 2823,
+    "columns_before": 25,
+    "columns_after": 25,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:11:46.507047"
+  },
+  {
+    "step_id": "clean_4",
+    "step_name": "Standardize Formats",
+    "category": "clean",
+    "description": "Title-cased 5 columns: `PRODUCTLINE`, `ADDRESSLINE2`, `STATE`, `COUNTRY`, `TERRITORY`",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 2823,
+    "rows_after": 2823,
+    "columns_before": 25,
+    "columns_after": 25,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:11:46.513114"
+  },
+  {
+    "step_id": "clean_5",
+    "step_name": "Fix Inconsistent Entries",
+    "category": "clean",
+    "description": "No inconsistencies detected",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 2823,
+    "rows_after": 2823,
+    "columns_before": 25,
+    "columns_after": 25,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:11:46.520222"
+  },
+  {
+    "step_id": "clean_6",
+    "step_name": "Remove Unnecessary Columns",
+    "category": "clean",
+    "description": "All columns are useful",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 2823,
+    "rows_after": 2823,
+    "columns_before": 25,
+    "columns_after": 25,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:11:46.527440"
+  },
+  {
+    "step_id": "clean_7",
+    "step_name": "Handle Outliers (IQR Capping)",
+    "category": "clean",
+    "description": "`QUANTITYORDERED`: 8 values capped, `SALES`: 81 values capped, `MSRP`: 28 values capped",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 2823,
+    "rows_after": 2823,
+    "columns_before": 25,
+    "columns_after": 25,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:11:46.541147"
+  },
+  {
+    "step_id": "clean_8",
+    "step_name": "Remove Extra Whitespace",
+    "category": "clean",
+    "description": "No whitespace issues found",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 2823,
+    "rows_after": 2823,
+    "columns_before": 25,
+    "columns_after": 25,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:11:46.548213"
+  },
+  {
+    "step_id": "clean_9",
+    "step_name": "Validate Data",
+    "category": "clean",
+    "description": "All values are valid",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 2823,
+    "rows_after": 2823,
+    "columns_before": 25,
+    "columns_after": 25,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:11:46.548213"
+  },
+  {
+    "step_id": "clean_10",
+    "step_name": "Rename Columns",
+    "category": "clean",
+    "description": "`ORDERNUMBER` \u2192 `ordernumber`, `QUANTITYORDERED` \u2192 `quantityordered`, `PRICEEACH` \u2192 `priceeach`, `ORDERLINENUMBER` \u2192 `orderlinenumber`, `SALES` \u2192 `sales`, `ORDERDATE` \u2192 `orderdate`, `STATUS` \u2192 `status`, `QTR_ID` \u2192 `qtr_id` \u2026 +17 more",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 2823,
+    "rows_after": 2823,
+    "columns_before": 25,
+    "columns_after": 25,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:11:46.551734"
+  }
+]

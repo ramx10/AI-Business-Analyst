@@ -1,0 +1,175 @@
+[
+  {
+    "step_id": "upload",
+    "step_name": "File Upload",
+    "category": "upload",
+    "description": "Uploaded retail_sales_dataset.csv (csv)",
+    "affected_columns": [
+      "Transaction ID",
+      "Date",
+      "Customer ID",
+      "Gender",
+      "Age",
+      "Product Category",
+      "Quantity",
+      "Price per Unit",
+      "Total Amount"
+    ],
+    "rows_before": 0,
+    "rows_after": 1000,
+    "columns_before": 0,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:17:46.186271"
+  },
+  {
+    "step_id": "clean_1",
+    "step_name": "Correct Data Types",
+    "category": "clean",
+    "description": "All data types are correct",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:50:06.943952"
+  },
+  {
+    "step_id": "clean_2",
+    "step_name": "Handle Missing Values",
+    "category": "clean",
+    "description": "No missing values found",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:50:06.946288"
+  },
+  {
+    "step_id": "clean_3",
+    "step_name": "Remove Duplicate Records",
+    "category": "clean",
+    "description": "No duplicates found",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:50:06.948800"
+  },
+  {
+    "step_id": "clean_4",
+    "step_name": "Standardize Formats",
+    "category": "clean",
+    "description": "No format standardization needed",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:50:06.955517"
+  },
+  {
+    "step_id": "clean_5",
+    "step_name": "Fix Inconsistent Entries",
+    "category": "clean",
+    "description": "No inconsistencies detected",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:50:06.957838"
+  },
+  {
+    "step_id": "clean_6",
+    "step_name": "Remove Unnecessary Columns",
+    "category": "clean",
+    "description": "All columns are useful",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:50:06.959343"
+  },
+  {
+    "step_id": "clean_7",
+    "step_name": "Handle Outliers (IQR Capping)",
+    "category": "clean",
+    "description": "No outliers detected",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:50:06.962885"
+  },
+  {
+    "step_id": "clean_8",
+    "step_name": "Remove Extra Whitespace",
+    "category": "clean",
+    "description": "No whitespace issues found",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:50:06.962885"
+  },
+  {
+    "step_id": "clean_9",
+    "step_name": "Validate Data",
+    "category": "clean",
+    "description": "All values are valid",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:50:06.969469"
+  },
+  {
+    "step_id": "clean_10",
+    "step_name": "Rename Columns",
+    "category": "clean",
+    "description": "`Transaction ID` \u2192 `transaction_id`, `Date` \u2192 `date`, `Customer ID` \u2192 `customer_id`, `Gender` \u2192 `gender`, `Age` \u2192 `age`, `Product Category` \u2192 `product_category`, `Quantity` \u2192 `quantity`, `Price per Unit` \u2192 `price_per_unit` \u2026 +1 more",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T15:50:06.970591"
+  }
+]
