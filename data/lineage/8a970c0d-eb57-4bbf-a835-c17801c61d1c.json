@@ -21,5 +21,305 @@
     "columns_after": 9,
     "duration_ms": 0,
     "timestamp": "2026-06-09T16:06:54.965466"
+  },
+  {
+    "step_id": "clean_1",
+    "step_name": "Correct Data Types",
+    "category": "clean",
+    "description": "All data types are correct",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:02.167878"
+  },
+  {
+    "step_id": "clean_2",
+    "step_name": "Handle Missing Values",
+    "category": "clean",
+    "description": "No missing values found",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:02.169434"
+  },
+  {
+    "step_id": "clean_3",
+    "step_name": "Remove Duplicate Records",
+    "category": "clean",
+    "description": "No duplicates found",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:02.171459"
+  },
+  {
+    "step_id": "clean_4",
+    "step_name": "Standardize Formats",
+    "category": "clean",
+    "description": "No format standardization needed",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:02.173466"
+  },
+  {
+    "step_id": "clean_5",
+    "step_name": "Fix Inconsistent Entries",
+    "category": "clean",
+    "description": "No inconsistencies detected",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:02.175473"
+  },
+  {
+    "step_id": "clean_6",
+    "step_name": "Remove Unnecessary Columns",
+    "category": "clean",
+    "description": "All columns are useful",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:02.177477"
+  },
+  {
+    "step_id": "clean_7",
+    "step_name": "Handle Outliers (IQR Capping)",
+    "category": "clean",
+    "description": "No outliers detected",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:02.182172"
+  },
+  {
+    "step_id": "clean_8",
+    "step_name": "Remove Extra Whitespace",
+    "category": "clean",
+    "description": "No whitespace issues found",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:02.183691"
+  },
+  {
+    "step_id": "clean_9",
+    "step_name": "Validate Data",
+    "category": "clean",
+    "description": "All values are valid",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:02.185699"
+  },
+  {
+    "step_id": "clean_10",
+    "step_name": "Rename Columns",
+    "category": "clean",
+    "description": "Column names are already clean",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:02.186450"
+  },
+  {
+    "step_id": "clean_1",
+    "step_name": "Correct Data Types",
+    "category": "clean",
+    "description": "All data types are correct",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:03.969567"
+  },
+  {
+    "step_id": "clean_2",
+    "step_name": "Handle Missing Values",
+    "category": "clean",
+    "description": "No missing values found",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:03.971617"
+  },
+  {
+    "step_id": "clean_3",
+    "step_name": "Remove Duplicate Records",
+    "category": "clean",
+    "description": "No duplicates found",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:03.973632"
+  },
+  {
+    "step_id": "clean_4",
+    "step_name": "Standardize Formats",
+    "category": "clean",
+    "description": "No format standardization needed",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:03.976155"
+  },
+  {
+    "step_id": "clean_5",
+    "step_name": "Fix Inconsistent Entries",
+    "category": "clean",
+    "description": "No inconsistencies detected",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:03.978236"
+  },
+  {
+    "step_id": "clean_6",
+    "step_name": "Remove Unnecessary Columns",
+    "category": "clean",
+    "description": "All columns are useful",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:03.980276"
+  },
+  {
+    "step_id": "clean_7",
+    "step_name": "Handle Outliers (IQR Capping)",
+    "category": "clean",
+    "description": "No outliers detected",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:03.984858"
+  },
+  {
+    "step_id": "clean_8",
+    "step_name": "Remove Extra Whitespace",
+    "category": "clean",
+    "description": "No whitespace issues found",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:03.987366"
+  },
+  {
+    "step_id": "clean_9",
+    "step_name": "Validate Data",
+    "category": "clean",
+    "description": "All values are valid",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:03.987366"
+  },
+  {
+    "step_id": "clean_10",
+    "step_name": "Rename Columns",
+    "category": "clean",
+    "description": "Column names are already clean",
+    "affected_columns": [
+      "*"
+    ],
+    "rows_before": 1000,
+    "rows_after": 1000,
+    "columns_before": 9,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-09T23:06:03.989407"
   }
 ]
