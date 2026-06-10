@@ -141,8 +141,8 @@ function buildSidebar(activePage) {
     </a>`;
   };
 
-  const theme = localStorage.getItem('ai_ba_theme') || 'light-corporate';
-  const profileHtml = (theme === 'superieur-admin' || theme === 'study-admin' || theme === 'server-admin') ? `
+  const savedTemplate = localStorage.getItem('ai_ba_template') || '';
+  const profileHtml = (savedTemplate === 'superieur-admin' || savedTemplate === 'study-admin' || savedTemplate === 'server-admin') ? `
     <div class="sidebar-profile">
       <div class="sidebar-profile-avatar">${Icons.user}</div>
       <div class="sidebar-profile-info">
