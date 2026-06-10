@@ -151,9 +151,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   let savedTheme = localStorage.getItem('ai_ba_theme') || 'dark';
 
   if (savedTemplate !== 'superieur-admin' && savedTemplate !== 'study-admin' && savedTemplate !== 'server-admin') {
-    if (savedTheme === 'superieur-admin' || savedTheme === 'study-admin' || savedTheme === 'server-admin') {
-      savedTheme = localStorage.getItem('ai_ba_regular_theme') || 'dark';
-    }
     localStorage.setItem('ai_ba_regular_theme', savedTheme);
   }
 
@@ -187,11 +184,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let activeTheme = localStorage.getItem('ai_ba_theme') || 'dark';
 
+    document.documentElement.classList.remove('template-superieur-admin', 'template-study-admin', 'template-server-admin');
+
     if (templateId === 'superieur-admin' || templateId === 'study-admin' || templateId === 'server-admin') {
-      activeTheme = templateId;
+      document.documentElement.classList.add('template-' + templateId);
       if (themeSelect) {
-        themeSelect.value = '';
-        themeSelect.disabled = true;
+        let currentTheme = localStorage.getItem('ai_ba_regular_theme') || 'dark';
+        activeTheme = currentTheme;
+        themeSelect.value = activeTheme;
+        themeSelect.disabled = false;
       }
     } else {
       if (themeSelect) {
