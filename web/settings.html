@@ -9,6 +9,10 @@
   <script>
     const savedTheme = localStorage.getItem('ai_ba_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
+    const savedTemplate = localStorage.getItem('ai_ba_template') || '';
+    if (savedTemplate === 'superieur-admin' || savedTemplate === 'study-admin' || savedTemplate === 'server-admin') {
+      document.documentElement.classList.add('template-' + savedTemplate);
+    }
   </script>
   <style>
     .settings-grid {
