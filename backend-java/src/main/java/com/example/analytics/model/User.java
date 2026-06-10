@@ -30,6 +30,9 @@ public class User {
 
     private String password;
 
+    @Column(name = "auth_token", unique = true)
+    private String authToken;
+
     // Constructors
     public User() {}
 
@@ -38,6 +41,7 @@ public class User {
         this.email = email;
         this.name = name;
         this.pictureUrl = pictureUrl;
+        this.authToken = java.util.UUID.randomUUID().toString();
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -48,6 +52,7 @@ public class User {
         this.name = name;
         this.pictureUrl = pictureUrl;
         this.password = password;
+        this.authToken = java.util.UUID.randomUUID().toString();
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -70,6 +75,9 @@ public class User {
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public String getAuthToken() { return authToken; }
+    public void setAuthToken(String authToken) { this.authToken = authToken; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
