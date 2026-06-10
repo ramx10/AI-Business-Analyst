@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,6 +36,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.UUID;
 
 @Configuration
 @EnableWebSecurity
@@ -42,6 +44,12 @@ public class SecurityConfig {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Value("${cors.allowed-origins}")
+    private String corsAllowedOrigins;
+
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -53,7 +61,7 @@ public class SecurityConfig {
                 .anyRequest().permitAll()
             )
             .oauth2Login(oauth2 -> oauth2
-                .successHandler(new OAuth2SuccessHandler())
+                .successHandler(oAuth2SuccessHandler())
                 .userInfoEndpoint(userInfo -> userInfo
                     .oidcUserService(oidcUserService())
                     .userService(oauth2UserService())
@@ -67,7 +75,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:8000", "http://127.0.0.1:8000"));
+        configuration.setAllowedOrigins(Arrays.asList(corsAllowedOrigins.split(",")));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
         configuration.setAllowCredentials(true);
@@ -81,18 +89,17 @@ public class SecurityConfig {
         OidcUserService delegate = new OidcUserService();
         return new OidcUserService() {
             @Override
-            public OidcUser loadUser(org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest userRequest) 
+            public OidcUser loadUser(org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest userRequest)
                     throws OAuth2AuthenticationException {
                 OidcUser oidcUser = delegate.loadUser(userRequest);
-                
+
                 String googleId = oidcUser.getSubject();
                 String email = oidcUser.getEmail();
                 String name = oidcUser.getFullName();
                 String pictureUrl = oidcUser.getPicture();
-                
-                // Save or update user profile details in database
+
                 saveOrUpdateUser(googleId, email, name, pictureUrl);
-                
+
                 return oidcUser;
             }
         };
@@ -103,14 +110,14 @@ public class SecurityConfig {
         DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
         return userRequest -> {
             OAuth2User oauth2User = delegate.loadUser(userRequest);
-            
+
             String googleId = oauth2User.getName();
             String email = oauth2User.getAttribute("email");
             String name = oauth2User.getAttribute("name");
             String pictureUrl = oauth2User.getAttribute("picture");
-            
+
             saveOrUpdateUser(googleId, email, name, pictureUrl);
-            
+
             return oauth2User;
         };
     }
@@ -138,9 +145,8 @@ public class SecurityConfig {
                 String header = request.getHeader("Authorization");
                 if (header != null && header.startsWith("Bearer ")) {
                     String token = header.substring(7);
-                    
-                    // Simple Token validation: looks up database by email token
-                    Optional<User> userOpt = userRepository.findByEmail(token);
+
+                    Optional<User> userOpt = userRepository.findByAuthToken(token);
                     if (userOpt.isPresent()) {
                         User user = userOpt.get();
                         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
@@ -153,18 +159,33 @@ public class SecurityConfig {
         };
     }
 
-    // Redirects to frontend with ?token=email on successful login
-    public static class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
-        @Override
-        public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                Authentication authentication) throws IOException, ServletException {
-            OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
-            String email = oauth2User.getAttribute("email");
-            
-            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:8000/index.html")
-                    .queryParam("token", email)
-                    .build().toUriString();
-            getRedirectStrategy().sendRedirect(request, response, targetUrl);
-        }
+    public SimpleUrlAuthenticationSuccessHandler oAuth2SuccessHandler() {
+        return new SimpleUrlAuthenticationSuccessHandler() {
+            @Override
+            public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+                    Authentication authentication) throws IOException, ServletException {
+                OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
+                String email = oauth2User.getAttribute("email");
+
+                Optional<User> userOpt = userRepository.findByEmail(email);
+                String token;
+                if (userOpt.isPresent()) {
+                    User user = userOpt.get();
+                    token = user.getAuthToken();
+                    if (token == null) {
+                        token = UUID.randomUUID().toString();
+                        user.setAuthToken(token);
+                        userRepository.save(user);
+                    }
+                } else {
+                    token = UUID.randomUUID().toString();
+                }
+
+                String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/index.html")
+                        .queryParam("token", token)
+                        .build().toUriString();
+                getRedirectStrategy().sendRedirect(request, response, targetUrl);
+            }
+        };
     }
 }
