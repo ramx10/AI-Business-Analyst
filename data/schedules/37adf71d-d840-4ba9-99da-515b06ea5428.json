@@ -1,0 +1,11 @@
+{
+  "schedule_id": "37adf71d-d840-4ba9-99da-515b06ea5428",
+  "session_id": "18e488e0-7704-4110-ab4f-a403b5ac3ea6",
+  "name": "saels",
+  "frequency": "daily",
+  "email": "shipalkarram@gmail.com",
+  "format": "pdf",
+  "active": true,
+  "last_run": null,
+  "next_run": "2026-06-11T08:00:00"
+}

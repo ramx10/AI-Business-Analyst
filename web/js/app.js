@@ -142,12 +142,30 @@ function buildSidebar(activePage) {
   };
 
   const savedTemplate = localStorage.getItem('ai_ba_template') || '';
+  const userProfileStr = localStorage.getItem('user_profile');
+  let userName = 'Guest User';
+  let userEmail = 'guest@example.com';
+  let userAvatarHtml = Icons.user;
+  
+  if (userProfileStr) {
+    try {
+      const userProfile = JSON.parse(userProfileStr);
+      userName = userProfile.name || userName;
+      userEmail = userProfile.email || userEmail;
+      if (userProfile.pictureUrl) {
+        userAvatarHtml = `<img src="${userProfile.pictureUrl}" alt="Avatar" />`;
+      }
+    } catch (e) {
+      console.error("Failed to parse cached user profile", e);
+    }
+  }
+
   const profileHtml = (savedTemplate === 'superieur-admin' || savedTemplate === 'study-admin' || savedTemplate === 'server-admin') ? `
     <div class="sidebar-profile">
-      <div class="sidebar-profile-avatar">${Icons.user}</div>
+      <div class="sidebar-profile-avatar">${userAvatarHtml}</div>
       <div class="sidebar-profile-info">
-        <span class="sidebar-profile-name">Samuel Brue</span>
-        <span class="sidebar-profile-email">samuel@gmail.com</span>
+        <span class="sidebar-profile-name">${userName}</span>
+        <span class="sidebar-profile-email">${userEmail}</span>
       </div>
     </div>
   ` : '';
@@ -171,6 +189,7 @@ function buildSidebar(activePage) {
 }
 
 function initSidebar(activePage) {
+  window.activePageGlobal = activePage;
   const sidebar = document.querySelector('.sidebar');
   if (sidebar) {
     sidebar.innerHTML = buildSidebar(activePage);
@@ -272,6 +291,7 @@ function handleGoogleLogin() {
 
 function handleLogout() {
   Auth.clearToken();
+  localStorage.removeItem('user_profile');
   location.reload();
 }
 
@@ -400,9 +420,39 @@ function loadDashboardFromHistory(id) {
   window.location.href = '/dashboard.html';
 }
 
+async function loadAndCacheUserProfile() {
+  const token = localStorage.getItem('auth_token');
+  if (!token || token === 'guest_user@example.com') {
+    localStorage.setItem('user_profile', JSON.stringify({
+      name: 'Guest User',
+      email: 'guest@example.com',
+      pictureUrl: ''
+    }));
+    return;
+  }
+  try {
+    const headers = Auth.getHeaders();
+    const userRes = await fetch(`${SPRING_BOOT_BACKEND}/api/user/profile`, { headers });
+    if (userRes.ok) {
+      const user = await userRes.json();
+      const oldProfile = localStorage.getItem('user_profile');
+      localStorage.setItem('user_profile', JSON.stringify(user));
+      if (oldProfile !== JSON.stringify(user)) {
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar && typeof window.activePageGlobal !== 'undefined') {
+          sidebar.innerHTML = buildSidebar(window.activePageGlobal);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to fetch user profile in background", err);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   renderSessionBadge();
   if (document.getElementById('auth-panel')) {
     initSettings();
   }
+  loadAndCacheUserProfile();
 });
