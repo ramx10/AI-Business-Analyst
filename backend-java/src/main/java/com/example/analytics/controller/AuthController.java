@@ -4,6 +4,8 @@ import com.example.analytics.model.User;
 import com.example.analytics.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -17,6 +19,8 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
+
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
@@ -37,14 +41,14 @@ public class AuthController {
             return ResponseEntity.badRequest().body(response);
         }
 
-        // Create user with manual ID
-        String googleId = "manual_" + UUID.randomUUID().toString();
-        User user = new User(googleId, email, name != null ? name : "User", null, password);
+        String googleId = "manual_" + UUID.randomUUID();
+        String hashedPassword = passwordEncoder.encode(password);
+        User user = new User(googleId, email, name != null ? name : "User", null, hashedPassword);
         userRepository.save(user);
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "Registration successful!");
-        response.put("token", email);
+        response.put("token", user.getAuthToken());
         return ResponseEntity.ok(response);
     }
 
@@ -62,9 +66,9 @@ public class AuthController {
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            if (password.equals(user.getPassword())) {
+            if (passwordEncoder.matches(password, user.getPassword())) {
                 Map<String, String> response = new HashMap<>();
-                response.put("token", email);
+                response.put("token", user.getAuthToken());
                 response.put("name", user.getName());
                 return ResponseEntity.ok(response);
             }
