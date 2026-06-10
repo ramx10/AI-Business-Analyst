@@ -905,49 +905,8 @@ tbody tr:hover td { background: var(--bg-hover); }
 }
 
 /* ─── Superieur Admin Custom Overrides ──────────────────────── */
-html[data-theme="superieur-admin"] .topbar {
-  background: #1e59ff;
-  border-bottom: none;
-  color: #ffffff;
-}
-html[data-theme="superieur-admin"] .topbar-crumb,
-html[data-theme="superieur-admin"] .topbar-crumb .current,
-html[data-theme="superieur-admin"] .topbar-sep {
-  color: #ffffff;
-}
-html[data-theme="superieur-admin"] .status-dot {
-  color: #ffffff;
-}
-html[data-theme="superieur-admin"] .status-dot::before {
-  background: #10b981;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4);
-}
-html[data-theme="superieur-admin"] .theme-toggle-btn {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
-}
-html[data-theme="superieur-admin"] .theme-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: #ffffff;
-}
-html[data-theme="superieur-admin"] .sidebar {
-  background: #ffffff;
-  border-right: 1px solid #e2e8f0;
-}
-html[data-theme="superieur-admin"] .nav-item.active {
-  background: #1e59ff;
-  color: #ffffff;
-}
-html[data-theme="superieur-admin"] .nav-item.active::before {
+.template-superieur-admin .nav-item.active::before {
   display: none;
-}
-html[data-theme="superieur-admin"] .nav-item.active .nav-badge {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-}
-html[data-theme="superieur-admin"] .workspace-name {
-  color: #212529 !important;
 }
 
 /* Sidebar User Profile */
@@ -992,53 +951,11 @@ html[data-theme="superieur-admin"] .workspace-name {
 }
 
 /* ─── Study Admin Custom Overrides ─────────────────────────── */
-html[data-theme="study-admin"] .topbar {
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
-  color: #0f172a;
-}
-html[data-theme="study-admin"] .topbar-crumb,
-html[data-theme="study-admin"] .topbar-crumb .current,
-html[data-theme="study-admin"] .topbar-sep {
-  color: #0f172a;
-}
-html[data-theme="study-admin"] .sidebar {
-  background: #ffffff;
-  border-right: 1px solid #e2e8f0;
-}
-html[data-theme="study-admin"] .nav-item.active {
-  background: #2563eb;
-  color: #ffffff;
-}
-html[data-theme="study-admin"] .nav-item.active::before {
+.template-study-admin .nav-item.active::before {
   display: none;
-}
-html[data-theme="study-admin"] .workspace-name {
-  color: #0f172a !important;
 }
 
 /* ─── Server Admin Custom Overrides ────────────────────────── */
-html[data-theme="server-admin"] .topbar {
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
-  color: #0f172a;
-}
-html[data-theme="server-admin"] .topbar-crumb,
-html[data-theme="server-admin"] .topbar-crumb .current,
-html[data-theme="server-admin"] .topbar-sep {
-  color: #0f172a;
-}
-html[data-theme="server-admin"] .sidebar {
-  background: #ffffff;
-  border-right: 1px solid #e5e7eb;
-}
-html[data-theme="server-admin"] .nav-item.active {
-  background: #0284c7;
-  color: #ffffff;
-}
-html[data-theme="server-admin"] .nav-item.active::before {
+.template-server-admin .nav-item.active::before {
   display: none;
-}
-html[data-theme="server-admin"] .workspace-name {
-  color: #0f172a !important;
 }
