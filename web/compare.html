@@ -28,32 +28,117 @@
     <div class="page-content">
       <div class="page-header">
         <h1 class="page-title">Compare Datasets</h1>
-        <p class="page-subtitle">Compare the current dataset against another CSV file.</p>
+        <p class="page-subtitle">Compare your current data against a previous upload to see what changed.</p>
       </div>
 
-      <div id="compare-root">
-        <div class="loading-state"><div class="spinner"></div><span>Loading dataset A…</span></div>
+      <div id="status-area"></div>
+
+      <div id="current-info" class="card no-hover" style="margin-bottom:20px;display:none;">
+        <div class="card-body" style="display:flex;align-items:center;gap:16px;padding:14px 20px;">
+          <span style="font-size:24px;">📊</span>
+          <div>
+            <div style="font-weight:600;font-size:13px;">Current Dataset</div>
+            <div id="current-desc" style="font-size:12px;color:var(--text-secondary);">Loading…</div>
+          </div>
+        </div>
       </div>
 
-      <div id="compare-status"></div>
-
-      <div id="upload-b" style="display:none;">
+      <div id="history-section" style="display:none;">
         <div class="section">
-          <div class="section-header"><div class="section-title">Upload Dataset B</div></div>
+          <div class="section-header">
+            <div class="section-title">Select Previous Dataset to Compare</div>
+            <span class="pill pill-blue">Last 3 Uploads</span>
+          </div>
+          <div class="card">
+            <div class="card-body" id="history-list"></div>
+          </div>
+        </div>
+        <div class="section" style="margin-top:16px;">
+          <div class="section-header">
+            <div class="section-title">Or Upload a CSV Directly to History</div>
+          </div>
           <div class="card no-hover">
             <div class="card-body">
-              <div class="upload-zone" id="upload-zone-b">
+              <div class="upload-zone" id="upload-history-zone">
                 <div class="upload-icon">↑</div>
-                <h3>Drag & drop CSV file here</h3>
-                <p>or click to browse — CSV only</p>
-                <input type="file" id="file-input-b" accept=".csv" style="display:none"/>
+                <h3>Drag & drop a CSV file here</h3>
+                <p>to save it as a historical entry for comparison</p>
+                <input type="file" id="history-file-input" accept=".csv" style="display:none"/>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div id="compare-results" style="display:none;"></div>
+      <div id="loading-compare" style="display:none;">
+        <div class="loading-state"><div class="spinner"></div><span>Analyzing differences — generating AI-powered comparison insights…</span></div>
+      </div>
+
+      <div id="compare-insights" style="display:none;">
+        <div class="section">
+          <div class="section-header"><div class="section-title">AI Comparison Insights</div><span class="pill pill-blue">AI Generated</span></div>
+          <div class="card">
+            <div class="card-body" id="insights-body"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="compare-metrics" style="display:none;">
+        <div class="section">
+          <div class="section-header"><div class="section-title">Metric Changes</div></div>
+          <div class="kpi-grid" id="metrics-grid"></div>
+        </div>
+      </div>
+
+      <div id="compare-numeric" style="display:none;">
+        <div class="section">
+          <div class="section-header"><div class="section-title">Numeric Column Changes</div></div>
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Column</th>
+                    <th>Previous Mean</th>
+                    <th>Current Mean</th>
+                    <th>Change</th>
+                    <th>% Change</th>
+                    <th>Direction</th>
+                  </tr>
+                </thead>
+                <tbody id="numeric-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="compare-data-quality" style="display:none;">
+        <div class="section">
+          <div class="section-header"><div class="section-title">Data Quality Comparison</div></div>
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Previous</th>
+                    <th>Current</th>
+                    <th>Change</th>
+                  </tr>
+                </thead>
+                <tbody id="quality-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="download-section" style="display:none;margin-top:20px;">
+        <div style="display:flex;gap:8px;">
+          <button id="btn-download" class="btn btn-primary">↓ Download Comparison Report</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>

@@ -8,6 +8,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/maps/world-merc.js"></script>
   <script>
     const savedTheme = localStorage.getItem('ai_ba_theme') || 'light-corporate';
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -54,6 +57,45 @@
       .viz-selector { flex-direction: row; overflow-x: auto; min-width: 0; }
       .viz-option { white-space: nowrap; }
     }
+
+    /* jsVectorMap Customization */
+    #map-container {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      touch-action: none;
+      user-select: none;
+    }
+    .jvm-tooltip {
+      background: rgba(15, 23, 42, 0.95) !important;
+      border: 1px solid var(--border-hover) !important;
+      border-radius: var(--radius) !important;
+      padding: 8px 12px !important;
+      font-family: 'Inter', sans-serif !important;
+      font-size: 11px !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+      color: #fff !important;
+      pointer-events: none;
+      z-index: 1000;
+      line-height: 1.4;
+    }
+    .jvm-zoom-btn {
+      background: rgba(15, 23, 42, 0.8) !important;
+      color: #fff !important;
+      border: 1px solid var(--border-hover) !important;
+      border-radius: 4px !important;
+      width: 24px !important;
+      height: 24px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 14px !important;
+      cursor: pointer !important;
+      transition: background 0.2s ease !important;
+    }
+    .jvm-zoom-btn:hover {
+      background: var(--accent) !important;
+    }
   </style>
 </head>
 <body>
@@ -84,6 +126,9 @@
               <option value="exec">Executive Overview</option>
               <option value="sales">Sales & Operations</option>
               <option value="product">Product Performance</option>
+              <option value="financial">Financial Dashboard</option>
+              <option value="marketing">Marketing Dashboard</option>
+              <option value="hr">HR Dashboard</option>
               <option value="superieur-admin">Superieur Admin</option>
               <option value="study-admin">Study Admin</option>
               <option value="server-admin">Server Admin</option>
@@ -335,7 +380,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <!-- Row 2: Earnings + Top Products + Visitors -->
           <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:20px;">
             <!-- Earnings -->
-            <div class="card" style="padding:20px;display:flex;flex-direction:column;justify-content:space-between;">
+            <div class="card" style="padding:16px;display:flex;flex-direction:column;justify-content:space-between;">
               <div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                   <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0;">Earnings</h4>
@@ -344,34 +389,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div style="font-size:24px;font-weight:700;color:var(--text-primary);">${k.profit ? k.profit.value : '$0'}</div>
                 <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">↑ ${k.profit ? k.profit.trend : '0%'} vs last period</div>
               </div>
-              <div style="height:100px;margin-top:15px;"><canvas id="chart-superieur-earnings"></canvas></div>
+              <div style="height:80px;margin-top:10px;"><canvas id="chart-superieur-earnings"></canvas></div>
             </div>
             <!-- Recently Top Products -->
-            <div class="card" style="padding:20px;display:flex;flex-direction:column;">
-              <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0 0 14px 0;">Recently Top Products</h4>
-              <div style="display:flex;flex-direction:column;gap:12px;flex:1;justify-content:center;">
+            <div class="card" style="padding:16px;display:flex;flex-direction:column;">
+              <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0 0 8px 0;">Recently Top Products</h4>
+              <div style="display:flex;flex-direction:column;gap:8px;flex:1;justify-content:center;">
                 ${prodListHtml}
               </div>
             </div>
             <!-- Visitors Map -->
-            <div class="card" style="padding:20px;display:flex;flex-direction:column;">
+            <div class="card" style="padding:16px;display:flex;flex-direction:column;" id="visitors-map-card">
               <h4 style="font-size:13px;font-weight:700;color:var(--text-primary);margin:0 0 8px 0;">Visitors Map</h4>
-              <div style="flex:1;display:flex;align-items:center;justify-content:center;position:relative;">
-                <svg viewBox="0 0 1000 480" style="width:100%;height:auto;">
-                  <style>@keyframes mapPulse{0%,100%{r:14;opacity:0.25}50%{r:20;opacity:0.1}}</style>
-                  <path d="M150,60 L280,55 L300,100 L280,140 L250,170 L210,180 L180,200 L150,180 L130,140 L120,100 Z" fill="var(--text-tertiary)" opacity="0.25"/>
-                  <path d="M190,220 L240,210 L260,230 L280,310 L260,370 L230,390 L210,340 L200,280 Z" fill="var(--text-tertiary)" opacity="0.25"/>
-                  <path d="M420,60 L580,50 L620,70 L600,180 L500,200 L440,150 Z" fill="var(--text-tertiary)" opacity="0.25"/>
-                  <path d="M580,50 L850,60 L900,200 L780,260 L680,230 L620,170 L620,70 Z" fill="var(--text-tertiary)" opacity="0.25"/>
-                  <path d="M480,220 L580,210 L620,250 L600,340 L560,360 L510,330 L480,270 Z" fill="var(--text-tertiary)" opacity="0.25"/>
-                  <path d="M760,300 L880,310 L870,400 L790,420 L750,380 Z" fill="var(--text-tertiary)" opacity="0.25"/>
-                  <circle cx="210" cy="120" r="5" fill="#10b981"/><circle cx="210" cy="120" r="14" fill="#10b981" opacity="0.25" style="animation:mapPulse 2s infinite;"/>
-                  <circle cx="240" cy="300" r="4" fill="#1e59ff"/><circle cx="240" cy="300" r="12" fill="#1e59ff" opacity="0.25"/>
-                  <circle cx="500" cy="130" r="6" fill="#10b981"/><circle cx="500" cy="130" r="16" fill="#10b981" opacity="0.25" style="animation:mapPulse 2s 0.5s infinite;"/>
-                  <circle cx="780" cy="170" r="7" fill="#f43f5e"/><circle cx="780" cy="170" r="18" fill="#f43f5e" opacity="0.25" style="animation:mapPulse 2s 1s infinite;"/>
-                  <circle cx="830" cy="350" r="5" fill="#f59e0b"/><circle cx="830" cy="350" r="14" fill="#f59e0b" opacity="0.25"/>
-                </svg>
-              </div>
+              <div style="height:220px;min-height:220px;position:relative;overflow:hidden;" id="map-container"></div>
             </div>
           </div>
         </div>
@@ -384,6 +414,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         makeSuperieurSparkline('chart-superieur-blue', sparkValuesBlue, '#ffffff', 'bar');
         makeSuperieurSparkline('chart-superieur-red', sparkValuesRed, '#ffffff', 'line');
       }
+      initDynamicMap(c.regional);
       return;
     }
 
@@ -1035,6 +1066,117 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         </div>
       `;
+    } else if (templateId === 'financial') {
+      chartsHtml = `
+        <!-- KPI Grid -->
+        <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+          ${buildKpis(['revenue', 'expenses', 'profit', 'profit_margin'], k)}
+        </div>
+
+        <!-- Row 1: Revenue & Expenses Trend + Profit Margin trend -->
+        <div style="display:grid;grid-template-columns: 2fr 1.2fr; gap: 20px; margin-bottom: 20px;">
+          <div class="card" style="padding:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0;">Revenue vs Expenses Trend</h4>
+              <button class="btn-download-chart btn btn-ghost btn-sm" data-chart="chart-fin-trend" style="font-size:10px;padding:2px 8px;">⬇ PNG</button>
+            </div>
+            <div style="height:220px;"><canvas id="chart-fin-trend"></canvas></div>
+          </div>
+          <div class="card" style="padding:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0;">Profit Margin Analytics</h4>
+              <button class="btn-download-chart btn btn-ghost btn-sm" data-chart="chart-fin-margin" style="font-size:10px;padding:2px 8px;">⬇ PNG</button>
+            </div>
+            <div style="height:220px;"><canvas id="chart-fin-margin"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Row 2: Expense Category breakdown + Regional Profitability -->
+        <div class="grid-2">
+          <div class="card" style="padding:20px;">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;"><div class="card-title">Expense Allocation by Category</div></div>
+            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-fin-cat"></canvas></div></div>
+          </div>
+          <div class="card" style="padding:20px;">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;"><div class="card-title">Regional Operating Profitability</div></div>
+            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-fin-region"></canvas></div></div>
+          </div>
+        </div>
+      `;
+    } else if (templateId === 'marketing') {
+      chartsHtml = `
+        <!-- KPI Grid -->
+        <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+          ${buildKpis(['spend', 'impressions', 'ctr', 'roi'], k)}
+        </div>
+
+        <!-- Row 1: Campaign CTR Trend + Conversion Funnel -->
+        <div style="display:grid;grid-template-columns: 2fr 1.2fr; gap: 20px; margin-bottom: 20px;">
+          <div class="card" style="padding:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0;">Campaign CTR Trend</h4>
+              <button class="btn-download-chart btn btn-ghost btn-sm" data-chart="chart-mktg-ctr" style="font-size:10px;padding:2px 8px;">⬇ PNG</button>
+            </div>
+            <div style="height:220px;"><canvas id="chart-mktg-ctr"></canvas></div>
+          </div>
+          <div class="card" style="padding:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0;">Conversion Funnel</h4>
+              <button class="btn-download-chart btn btn-ghost btn-sm" data-chart="chart-mktg-funnel" style="font-size:10px;padding:2px 8px;">⬇ PNG</button>
+            </div>
+            <div style="height:220px;"><canvas id="chart-mktg-funnel"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Row 2: Acquisition Channels + Geographic ROI -->
+        <div class="grid-2">
+          <div class="card" style="padding:20px;">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;"><div class="card-title">Acquisition Channels Distribution</div></div>
+            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-mktg-channels"></canvas></div></div>
+          </div>
+          <div class="card" style="padding:20px;">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;"><div class="card-title">Regional Campaign Performance</div></div>
+            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-mktg-region"></canvas></div></div>
+          </div>
+        </div>
+      `;
+    } else if (templateId === 'hr') {
+      chartsHtml = `
+        <!-- KPI Grid -->
+        <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+          ${buildKpis(['headcount', 'avg_salary', 'dept_count', 'avg_age'], k)}
+        </div>
+
+        <!-- Row 1: Headcount Growth Trend + Age Demographics -->
+        <div style="display:grid;grid-template-columns: 2fr 1.2fr; gap: 20px; margin-bottom: 20px;">
+          <div class="card" style="padding:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0;">Headcount Growth Trend</h4>
+              <button class="btn-download-chart btn btn-ghost btn-sm" data-chart="chart-hr-growth" style="font-size:10px;padding:2px 8px;">⬇ PNG</button>
+            </div>
+            <div style="height:220px;"><canvas id="chart-hr-growth"></canvas></div>
+          </div>
+          <div class="card" style="padding:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0;">Age Demographics</h4>
+              <button class="btn-download-chart btn btn-ghost btn-sm" data-chart="chart-hr-age" style="font-size:10px;padding:2px 8px;">⬇ PNG</button>
+            </div>
+            <div style="height:220px;"><canvas id="chart-hr-age"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Row 2: Department Distribution + Salary by Department -->
+        <div class="grid-2">
+          <div class="card" style="padding:20px;">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;"><div class="card-title">Department Employee Share</div></div>
+            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-hr-share"></canvas></div></div>
+          </div>
+          <div class="card" style="padding:20px;">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;"><div class="card-title">Average Salary by Department</div></div>
+            <div class="card-body" style="padding-top:0"><div style="height:240px"><canvas id="chart-hr-salaries"></canvas></div></div>
+          </div>
+        </div>
+      `;
     }
 
     root.innerHTML = chartsHtml;
@@ -1129,11 +1271,178 @@ document.addEventListener('DOMContentLoaded', async () => {
           document.body.removeChild(link);
         });
       }
+    } else if (templateId === 'financial') {
+      const labels = safeChartData('revenue_trend', 'labels');
+      const revValues = safeChartData('revenue_trend', 'values');
+      const expValues = safeChartData('expenses_trend', 'values');
+      const marginValues = safeChartData('revenue_trend', 'values').map((rv, idx) => {
+        const ev = expValues[idx] || (rv * 0.75);
+        return rv ? Math.round((rv - ev) / rv * 1000) / 10 : 25.0;
+      });
+
+      const trendCtx = document.getElementById('chart-fin-trend');
+      if (trendCtx && labels.length) {
+        new Chart(trendCtx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              { label: 'Revenue', data: revValues, borderColor: '#1e59ff', backgroundColor: 'rgba(30, 89, 255, 0.05)', fill: true, tension: 0.4, borderWidth: 2.5 },
+              { label: 'Expenses', data: expValues, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.05)', fill: true, tension: 0.4, borderWidth: 2.5 }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: true, labels: { font: { family: 'Inter', size: 10 } } } },
+            scales: {
+              x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } },
+              y: { grid: { borderDash: [4, 4] }, ticks: { font: { family: 'Inter', size: 10 } } }
+            }
+          }
+        });
+      }
+
+      const marginCtx = document.getElementById('chart-fin-margin');
+      if (marginCtx && labels.length) {
+        new Chart(marginCtx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{ label: 'Margin %', data: marginValues, backgroundColor: '#10b981', borderRadius: 4 }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } },
+              y: { ticks: { callback: v => v + '%', font: { family: 'Inter', size: 10 } } }
+            }
+          }
+        });
+      }
+
+      const catLabels = safeChartData('category', 'labels');
+      const catValues = safeChartData('category', 'values');
+      if (catLabels.length) {
+        makeDoughnutChart('chart-fin-cat', catLabels, catValues.map(v => Math.round(v * 0.75)));
+      }
+      
+      const regionLabels = safeChartData('regional', 'labels');
+      const regionValues = safeChartData('regional', 'values');
+      if (regionLabels.length) {
+        makeBarChart('chart-fin-region', regionLabels, regionValues, true);
+      }
+    } else if (templateId === 'marketing') {
+      const labels = safeChartData('revenue_trend', 'labels');
+      const ctrValues = safeChartData('ctr_trend', 'values');
+      
+      const ctrCtx = document.getElementById('chart-mktg-ctr');
+      if (ctrCtx && labels.length) {
+        new Chart(ctrCtx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{ label: 'CTR %', data: ctrValues, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.05)', fill: true, tension: 0.4, borderWidth: 2.5 }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } },
+              y: { ticks: { callback: v => v + '%', font: { family: 'Inter', size: 10 } } }
+            }
+          }
+        });
+      }
+
+      const funnelCtx = document.getElementById('chart-mktg-funnel');
+      const funnelData = c.conversion_funnel || { labels: [], values: [] };
+      if (funnelCtx && funnelData.labels.length) {
+        new Chart(funnelCtx, {
+          type: 'bar',
+          data: {
+            labels: funnelData.labels,
+            datasets: [{ label: 'Users', data: funnelData.values, backgroundColor: ['#3b82f6', '#10b981', '#f43f5e'] }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { font: { family: 'Inter', size: 10 } } },
+              y: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } }
+            }
+          }
+        });
+      }
+
+      const chanLabels = safeChartData('channel_share', 'labels');
+      const chanValues = safeChartData('channel_share', 'values');
+      if (chanLabels.length) {
+        makeDoughnutChart('chart-mktg-channels', chanLabels, chanValues);
+      }
+
+      const regLabels = safeChartData('regional', 'labels');
+      const regValues = safeChartData('regional', 'values');
+      if (regLabels.length) {
+        makeBarChart('chart-mktg-region', regLabels, regValues.map(v => Math.round(v / 50)));
+      }
+    } else if (templateId === 'hr') {
+      const labels = safeChartData('revenue_trend', 'labels');
+      const growthValues = safeChartData('employee_growth', 'values');
+      
+      const growthCtx = document.getElementById('chart-hr-growth');
+      if (growthCtx && labels.length) {
+        new Chart(growthCtx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{ label: 'Headcount', data: growthValues, borderColor: '#7c3aed', backgroundColor: 'rgba(124, 58, 237, 0.05)', fill: true, tension: 0.1, borderWidth: 2.5 }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } },
+              y: { ticks: { font: { family: 'Inter', size: 10 } } }
+            }
+          }
+        });
+      }
+
+      const ageCtx = document.getElementById('chart-hr-age');
+      const ageData = c.age_demographics || { labels: [], values: [] };
+      if (ageCtx && ageData.labels.length) {
+        new Chart(ageCtx, {
+          type: 'doughnut',
+          data: {
+            labels: ageData.labels,
+            datasets: [{ data: ageData.values, backgroundColor: ['#ef4444', '#f97316', '#2563eb', '#10b981', '#7c3aed'] }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 9 }, boxWidth: 10 } } }
+          }
+        });
+      }
+
+      const deptLabels = safeChartData('category', 'labels');
+      const deptValues = safeChartData('category', 'values');
+      if (deptLabels.length) {
+        makePieChart('chart-hr-share', deptLabels.slice(0, 6), deptValues.slice(0, 6).map(v => Math.round(v / 10) + 1));
+      }
+
+      const salLabels = safeChartData('salary_by_dept', 'labels');
+      const salValues = safeChartData('salary_by_dept', 'values');
+      if (salLabels.length) {
+        makeBarChart('chart-hr-salaries', salLabels.slice(0, 6), salValues.slice(0, 6));
+      }
     }
   }
 
   function kpisCount(templateId) {
     if (templateId === 'exec') return 5;
+    if (templateId === 'financial' || templateId === 'marketing' || templateId === 'hr') return 4;
     return 3;
   }
 
@@ -1143,7 +1452,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       profit: { label: 'Net Profit' },
       orders: { label: 'Total Orders' },
       customers: { label: 'Unique Customers' },
-      profit_margin: { label: 'Profit Margin' }
+      profit_margin: { label: 'Profit Margin' },
+      expenses: { label: 'Total Expenses' },
+      impressions: { label: 'Ad Impressions' },
+      ctr: { label: 'Click-Through Rate' },
+      conversions: { label: 'Conversions' },
+      cvr: { label: 'Conversion Rate' },
+      spend: { label: 'Ad Spend' },
+      roi: { label: 'Campaign ROI' },
+      headcount: { label: 'Total Employees' },
+      avg_salary: { label: 'Average Salary' },
+      dept_count: { label: 'Departments' },
+      avg_age: { label: 'Average Age' }
     };
     return keys.map(key => {
       const kd = kpiData[key]; if (!kd) return '';
@@ -1283,6 +1603,179 @@ document.addEventListener('DOMContentLoaded', async () => {
         quickExportBtn.textContent = '↓ Export Data';
       }
     });
+  }
+
+  // ─── Dynamic Visitor Map Helper ─────────────────────────────
+  function initDynamicMap(regional) {
+    const mapSvg = document.getElementById('visitors-map-svg');
+    const tooltip = document.getElementById('map-tooltip');
+    const container = document.getElementById('map-container');
+    if (!container) return;
+
+    // Clean up previous instance to prevent multiple renders and overlay issues
+    if (window.mapInstance) {
+      try {
+        window.mapInstance.destroy();
+      } catch (err) {
+        console.warn("Error destroying map:", err);
+      }
+      window.mapInstance = null;
+    }
+    container.innerHTML = '';
+
+    // Database of GPS coordinates for major countries
+    const countryCoordinates = {
+      "united states": [37.0902, -95.7129],
+      "usa": [37.0902, -95.7129],
+      "canada": [56.1304, -106.3468],
+      "mexico": [23.6345, -102.5528],
+      "brazil": [-14.2350, -51.9253],
+      "argentina": [-38.4161, -63.6167],
+      "colombia": [4.5709, -74.2973],
+      "chile": [-35.6751, -71.5430],
+      "peru": [-9.1900, -75.0152],
+      "united kingdom": [55.3781, -3.4360],
+      "uk": [55.3781, -3.4360],
+      "france": [46.2276, 2.2137],
+      "germany": [51.1657, 10.4515],
+      "italy": [41.8719, 12.5674],
+      "spain": [40.4637, -3.7492],
+      "netherlands": [52.1326, 5.2913],
+      "belgium": [50.5039, 4.4699],
+      "switzerland": [46.8182, 8.2275],
+      "sweden": [60.1282, 18.6435],
+      "norway": [60.4720, 8.4689],
+      "poland": [51.9194, 19.1451],
+      "russia": [61.5240, 105.3188],
+      "china": [35.8617, 104.1954],
+      "india": [20.5937, 78.9629],
+      "japan": [36.2048, 138.2529],
+      "south korea": [35.9078, 127.7669],
+      "pakistan": [30.3753, 69.3451],
+      "indonesia": [-0.7893, 113.9213],
+      "philippines": [12.8797, 121.7740],
+      "vietnam": [14.0583, 108.2772],
+      "thailand": [15.8700, 100.9925],
+      "singapore": [1.3521, 103.8198],
+      "turkey": [38.9637, 35.2433],
+      "saudi arabia": [23.8859, 45.0792],
+      "south africa": [-30.5595, 22.9375],
+      "egypt": [26.8206, 30.8025],
+      "nigeria": [9.0820, 8.6753],
+      "kenya": [-0.0236, 37.9062],
+      "morocco": [31.7917, -7.0926],
+      "australia": [-25.2744, 133.7751],
+      "new zealand": [-40.9006, 174.8860]
+    };
+
+    // Fallback mock data if no regional data is present
+    let activeRegional = regional;
+    if (!activeRegional || !activeRegional.labels || !activeRegional.labels.length) {
+      activeRegional = {
+        labels: ["United States", "Brazil", "Germany", "China", "Australia", "South Africa", "India", "France", "United Kingdom"],
+        values: [1250, 850, 600, 1500, 450, 350, 1100, 750, 900]
+      };
+    }
+
+    const maxVal = Math.max(...activeRegional.values, 1);
+    const activeMarkers = [];
+
+    activeRegional.labels.forEach((label, idx) => {
+      const val = activeRegional.values[idx];
+      const norm = label.trim().toLowerCase();
+      let coords = countryCoordinates[norm];
+      
+      // Fuzzy matching
+      if (!coords) {
+        for (const key in countryCoordinates) {
+          if (norm.includes(key) || key.includes(norm)) {
+            coords = countryCoordinates[key];
+            break;
+          }
+        }
+      }
+      
+      // Fallback coordinates if not found (distribute near equator/center)
+      if (!coords) {
+        const hash = norm.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        coords = [((hash % 80) - 40), ((hash >> 2) % 180) - 90];
+      }
+      
+      activeMarkers.push({
+        name: label,
+        coords: coords,
+        value: val,
+        style: {
+          r: 5 + (val / maxVal) * 6,
+          fill: '#ffffff',
+          stroke: '#1e59ff',
+          strokeWidth: 2.5
+        }
+      });
+    });
+
+    // Prevent page scroll when zooming inside the map container
+    container.addEventListener('wheel', function(e) {
+      e.preventDefault();
+    }, { passive: false });
+
+    try {
+      window.mapInstance = new jsVectorMap({
+        selector: '#map-container',
+        map: 'world_merc',
+        backgroundColor: 'transparent',
+        draggable: true,
+        zoomButtons: true,
+        zoomOnScroll: true,
+        regionStyle: {
+          initial: {
+            fill: '#1e59ff', // Premium blue landmasses
+            fillOpacity: 0.85,
+            stroke: '#ffffff', // Clean white borders
+            strokeWidth: 1.2,
+            strokeOpacity: 0.6
+          },
+          hover: {
+            fillOpacity: 1.0,
+            cursor: 'pointer'
+          }
+        },
+        markers: activeMarkers,
+        onMarkerLabelShow: function(event, label, index) {
+          const marker = activeMarkers[index];
+          label.html(`
+            <div style="font-weight:700;margin-bottom:2px;color:#fff;">${marker.name}</div>
+            <div style="color:#10b981;font-weight:600;">${marker.value.toLocaleString()} visitors</div>
+          `);
+        },
+        onRegionLabelShow: function(event, label, code) {
+          const countryName = label.html();
+          let val = 0;
+          activeRegional.labels.forEach((lbl, idx) => {
+            const normLbl = lbl.trim().toLowerCase();
+            const normCountryName = countryName.toLowerCase();
+            const normCode = code.toLowerCase();
+            if (normLbl === normCountryName || normLbl === normCode || 
+                (normLbl.length > 3 && (normCountryName.includes(normLbl) || normLbl.includes(normCountryName)))) {
+              val = activeRegional.values[idx];
+            }
+          });
+
+          if (val > 0) {
+            label.html(`
+              <div style="font-weight:700;margin-bottom:2px;color:#fff;">${countryName}</div>
+              <div style="color:#10b981;font-weight:600;">${val.toLocaleString()} visitors</div>
+            `);
+          } else {
+            label.html(`
+              <div style="font-weight:700;color:#fff;">${countryName}</div>
+            `);
+          }
+        }
+      });
+    } catch (err) {
+      console.error("Failed to initialize jsVectorMap:", err);
+    }
   }
 });
 </script>

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Smart Dashboard — AI Business Analyst</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    const savedTheme = localStorage.getItem('ai_ba_theme') || 'light-corporate';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
+  <style>
+    .smart-layout-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .domain-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: var(--accent-muted);
+      color: var(--accent);
+      border: 1px solid var(--accent-border, var(--border));
+    }
+    .data-table-container {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      overflow-x: auto;
+    }
+    .smart-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+    .smart-table th {
+      padding: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-bottom: 2px solid var(--border);
+    }
+    .smart-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+    .smart-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-crumb">
+        <span>AI Business Analyst</span><span class="topbar-sep">/</span>
+        <span class="current">Smart Dashboard</span>
+      </div>
+      <div class="topbar-actions" id="session-badge"></div>
+    </header>
+    <div class="page-content">
+      
+      <!-- Top header section -->
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+            <h1 class="page-title" id="smart-title" style="margin:0;">Smart Dashboard</h1>
+            <span class="domain-badge" id="smart-domain">Analyzing...</span>
+          </div>
+          <p class="page-subtitle">Multi-agent discovery dashboard: Schema, classification, KPIs, and custom visualizations. <span id="smart-stats" style="font-weight:500;color:var(--accent);"></span></p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button id="btn-export-pdf" class="btn btn-secondary btn-sm">⊡ Export PDF Report</button>
+        </div>
+      </div>
+
+      <!-- Main Dynamic Content Root -->
+      <div id="smart-dash-root">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <span>Agents are classifying domain and discovering layout configuration...</span>
+        </div>
+      </div>
+      
+      <!-- Bottom Navigation Controls -->
+      <div style="margin-top:24px;display:flex;gap:8px;">
+        <a href="/visualize.html" class="btn btn-ghost btn-sm">← Back to Visualize</a>
+        <a href="/insights.html" class="btn btn-primary btn-sm">Continue to Insights →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/exports.js"></script>
+<script>
+  initSidebar('smart-dashboard');
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const root = document.getElementById('smart-dash-root');
+    const sid = Session.require(); if (!sid) return;
+
+    try {
+      const stats = await API.get(`/api/dataset/stats?session_id=${sid}`);
+      const statsEl = document.getElementById('smart-stats');
+      if (statsEl && stats.row_count) {
+        statsEl.textContent = `— ${stats.row_count.toLocaleString()} rows, ${stats.column_count} cols`;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    try {
+      // Step 1: Call Multi-Agent dynamic spec generator endpoint
+      const spec = await API.get(`/api/dashboard/smart?session_id=${sid}`);
+      
+      // Step 2: Set Title and Domain
+      document.getElementById('smart-title').textContent = spec.dashboard_title;
+      const domainEl = document.getElementById('smart-domain');
+      domainEl.textContent = spec.domain + " Domain";
+
+      // Step 3: Parse and render row layouts
+      let html = '';
+
+      // KPI Grid Row (row1)
+      if (spec.kpis && spec.kpis.length) {
+        const gridCols = spec.kpis.length;
+        html += `
+          <div class="kpi-grid" style="grid-template-columns: repeat(${gridCols}, 1fr); margin-bottom: 20px;">
+            ${spec.kpis.map(k => {
+              const up = k.direction === 'up';
+              return `
+                <div class="kpi-card">
+                  <div class="kpi-label">${k.label}</div>
+                  <div class="kpi-value">${k.value}</div>
+                  <div class="kpi-trend ${up ? 'up' : 'down'}">${up ? '↑' : '↓'} ${k.trend} <span>discovered metric</span></div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      }
+
+      // Check chart groupings
+      const charts = spec.charts || [];
+      const row2Chart = charts.find(c => c.position === 'row2_full');
+      const row3LeftChart = charts.find(c => c.position === 'row3_left');
+      const row3RightChart = charts.find(c => c.position === 'row3_right');
+      const row4Chart = charts.find(c => c.position === 'row4_full');
+
+      // Row 2: Full-width Line or Trend Chart
+      if (row2Chart) {
+        html += `
+          <div class="card" style="padding:20px; margin-bottom: 20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0;">${row2Chart.title}</h4>
+              <button class="btn-download-chart btn btn-ghost btn-sm" data-chart="${row2Chart.id}" style="font-size:10px;padding:2px 8px;">⬇ PNG</button>
+            </div>
+            <div style="height:230px;"><canvas id="${row2Chart.id}"></canvas></div>
+          </div>
+        `;
+      }
+
+      // Row 3: Grid of 2 charts side-by-side
+      if (row3LeftChart || row3RightChart) {
+        html += `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px;">`;
+        
+        if (row3LeftChart) {
+          html += `
+            <div class="card" style="padding:20px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0;">${row3LeftChart.title}</h4>
+                <button class="btn-download-chart btn btn-ghost btn-sm" data-chart="${row3LeftChart.id}" style="font-size:10px;padding:2px 8px;">⬇ PNG</button>
+              </div>
+              <div style="height:230px;"><canvas id="${row3LeftChart.id}"></canvas></div>
+            </div>
+          `;
+        }
+
+        if (row3RightChart) {
+          html += `
+            <div class="card" style="padding:20px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0;">${row3RightChart.title}</h4>
+                <button class="btn-download-chart btn btn-ghost btn-sm" data-chart="${row3RightChart.id}" style="font-size:10px;padding:2px 8px;">⬇ PNG</button>
+              </div>
+              <div style="height:230px;"><canvas id="${row3RightChart.id}"></canvas></div>
+            </div>
+          `;
+        }
+        
+        html += `</div>`;
+      }
+
+      // Row 4: Full-width relationship scatter
+      if (row4Chart) {
+        html += `
+          <div class="card" style="padding:20px; margin-bottom: 20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0;">${row4Chart.title}</h4>
+              <button class="btn-download-chart btn btn-ghost btn-sm" data-chart="${row4Chart.id}" style="font-size:10px;padding:2px 8px;">⬇ PNG</button>
+            </div>
+            <div style="height:250px;"><canvas id="${row4Chart.id}"></canvas></div>
+          </div>
+        `;
+      }
+
+      // Table Row (row5_full) — Card style with scrollable content
+      const tableSpec = spec.table_spec;
+      if (tableSpec && tableSpec.data && tableSpec.data.length) {
+        const columns = Object.keys(tableSpec.data[0]);
+        html += `
+          <div class="card" style="padding:20px; margin-bottom:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h4 style="font-size:14px;font-weight:700;color:var(--text-primary);margin:0;">${tableSpec.title}</h4>
+            </div>
+            <div style="overflow-x:auto; overflow-y:auto; height:250px;">
+              <table class="smart-table">
+                <thead>
+                  <tr>
+                    ${columns.map(c => `<th style="text-transform: capitalize; position:sticky; top:0; background:var(--bg-elevated); z-index:1;">${c.replace(/_/g, ' ')}</th>`).join('')}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${tableSpec.data.map(row => `
+                    <tr>
+                      ${columns.map(c => `<td>${row[c]}</td>`).join('')}
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+
+      // Inject HTML
+      root.innerHTML = html;
+
+      // Draw all recommended charts
+      charts.forEach(cSpec => {
+        const ctx = document.getElementById(cSpec.id);
+        if (!ctx) return;
+
+        let chartConfig = {};
+
+        if (cSpec.type === 'line') {
+          chartConfig = {
+            type: 'line',
+            data: {
+              labels: cSpec.labels,
+              datasets: [{
+                label: cSpec.title,
+                data: cSpec.values,
+                borderColor: '#1e59ff',
+                backgroundColor: 'rgba(30, 89, 255, 0.05)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2.5
+              }]
+            },
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } },
+                y: { grid: { borderDash: [4, 4] }, ticks: { font: { family: 'Inter', size: 10 } } }
+              }
+            }
+          };
+        } else if (cSpec.type === 'doughnut') {
+          chartConfig = {
+            type: 'doughnut',
+            data: {
+              labels: cSpec.labels,
+              datasets: [{
+                data: cSpec.values,
+                backgroundColor: ['#1e59ff', '#10b981', '#f59e0b', '#ef4444', '#7c3aed', '#06b6d4', '#f43f5e', '#64748b']
+              }]
+            },
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  labels: { font: { family: 'Inter', size: 9 }, boxWidth: 10 }
+                }
+              }
+            }
+          };
+        } else if (cSpec.type === 'bar') {
+          chartConfig = {
+            type: 'bar',
+            data: {
+              labels: cSpec.labels,
+              datasets: [{
+                label: cSpec.title,
+                data: cSpec.values,
+                backgroundColor: '#10b981',
+                borderRadius: 4
+              }]
+            },
+            options: {
+              indexAxis: cSpec.horizontal ? 'y' : 'x',
+              responsive: true, maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } },
+                y: { grid: { borderDash: [4, 4] }, ticks: { font: { family: 'Inter', size: 10 } } }
+              }
+            }
+          };
+        } else if (cSpec.type === 'scatter') {
+          const scatterPoints = cSpec.x_values.map((xv, idx) => ({
+            x: xv,
+            y: cSpec.y_values[idx],
+            label: cSpec.labels[idx] || ''
+          }));
+
+          chartConfig = {
+            type: 'scatter',
+            data: {
+              datasets: [{
+                label: 'Correlation Points',
+                data: scatterPoints,
+                backgroundColor: '#7c3aed',
+                pointRadius: 6,
+                pointHoverRadius: 8
+              }]
+            },
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              plugins: {
+                tooltip: {
+                  callbacks: {
+                    label: function(ctx) {
+                      const item = ctx.raw;
+                      return `${item.label}: (${cSpec.x_axis_label}: ${item.x}, ${cSpec.y_axis_label}: ${item.y})`;
+                    }
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  title: { display: true, text: cSpec.x_axis_label, font: { family: 'Inter', size: 10 } },
+                  ticks: { font: { family: 'Inter', size: 10 } }
+                },
+                y: {
+                  title: { display: true, text: cSpec.y_axis_label, font: { family: 'Inter', size: 10 } },
+                  ticks: { font: { family: 'Inter', size: 10 } }
+                }
+              }
+            }
+          };
+        }
+
+        new Chart(ctx, chartConfig);
+      });
+
+      // Hook up download PNG buttons
+      document.querySelectorAll('.btn-download-chart').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const chartId = e.currentTarget.getAttribute('data-chart');
+          const canvas = document.getElementById(chartId);
+          if (!canvas) return;
+          const url = canvas.toDataURL('image/png');
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${chartId}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        });
+      });
+
+      // PDF export handler
+      const btnExportPdf = document.getElementById('btn-export-pdf');
+      if (btnExportPdf) {
+        btnExportPdf.addEventListener('click', async () => {
+          btnExportPdf.disabled = true;
+          btnExportPdf.textContent = 'Generating...';
+          try {
+            const { jsPDF } = window.jspdf;
+            const element = document.getElementById('smart-dash-root');
+            const canvas = await html2canvas(element, { scale: 2 });
+            const imgData = canvas.toDataURL('image/png');
+            
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            const pageHeight = 295;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft >= 0) {
+              position = heightLeft - imgHeight;
+              pdf.addPage();
+              pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+              heightLeft -= pageHeight;
+            }
+            pdf.save('smart-dashboard-report.pdf');
+          } catch (err) {
+            alert('PDF Generation failed: ' + err.message);
+          } finally {
+            btnExportPdf.disabled = false;
+            btnExportPdf.textContent = '⊡ Export PDF Report';
+          }
+        });
+      }
+
+    } catch (e) {
+      console.error(e);
+      root.innerHTML = `
+        <div class="alert alert-danger" style="padding:20px; border-radius:8px;">
+          <h4>Smart Layout Discovery Failed</h4>
+          <p>${e.message}</p>
+          <p style="margin-top:10px; font-size:12px;">Please make sure a valid dataset is loaded in your active session. Go to <a href="/upload.html">Upload Data</a> to select a file.</p>
+        </div>
+      `;
+    }
+  });
+</script>
+</body>
+</html>

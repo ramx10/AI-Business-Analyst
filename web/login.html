@@ -49,11 +49,16 @@
       width: 50px;
       height: 50px;
       border-radius: var(--radius);
-      background: var(--accent);
       color: #ffffff;
       font-size: 24px;
       font-weight: 700;
       margin-bottom: 16px;
+    }
+    img.login-logo {
+      background: transparent;
+    }
+    div.login-logo {
+      background: var(--accent);
       box-shadow: 0 0 20px var(--accent-muted);
     }
 
@@ -188,7 +193,7 @@
 
   <div class="login-container">
     <div class="login-header">
-      <div class="login-logo">A</div>
+      <img class="login-logo" src="/images/light.png" alt="A" onerror="this.outerHTML='<div class=&quot;login-logo&quot;>A</div>'" style="object-fit: cover;">
       <h1 class="login-title">AI Business Analyst</h1>
       <p class="login-subtitle">Transform and clean raw datasets, extract key trends, and generate production-ready dashboards instantly.</p>
     </div>
