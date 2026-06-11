@@ -1,0 +1,25 @@
+[
+  {
+    "step_id": "upload",
+    "step_name": "File Upload",
+    "category": "upload",
+    "description": "Uploaded retail_sales_dataset.csv (csv)",
+    "affected_columns": [
+      "Transaction ID",
+      "Date",
+      "Customer ID",
+      "Gender",
+      "Age",
+      "Product Category",
+      "Quantity",
+      "Price per Unit",
+      "Total Amount"
+    ],
+    "rows_before": 0,
+    "rows_after": 1000,
+    "columns_before": 0,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-11T10:48:52.067071"
+  }
+]

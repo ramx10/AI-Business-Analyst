@@ -1,0 +1,41 @@
+[
+  {
+    "step_id": "upload",
+    "step_name": "File Upload",
+    "category": "upload",
+    "description": "Uploaded sales_data_sample.csv (csv)",
+    "affected_columns": [
+      "ORDERNUMBER",
+      "QUANTITYORDERED",
+      "PRICEEACH",
+      "ORDERLINENUMBER",
+      "SALES",
+      "ORDERDATE",
+      "STATUS",
+      "QTR_ID",
+      "MONTH_ID",
+      "YEAR_ID",
+      "PRODUCTLINE",
+      "MSRP",
+      "PRODUCTCODE",
+      "CUSTOMERNAME",
+      "PHONE",
+      "ADDRESSLINE1",
+      "ADDRESSLINE2",
+      "CITY",
+      "STATE",
+      "POSTALCODE",
+      "COUNTRY",
+      "TERRITORY",
+      "CONTACTLASTNAME",
+      "CONTACTFIRSTNAME",
+      "DEALSIZE"
+    ],
+    "rows_before": 0,
+    "rows_after": 2823,
+    "columns_before": 0,
+    "columns_after": 25,
+    "duration_ms": 0,
+    "timestamp": "2026-06-11T11:51:49.661363"
+  }
+]
