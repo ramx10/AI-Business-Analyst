@@ -19,7 +19,7 @@ class SupervisorAgent:
 
         self.report_agent = ReportAgent()
 
-    def run(self, df):
+    def run(self, df, mode="detailed"):
 
         # Step 1: Schema Analysis
         schema_info = self.schema_agent.analyze_schema(df)
@@ -34,14 +34,17 @@ class SupervisorAgent:
         insights = self.ai_insight_agent.generate_insights(
             schema_info,
             cleaning_info,
-            kpi_info
+            kpi_info,
+            mode=mode
         )
 
         # Step 5: Final Report (Groq Call #2)
         report = self.report_agent.generate_report(
             schema_info,
             cleaning_info,
-            insights
+            kpi_info,
+            insights,
+            mode=mode
         )
 
         return {

@@ -8,9 +8,9 @@ class AIInsightAgent:
             self,
             schema_info,
             cleaning_info,
-            kpi_info):
+            kpi_info,
+            mode="detailed"):
 
-        # Compress input
         summary = {
             "columns": len(schema_info),
             "missing_values": cleaning_info["missing_values"],
@@ -19,22 +19,35 @@ class AIInsightAgent:
             "columns_count": kpi_info["columns"]
         }
 
-        prompt = f"""
-You are a senior business analyst.
+        if mode == "summary":
+            prompt = f"""
+You are a senior business analyst. Produce a VERY SHORT set of insights for an executive summary.
+
+Dataset: {summary["rows"]} rows, {summary["columns_count"]} cols, {summary["missing_values"]} missing, {summary["duplicate_rows"]} duplicates
+
+Output exactly 3 bullet points total:
+- One key business insight
+- One critical finding
+- One urgent recommendation
+
+Max 2 lines per bullet. No headers, no sections, no introduction.
+"""
+        else:
+            prompt = f"""
+You are a senior business analyst producing detailed insights.
 
 Dataset Summary:
-
 {summary}
 
-Generate:
+Generate 5 sections with bullet points:
 
-1. Key Business Insights
-2. Trends
-3. Risks
-4. Opportunities
-5. Recommendations
+1. Key Business Insights — 3-4 data-backed observations
+2. Trends & Patterns — 2-3 notable trends
+3. Risks — 2-3 specific risks with business impact
+4. Opportunities — 2-3 actionable opportunities
+5. Recommendations — 3-4 prioritized recommendations
 
-Use bullet points and keep answers concise.
+Be specific, mention column names, use numbers. Each bullet max 2 lines.
 """
 
         try:
