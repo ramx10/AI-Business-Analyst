@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
-from api.routers import upload, schema, clean, dashboard, insights, report, history, nlq, llm_settings, pii, lineage, sharing, scheduler, exports, plugins
+from api.routers import upload, schema, clean, dashboard, insights, report, history, nlq, llm_settings, pii, lineage, sharing, scheduler, exports, plugins, compare
 
 
 class NoCacheMiddleware(BaseHTTPMiddleware):
@@ -62,6 +62,7 @@ app.include_router(sharing.router, prefix="/api", tags=["Sharing"])
 app.include_router(scheduler.router, prefix="/api", tags=["Scheduler"])
 app.include_router(exports.router, prefix="/api", tags=["Export"])
 app.include_router(plugins.router, prefix="/api", tags=["Plugins"])
+app.include_router(compare.router, prefix="/api", tags=["Compare"])
 
 # Start background scheduler daemon
 from api.scheduler_daemon import start_scheduler

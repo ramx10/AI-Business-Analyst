@@ -6,14 +6,15 @@ import io
 from pathlib import Path
 
 import pandas as pd
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from fastapi.responses import JSONResponse
 
-from api.session_store import new_session_id, save_df
+from api.session_store import new_session_id, save_df, load_df, session_exists, SESSION_DIR
 from utils.sample_data import generate_sample_sales_df
 from utils.helper import read_excel, read_json, read_parquet
 from utils.large_dataset import estimate_memory
 from utils.lineage import LineageTracker, LineageStep
+from utils.session_history import record_upload
 from datetime import datetime
 
 router = APIRouter()
@@ -22,7 +23,10 @@ ALLOWED_EXTENSIONS = {".csv", ".xlsx", ".json", ".parquet"}
 
 
 @router.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(
+    file: UploadFile = File(...),
+    current_session_id: str = Form(""),
+):
     """Accept a file upload (CSV, Excel, JSON, Parquet), save to session, return session_id."""
     ext = Path(file.filename).suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
@@ -31,6 +35,12 @@ async def upload_file(file: UploadFile = File(...)):
             detail=f"Unsupported file format '{ext}'. Supported: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
         )
     try:
+        # Record previous session in history before replacing it
+        if current_session_id and session_exists(current_session_id):
+            old_df = load_df(current_session_id)
+            old_source = os.path.join(SESSION_DIR, f"{current_session_id}.parquet")
+            record_upload(current_session_id, "(previous)", len(old_df), len(old_df.columns), old_source)
+
         contents = await file.read()
         if ext == ".csv":
             df = pd.read_csv(io.BytesIO(contents), encoding_errors="replace")
@@ -75,9 +85,15 @@ async def upload_file(file: UploadFile = File(...)):
 
 
 @router.post("/upload/sample")
-async def load_sample():
+async def load_sample(current_session_id: str = Form("")):
     """Generate and return a sample retail sales dataset."""
     try:
+        # Record previous session in history before replacing it
+        if current_session_id and session_exists(current_session_id):
+            old_df = load_df(current_session_id)
+            old_source = os.path.join(SESSION_DIR, f"{current_session_id}.parquet")
+            record_upload(current_session_id, "(previous)", len(old_df), len(old_df.columns), old_source)
+
         df = generate_sample_sales_df()
         session_id = new_session_id()
         save_df(session_id, df)
