@@ -60,6 +60,22 @@ const Icons = window.Icons;
 })();
 
 
+function getLogoUrl() {
+  const theme = localStorage.getItem('ai_ba_theme') || 'light-corporate';
+  const darkThemes = ['dark', 'crypto-admin', 'aone-admin', 'crmi-admin'];
+  if (darkThemes.includes(theme)) {
+    return '/images/dark.png';
+  }
+  return '/images/light.png';
+}
+
+function updateLogos() {
+  const logoUrl = getLogoUrl();
+  document.querySelectorAll('img.logo-mark, img.login-logo').forEach(img => {
+    img.src = logoUrl;
+  });
+}
+
 function toggleTheme() {
   const current = localStorage.getItem('ai_ba_theme') || 'light-corporate';
   const next = current === 'dark' ? 'light-corporate' : 'dark';
@@ -76,6 +92,7 @@ function toggleTheme() {
   }
   
   window.dispatchEvent(new CustomEvent('theme-changed', { detail: { theme: next } }));
+  updateLogos();
 }
 
 // ─── API Client ───────────────────────────────────────────────
@@ -91,8 +108,14 @@ const API = {
   async get(path) {
     const sep = path.includes('?') ? '&' : '?';
     const r = await fetch(`${path}${sep}_t=${Date.now()}`);
-    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Request failed'); }
-    return r.json();
+    const body = await r.text();
+    if (!r.ok) {
+      let msg = `HTTP ${r.status}`;
+      try { const e = JSON.parse(body); msg = e.detail || msg; } catch (_) { msg = body.slice(0, 200) || msg; }
+      throw new Error(msg);
+    }
+    if (!body) throw new Error(`Server returned empty body (HTTP ${r.status})`);
+    return JSON.parse(body);
   }
 };
 
@@ -118,6 +141,7 @@ function buildSidebar(activePage) {
     { href: '/clean.html',     icon: 'clean',       label: 'Cleaning',           badge: '3',  page: 'clean',    sym: '\u25C8' },
     { href: '/visualize.html', icon: 'visualize',   label: 'Visualize',          badge: '4',  page: 'visualize',sym: '\u25A3' },
     { href: '/dashboard.html', icon: 'dashboard',   label: 'Dashboard',          badge: '5',  page: 'dashboard',sym: '\u25C9' },
+    { href: '/smart-dashboard.html', icon: 'insights',   label: 'Smart Dashboard', badge: null,  page: 'smart-dashboard',sym: '\u2726' },
     { href: '/compare.html',   icon: 'compare',     label: 'Compare Datasets',   badge: null, page: 'compare',  sym: '\u29C9' },
     { href: '/governance.html',icon: 'governance',  label: 'Governance',         badge: null, page: 'governance',sym: '\u22A1' },
     { href: '/lineage.html',   icon: 'lineage',     label: 'Lineage',            badge: null, page: 'lineage',  sym: '\u21BB' },
@@ -172,7 +196,7 @@ function buildSidebar(activePage) {
 
   return `
     <div class="sidebar-header" onclick="window.location='/index.html'">
-      <div class="logo-mark">A</div>
+      <img class="logo-mark" src="${getLogoUrl()}" alt="A" onerror="this.outerHTML='<div class=&quot;logo-mark&quot;>A</div>'" style="object-fit: cover;">
       <span class="workspace-name">AI Business Analyst</span>
       <span class="chevron">${Icons.chevron_down}</span>
     </div>
@@ -450,6 +474,7 @@ async function loadAndCacheUserProfile() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  updateLogos();
   renderSessionBadge();
   if (document.getElementById('auth-panel')) {
     initSettings();

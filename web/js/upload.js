@@ -26,7 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
     sampleBtn.textContent = 'Generating…';
     statusEl.innerHTML = '';
     try {
-      const data = await API.post('/api/upload/sample', {});
+      const prev = Session.get();
+      const payload = prev ? { current_session_id: prev } : {};
+      const data = await API.post('/api/upload/sample', payload);
       Session.set(data.session_id);
       renderPreview(data, previewEl);
       showAlert(statusEl, 'success', `Sample dataset loaded — ${data.rows.toLocaleString()} rows, ${data.columns} columns.`);
@@ -43,6 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
   async function handleFile(file) {
     const form = new FormData();
     form.append('file', file);
+    const prev = Session.get();
+    if (prev) form.append('current_session_id', prev);
     showAlert(statusEl, 'info', `Uploading ${file.name}…`);
     try {
       const data = await API.post('/api/upload', form, true);

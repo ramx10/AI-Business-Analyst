@@ -1,451 +1,305 @@
-// ─── Compare Page Logic ───────────────────────────────────────
-
-function computeStats(headers, rows) {
-  const colCount = headers.length;
-  const rowCount = rows.length;
-  const missing = {};
-  const colTypes = {};
-  const numericData = {};
-
-  headers.forEach(h => {
-    missing[h] = 0;
-    colTypes[h] = 'other';
-    numericData[h] = [];
-  });
-
-  rows.forEach(row => {
-    headers.forEach((h, i) => {
-      const val = row[i];
-      if (val === null || val === undefined || val === '' || val === 'NA' || val === 'N/A') {
-        missing[h]++;
-      } else {
-        const num = parseFloat(val);
-        if (!isNaN(num) && val.trim() !== '') {
-          numericData[h].push(num);
-          if (colTypes[h] === 'other') colTypes[h] = 'numeric';
-        } else {
-          if (colTypes[h] === 'other') colTypes[h] = 'categorical';
-        }
-      }
-    });
-  });
-
-  const numericSummary = {};
-  headers.forEach(h => {
-    const vals = numericData[h];
-    if (vals.length > 1) {
-      const sorted = [...vals].sort((a, b) => a - b);
-      const sum = vals.reduce((s, v) => s + v, 0);
-      numericSummary[h] = {
-        count: vals.length,
-        mean: round(sum / vals.length),
-        std: round(Math.sqrt(vals.reduce((sq, v) => sq + (v - sum / vals.length) ** 2, 0) / (vals.length - 1))),
-        min: round(sorted[0]),
-        q1: round(sorted[Math.floor(sorted.length * 0.25)]),
-        median: round(sorted[Math.floor(sorted.length * 0.5)]),
-        q3: round(sorted[Math.floor(sorted.length * 0.75)]),
-        max: round(sorted[sorted.length - 1]),
-      };
-    }
-  });
-
-  const seen = new Set();
-  let dupCount = 0;
-  rows.forEach(row => {
-    const key = row.join('|');
-    if (seen.has(key)) dupCount++;
-    else seen.add(key);
-  });
-
-  return { colCount, rowCount, missing, colTypes, numericSummary, duplicateRows: dupCount, columns: headers };
+function showAlert(el, type, msg) {
+  el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
 }
 
 function round(v) {
   return Math.round(v * 100) / 100;
 }
 
-function renderComparison(statsA, statsB) {
-  const root = document.getElementById('compare-results');
-  root.style.display = 'block';
-  root.innerHTML = '';
-
-  // ─── Summary Cards ───────────────────────────────────────────
-  const rowDiff = statsB.rowCount - statsA.rowCount;
-  const rowDiffStr = rowDiff >= 0 ? `+${rowDiff}` : `${rowDiff}`;
-  const rowDiffClass = rowDiff >= 0 ? 'green' : 'red';
-
-  const colsA = new Set(statsA.columns);
-  const colsB = new Set(statsB.columns);
-  const inANotB = statsA.columns.filter(c => !colsB.has(c));
-  const inBNotA = statsB.columns.filter(c => !colsA.has(c));
-  const commonCols = statsA.columns.filter(c => colsB.has(c));
-
-  const colDiffA = inANotB.length;
-  const colDiffB = inBNotA.length;
-
-  const missA = Object.values(statsA.missing).reduce((s, v) => s + v, 0);
-  const missB = Object.values(statsB.missing).reduce((s, v) => s + v, 0);
-
-  const dupA = statsA.duplicateRows;
-  const dupB = statsB.duplicateRows;
-
-  root.innerHTML = `
-    <div class="section">
-      <div class="section-header"><div class="section-title">Comparison Summary</div></div>
-      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
-        <div class="kpi-card">
-          <div class="kpi-label">Row Count Diff</div>
-          <div class="kpi-value" style="color:var(--${rowDiffClass});">${rowDiffStr}</div>
-          <div class="kpi-trend ${rowDiff >= 0 ? 'up' : 'down'}">A: ${statsA.rowCount.toLocaleString()} → B: ${statsB.rowCount.toLocaleString()}</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Column Diff</div>
-          <div class="kpi-value">${inANotB.length + inBNotA.length}</div>
-          <div class="kpi-trend up">${inANotB.length} in A only · ${inBNotA.length} in B only</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Missing Values</div>
-          <div class="kpi-value">${missA.toLocaleString()} / ${missB.toLocaleString()}</div>
-          <div class="kpi-trend up">A / B total missing</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Duplicate Rows</div>
-          <div class="kpi-value">${dupA.toLocaleString()} / ${dupB.toLocaleString()}</div>
-          <div class="kpi-trend up">A / B total duplicates</div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // ─── Column Differences ─────────────────────────────────────
-  if (inANotB.length > 0 || inBNotA.length > 0) {
-    root.innerHTML += `
-      <div class="section">
-        <div class="section-header"><div class="section-title">Column Differences</div></div>
-        <div class="grid-2">
-          ${inANotB.length > 0 ? `
-            <div class="card">
-              <div class="card-header"><div class="card-title">In A but not B (${inANotB.length})</div></div>
-              <div class="card-body"><div style="display:flex;flex-wrap:wrap;gap:6px;">${inANotB.map(c => `<span class="chip chip-blue">${c}</span>`).join('')}</div></div>
-            </div>
-          ` : ''}
-          ${inBNotA.length > 0 ? `
-            <div class="card">
-              <div class="card-header"><div class="card-title">In B but not A (${inBNotA.length})</div></div>
-              <div class="card-body"><div style="display:flex;flex-wrap:wrap;gap:6px;">${inBNotA.map(c => `<span class="chip chip-orange">${c}</span>`).join('')}</div></div>
-            </div>
-          ` : ''}
-        </div>
-      </div>
-    `;
-  }
-
-  // ─── Common Columns — Missing Values Comparison ──────────────
-  const missHtml = commonCols.map(col => {
-    const mA = statsA.missing[col] || 0;
-    const mB = statsB.missing[col] || 0;
-    const pctA = statsA.rowCount ? round((mA / statsA.rowCount) * 100) : 0;
-    const pctB = statsB.rowCount ? round((mB / statsB.rowCount) * 100) : 0;
-    return `<tr><td>${col}</td><td>${mA.toLocaleString()} (${pctA}%)</td><td>${mB.toLocaleString()} (${pctB}%)</td></tr>`;
-  }).join('');
-
-  if (commonCols.length > 0) {
-    root.innerHTML += `
-      <div class="section">
-        <div class="section-header"><div class="section-title">Missing Values by Column</div></div>
-        <div class="card">
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Column</th><th>Dataset A</th><th>Dataset B</th></tr></thead>
-              <tbody>${missHtml}</tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // ─── Numeric Stats Side-by-Side ──────────────────────────────
-  const numCols = Object.keys(statsA.numericSummary).filter(c => statsB.numericSummary[c]);
-  if (numCols.length > 0) {
-    const statFields = ['count', 'mean', 'std', 'min', 'q1', 'median', 'q3', 'max'];
-    const tableRows = numCols.map(col => {
-      const sA = statsA.numericSummary[col];
-      const sB = statsB.numericSummary[col];
-      const cells = statFields.map(f => `<td>${sA[f]}</td><td>${sB[f]}</td>`).join('');
-      return `<tr><td style="font-weight:600;white-space:nowrap;">${col}</td>${cells}</tr>`;
-    }).join('');
-    root.innerHTML += `
-      <div class="section">
-        <div class="section-header"><div class="section-title">Numeric Statistics (Common Columns)</div></div>
-        <div class="card">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Column</th>
-                  <th colspan="2">Count</th>
-                  <th colspan="2">Mean</th>
-                  <th colspan="2">Std</th>
-                  <th colspan="2">Min</th>
-                  <th colspan="2">Q1</th>
-                  <th colspan="2">Median</th>
-                  <th colspan="2">Q3</th>
-                  <th colspan="2">Max</th>
-                </tr>
-                <tr style="font-size:10px;color:var(--text-tertiary);">
-                  <th></th>
-                  <th>A</th><th>B</th>
-                  <th>A</th><th>B</th>
-                  <th>A</th><th>B</th>
-                  <th>A</th><th>B</th>
-                  <th>A</th><th>B</th>
-                  <th>A</th><th>B</th>
-                  <th>A</th><th>B</th>
-                  <th>A</th><th>B</th>
-                </tr>
-              </thead>
-              <tbody>${tableRows}</tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // ─── Data Preview Side-by-Side ──────────────────────────────
-  const previewA = statsA._rawPreview || [];
-  const previewB = statsB._rawPreview || [];
-  const previewCols = [...new Set([...statsA.columns, ...statsB.columns])];
-
-  const maxPreview = Math.min(10, previewA.length, previewB.length);
-  if (maxPreview > 0) {
-    const aRows = previewA.slice(0, maxPreview).map(r =>
-      `<tr>${previewCols.map(c => `<td>${r[c] ?? ''}</td>`).join('')}</tr>`
-    ).join('');
-    const bRows = previewB.slice(0, maxPreview).map(r =>
-      `<tr>${previewCols.map(c => `<td>${r[c] ?? ''}</td>`).join('')}</tr>`
-    ).join('');
-    const headers = previewCols.map(c => `<th>${c}</th>`).join('');
-
-    root.innerHTML += `
-      <div class="section">
-        <div class="section-header"><div class="section-title">Data Preview (side-by-side)</div></div>
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-header"><div class="card-title">Dataset A</div><div class="card-subtitle">${statsA.rowCount.toLocaleString()} rows</div></div>
-            <div class="table-wrap"><table><thead><tr>${headers}</tr></thead><tbody>${aRows}</tbody></table></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">Dataset B</div><div class="card-subtitle">${statsB.rowCount.toLocaleString()} rows</div></div>
-            <div class="table-wrap"><table><thead><tr>${headers}</tr></thead><tbody>${bRows}</tbody></table></div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // ─── Download Report Button ──────────────────────────────────
-  root.innerHTML += `
-    <div style="margin-top:16px;display:flex;gap:8px;">
-      <button id="btn-download-report" class="btn btn-primary">Download Comparison Report</button>
-    </div>
-  `;
-
-  document.getElementById('btn-download-report').addEventListener('click', () => downloadReport(statsA, statsB));
+function fmtNum(n) {
+  if (n === null || n === undefined || isNaN(n)) return '-';
+  return Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function downloadReport(statsA, statsB) {
-  const colsA = new Set(statsA.columns);
-  const colsB = new Set(statsB.columns);
-  const inANotB = statsA.columns.filter(c => !colsB.has(c));
-  const inBNotA = statsB.columns.filter(c => !colsA.has(c));
-  const missA = Object.values(statsA.missing).reduce((s, v) => s + v, 0);
-  const missB = Object.values(statsB.missing).reduce((s, v) => s + v, 0);
-
-  let md = `# Dataset Comparison Report\n\n`;
-  md += `## Overview\n\n`;
-  md += `| Metric | Dataset A | Dataset B |\n`;
-  md += `|---|---|---|\n`;
-  md += `| Rows | ${statsA.rowCount.toLocaleString()} | ${statsB.rowCount.toLocaleString()} |\n`;
-  md += `| Columns | ${statsA.colCount} | ${statsB.colCount} |\n`;
-  md += `| Missing Values | ${missA.toLocaleString()} | ${missB.toLocaleString()} |\n`;
-  md += `| Duplicate Rows | ${statsA.duplicateRows.toLocaleString()} | ${statsB.duplicateRows.toLocaleString()} |\n`;
-  md += `| Columns in A only | ${inANotB.join(', ') || 'none'} |\n`;
-  md += `| Columns in B only | ${inBNotA.join(', ') || 'none'} |\n\n`;
-
-  const commonCols = statsA.columns.filter(c => colsB.has(c));
-  if (commonCols.length > 0) {
-    md += `## Missing Values by Column\n\n`;
-    md += `| Column | A | B |\n|---|---|---|\n`;
-    commonCols.forEach(col => {
-      const mA = statsA.missing[col] || 0;
-      const mB = statsB.missing[col] || 0;
-      md += `| ${col} | ${mA.toLocaleString()} | ${mB.toLocaleString()} |\n`;
-    });
-    md += '\n';
-  }
-
-  const numCols = Object.keys(statsA.numericSummary).filter(c => statsB.numericSummary[c]);
-  if (numCols.length > 0) {
-    md += `## Numeric Statistics\n\n`;
-    numCols.forEach(col => {
-      const sA = statsA.numericSummary[col];
-      const sB = statsB.numericSummary[col];
-      md += `### ${col}\n\n`;
-      md += `| Stat | A | B |\n|---|---|---|\n`;
-      Object.keys(sA).forEach(k => {
-        md += `| ${k} | ${sA[k]} | ${sB[k]} |\n`;
-      });
-      md += '\n';
-    });
-  }
-
-  const blob = new Blob([md], { type: 'text/markdown' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'comparison_report.md';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function parseCSV(text) {
-  const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
-  if (!lines.length) return { headers: [], rows: [] };
-  const headers = parseCSVLine(lines[0]);
-  const rows = lines.slice(1).map(line => parseCSVLine(line));
-  return { headers, rows };
-}
-
-function parseCSVLine(line) {
-  const result = [];
-  let current = '';
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (inQuotes) {
-      if (ch === '"') {
-        if (i + 1 < line.length && line[i + 1] === '"') {
-          current += '"';
-          i++;
-        } else {
-          inQuotes = false;
-        }
-      } else {
-        current += ch;
-      }
-    } else {
-      if (ch === '"') {
-        inQuotes = true;
-      } else if (ch === ',') {
-        result.push(current.trim());
-        current = '';
-      } else {
-        current += ch;
-      }
-    }
-  }
-  result.push(current.trim());
-  return result;
-}
-
-function renderTable(el, headers, rows, label) {
-  const hCells = headers.map(h => `<th>${h}</th>`).join('');
-  const rHtml = rows.slice(0, 20).map(r =>
-    `<tr>${headers.map(h => `<td>${r[h] ?? ''}</td>`).join('')}</tr>`
-  ).join('');
-  el.innerHTML = `
-    <div class="section">
-      <div class="section-header"><div class="section-title">${label}</div></div>
-      <div class="card">
-        <div class="table-wrap"><table><thead><tr>${hCells}</tr></thead><tbody>${rHtml}</tbody></table></div>
-      </div>
-    </div>
-  `;
-}
-
-// ─── Main Init ────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  const root = document.getElementById('compare-root');
-  const statusEl = document.getElementById('compare-status');
-  const uploadB = document.getElementById('upload-b');
-  const resultsEl = document.getElementById('compare-results');
-  const zoneB = document.getElementById('upload-zone-b');
-  const fileInputB = document.getElementById('file-input-b');
+  const statusEl = document.getElementById('status-area');
+  const currentInfo = document.getElementById('current-info');
+  const currentDesc = document.getElementById('current-desc');
+  const historySection = document.getElementById('history-section');
+  const historyList = document.getElementById('history-list');
+  const loadingEl = document.getElementById('loading-compare');
+  const insightsEl = document.getElementById('compare-insights');
+  const insightsBody = document.getElementById('insights-body');
+  const metricsEl = document.getElementById('compare-metrics');
+  const metricsGrid = document.getElementById('metrics-grid');
+  const numericEl = document.getElementById('compare-numeric');
+  const numericBody = document.getElementById('numeric-table-body');
+  const qualityEl = document.getElementById('compare-data-quality');
+  const qualityBody = document.getElementById('quality-table-body');
+  const downloadBtn = document.getElementById('btn-download');
+  const downloadSection = document.getElementById('download-section');
 
-  let statsA = null;
-  let headersA = [];
-  let rowsA = [];
+  let currentStats = null;
+  let previousStats = null;
+  let insightsText = '';
 
-  // Load Dataset A stats from API
   const sid = Session.require();
   if (!sid) return;
 
+  // ── Load current dataset info ──────────────────────────────
   try {
-    const schemaRes = await API.get(`/api/schema?session_id=${sid}`);
-    const previewRes = await API.get(`/api/dataset/stats?session_id=${sid}`);
-
-    headersA = previewRes.column_names || schemaRes.schema?.columns?.map(c => c.name) || [];
-    rowsA = previewRes.preview || [];
-
-    statsA = computeStats(headersA, rowsA);
-    statsA._rawPreview = rowsA;
-
-    showAlert(statusEl, 'success', `Dataset A loaded — ${statsA.rowCount.toLocaleString()} rows, ${statsA.colCount} columns.`);
-    uploadB.style.display = 'block';
-
-    // Show dataset A preview
-    renderTable(root, headersA, rowsA, 'Dataset A');
+    const res = await API.get(`/api/dataset/stats?session_id=${sid}`);
+    currentStats = {
+      row_count: res.row_count,
+      column_count: res.column_count,
+      column_info: {},
+      numeric_summary: res.numeric_summary || {},
+      cat_summary: {},
+      missing_values: res.missing_values || {},
+      duplicate_rows: res.duplicate_rows,
+      columns: res.column_names || [],
+      preview: res.preview || [],
+    };
+    const numNumeric = Object.keys(res.numeric_summary || {}).length;
+    const numCategorical = (res.column_names || []).length - numNumeric;
+    currentDesc.textContent = `${res.row_count.toLocaleString()} rows · ${res.column_count} columns · ${numNumeric} numeric · ${numCategorical} categorical`;
+    currentInfo.style.display = 'block';
   } catch (e) {
-    showAlert(statusEl, 'danger', 'Failed to load dataset A: ' + e.message);
+    showAlert(statusEl, 'danger', 'Failed to load current dataset: ' + e.message);
     return;
   }
 
-  // Handle file upload for dataset B
-  zoneB.addEventListener('dragover', e => { e.preventDefault(); zoneB.classList.add('drag-over'); });
-  zoneB.addEventListener('dragleave', () => zoneB.classList.remove('drag-over'));
-  zoneB.addEventListener('drop', e => {
-    e.preventDefault(); zoneB.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file) handleFileB(file);
-  });
-  zoneB.addEventListener('click', () => fileInputB.click());
-  fileInputB.addEventListener('change', () => { if (fileInputB.files[0]) handleFileB(fileInputB.files[0]); });
+  // ── Load history list ──────────────────────────────────────
+  try {
+    const histRes = await API.get('/api/compare/history');
+    const entries = histRes.history || [];
 
-  async function handleFileB(file) {
-    showAlert(statusEl, 'info', `Reading ${file.name}…`);
-    try {
-      const text = await file.text();
-      const parsed = parseCSV(text);
-      if (parsed.headers.length === 0 || parsed.rows.length === 0) {
-        showAlert(statusEl, 'danger', 'CSV appears empty or invalid.');
-        return;
-      }
+    // Filter out the current session itself (can't compare with itself)
+    const available = entries.filter(e => e.session_id !== sid);
 
-      const headersB = parsed.headers;
-      const rowsB = parsed.rows.map(r => {
-        const obj = {};
-        headersB.forEach((h, i) => { obj[h] = r[i] || ''; });
-        return obj;
+    if (available.length === 0) {
+      historyList.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:13px;">
+        <div style="margin-bottom:12px;">No previous uploads found in history.</div>
+        <button id="btn-save-snapshot" class="btn btn-secondary btn-sm">Save current dataset as snapshot</button>
+        <div style="margin-top:8px;font-size:11px;color:var(--text-tertiary);">This will make the current data available for comparison after your next upload.</div>
+      </div>`;
+      document.getElementById('btn-save-snapshot')?.addEventListener('click', async () => {
+        try {
+          await API.post('/api/compare/snapshot', { session_id: sid, filename: 'current_snapshot' });
+          showAlert(statusEl, 'success', 'Snapshot saved! Upload a new dataset, then return here to compare.');
+        } catch (e) {
+          showAlert(statusEl, 'danger', 'Failed to save snapshot: ' + e.message);
+        }
       });
+      showAlert(statusEl, 'info', 'No previous datasets in history. Save a snapshot or upload a new dataset first.');
+    } else {
+      historyList.innerHTML = available.map((entry, idx) => {
+        const date = entry.uploaded_at ? new Date(entry.uploaded_at).toLocaleDateString() : 'unknown';
+        const time = entry.uploaded_at ? new Date(entry.uploaded_at).toLocaleTimeString() : '';
+        return `
+          <div class="history-item" style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;${idx > 0 ? 'border-top:1px solid var(--border-subtle);' : ''}">
+            <div class="history-info">
+              <div class="history-title" style="font-weight:600;font-size:13px;">${entry.filename}</div>
+              <div class="history-meta" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">
+                <span>${entry.rows.toLocaleString()} rows · ${entry.columns} columns</span>
+                <span style="margin-left:12px;">${date} ${time}</span>
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm compare-btn" data-id="${entry.session_id}" data-name="${entry.filename}">Compare</button>
+          </div>
+        `;
+      }).join('');
 
-      const statsB = computeStats(headersB, parsed.rows);
-      statsB._rawPreview = rowsB;
+      historyList.querySelectorAll('.compare-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          runComparison(btn.dataset.id, btn.dataset.name);
+        });
+      });
+    }
+    historySection.style.display = 'block';
 
-      showAlert(statusEl, 'success', `Dataset B loaded — ${statsB.rowCount.toLocaleString()} rows, ${statsB.colCount} columns.`);
+    // ── Upload CSV directly to history ──────────────────────
+    const historyZone = document.getElementById('upload-history-zone');
+    const historyFileInput = document.getElementById('history-file-input');
+    if (historyZone) {
+      historyZone.addEventListener('dragover', e => { e.preventDefault(); historyZone.classList.add('drag-over'); });
+      historyZone.addEventListener('dragleave', () => historyZone.classList.remove('drag-over'));
+      historyZone.addEventListener('drop', e => {
+        e.preventDefault(); historyZone.classList.remove('drag-over');
+        const f = e.dataTransfer.files[0];
+        if (f) uploadHistoryCsv(f);
+      });
+      historyZone.addEventListener('click', () => historyFileInput.click());
+      historyFileInput.addEventListener('change', () => { if (historyFileInput.files[0]) uploadHistoryCsv(historyFileInput.files[0]); });
+    }
 
-      // Show B preview
-      const bPreview = document.getElementById('compare-b-preview') || document.createElement('div');
-      bPreview.id = 'compare-b-preview';
-      if (!bPreview.parentNode) uploadB.parentNode.insertBefore(bPreview, uploadB.nextSibling);
-      renderTable(bPreview, headersB, rowsB, 'Dataset B');
+    async function uploadHistoryCsv(file) {
+      showAlert(statusEl, 'info', `Uploading ${file.name} to history…`);
+      try {
+        const fd = new FormData();
+        fd.append('file', file);
+        const res = await API.post('/api/compare/upload', fd, true);
+        showAlert(statusEl, 'success', `"${res.filename}" saved to history (${res.rows} rows). Reloading…`);
+        setTimeout(() => location.reload(), 1200);
+      } catch (e) {
+        showAlert(statusEl, 'danger', 'Upload failed: ' + e.message);
+      }
+    }
+  } catch (e) {
+    showAlert(statusEl, 'danger', 'Failed to load history. Make sure the server is running and has been restarted after the latest update. Error: ' + e.message);
+    return;
+  }
 
-      resultsEl.style.display = 'none';
-      renderComparison(statsA, statsB);
-      resultsEl.scrollIntoView({ behavior: 'smooth' });
+  // ── Run comparison ─────────────────────────────────────────
+  async function runComparison(previousId, previousName) {
+    showAlert(statusEl, 'info', `Comparing with ${previousName}…`);
+    historySection.style.display = 'none';
+    loadingEl.style.display = 'block';
+
+    try {
+      const res = await API.get(`/api/compare?session_id=${sid}&previous_id=${previousId}`);
+      previousStats = res.previous;
+      currentStats = res.current;
+      insightsText = res.insights;
+
+      loadingEl.style.display = 'none';
+      renderResults(previousName);
     } catch (e) {
-      showAlert(statusEl, 'danger', 'Failed to read file: ' + e.message);
+      loadingEl.style.display = 'none';
+      historySection.style.display = 'block';
+      showAlert(statusEl, 'danger', 'Comparison failed: ' + e.message);
     }
   }
+
+  // ── Render results ─────────────────────────────────────────
+  function renderResults(previousName) {
+    showAlert(statusEl, 'success', `Comparison complete against <strong>${previousName}</strong> — AI insights generated.`);
+
+    // Insights
+    insightsBody.innerHTML = marked.parse(insightsText);
+    insightsEl.style.display = 'block';
+
+    // Metric overview cards
+    const prevRow = previousStats.row_count;
+    const currRow = currentStats.row_count;
+    const rowDiff = currRow - prevRow;
+    const rowPct = prevRow > 0 ? round((rowDiff / prevRow) * 100) : 0;
+
+    const prevMiss = Object.values(previousStats.missing_values).reduce((a, b) => a + b, 0);
+    const currMiss = Object.values(currentStats.missing_values).reduce((a, b) => a + b, 0);
+
+    const prevDup = previousStats.duplicate_rows;
+    const currDup = currentStats.duplicate_rows;
+
+    const newCols = (currentStats.columns || []).filter(c => !(previousStats.columns || []).includes(c));
+    const removedCols = (previousStats.columns || []).filter(c => !(currentStats.columns || []).includes(c));
+
+    metricsGrid.innerHTML = `
+      <div class="kpi-card">
+        <div class="kpi-label">Row Count</div>
+        <div class="kpi-value">${currRow.toLocaleString()}</div>
+        <div class="kpi-trend ${rowDiff >= 0 ? 'up' : 'down'}">
+          ${rowDiff >= 0 ? '↑' : '↓'} ${rowDiff >= 0 ? '+' : ''}${rowDiff.toLocaleString()} (${rowPct >= 0 ? '+' : ''}${rowPct}%)
+          <span style="color:var(--text-secondary);font-weight:400;"> vs ${prevRow.toLocaleString()}</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Columns</div>
+        <div class="kpi-value">${currentStats.column_count}</div>
+        <div class="kpi-trend">
+          ${newCols.length > 0 ? `<span style="color:var(--green);">+${newCols.length} new</span>` : ''}
+          ${removedCols.length > 0 ? ` <span style="color:var(--red);">-${removedCols.length} removed</span>` : ''}
+          <span style="color:var(--text-secondary);font-weight:400;"> ${currentStats.columns.length} total</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Missing Values</div>
+        <div class="kpi-value">${currMiss.toLocaleString()}</div>
+        <div class="kpi-trend ${currMiss <= prevMiss ? 'up' : 'down'}">
+          ${currMiss <= prevMiss ? '↓ Improved' : '↑ Worse'}
+          <span style="color:var(--text-secondary);font-weight:400;"> was ${prevMiss.toLocaleString()}</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Duplicate Rows</div>
+        <div class="kpi-value">${currDup.toLocaleString()}</div>
+        <div class="kpi-trend ${currDup <= prevDup ? 'up' : 'down'}">
+          ${currDup <= prevDup ? '↓ Improved' : '↑ Worse'}
+          <span style="color:var(--text-secondary);font-weight:400;"> was ${prevDup.toLocaleString()}</span>
+        </div>
+      </div>
+    `;
+    metricsEl.style.display = 'block';
+
+    // Numeric column changes
+    const numPrev = previousStats.numeric_summary || {};
+    const numCurr = currentStats.numeric_summary || {};
+    const commonNum = Object.keys(numCurr).filter(c => numPrev[c]);
+
+    if (commonNum.length > 0) {
+      const rows = commonNum.map(col => {
+        const pMean = numPrev[col].mean;
+        const cMean = numCurr[col].mean;
+        const diff = round(cMean - pMean);
+        const pct = pMean !== 0 ? round((diff / Math.abs(pMean)) * 100) : 0;
+        const arrow = diff > 0.01 ? '↑' : diff < -0.01 ? '↓' : '→';
+        const color = diff > 0.01 ? 'var(--green)' : diff < -0.01 ? 'var(--red)' : 'var(--text-secondary)';
+        return `<tr>
+          <td style="font-weight:600;">${col}</td>
+          <td>${fmtNum(pMean)}</td>
+          <td>${fmtNum(cMean)}</td>
+          <td style="color:${color};">${diff >= 0 ? '+' : ''}${fmtNum(diff)}</td>
+          <td style="color:${color};">${pct >= 0 ? '+' : ''}${pct}%</td>
+          <td style="color:${color};font-size:18px;">${arrow}</td>
+        </tr>`;
+      }).join('');
+      numericBody.innerHTML = rows;
+      numericEl.style.display = 'block';
+    }
+
+    // Data quality comparison
+    qualityBody.innerHTML = `
+      <tr><td>Rows</td><td>${prevRow.toLocaleString()}</td><td>${currRow.toLocaleString()}</td><td style="color:${rowDiff >= 0 ? 'var(--green)' : 'var(--red)'};">${rowDiff >= 0 ? '+' : ''}${rowDiff.toLocaleString()}</td></tr>
+      <tr><td>Columns</td><td>${previousStats.column_count}</td><td>${currentStats.column_count}</td><td>${currentStats.column_count - previousStats.column_count >= 0 ? '+' : ''}${currentStats.column_count - previousStats.column_count}</td></tr>
+      <tr><td>Missing Values</td><td>${prevMiss.toLocaleString()}</td><td>${currMiss.toLocaleString()}</td><td style="color:${currMiss <= prevMiss ? 'var(--green)' : 'var(--red)'};">${currMiss <= prevMiss ? '↓' : '↑'} ${Math.abs(currMiss - prevMiss).toLocaleString()}</td></tr>
+      <tr><td>Duplicate Rows</td><td>${prevDup.toLocaleString()}</td><td>${currDup.toLocaleString()}</td><td style="color:${currDup <= prevDup ? 'var(--green)' : 'var(--red)'};">${currDup <= prevDup ? '↓' : '↑'} ${Math.abs(currDup - prevDup).toLocaleString()}</td></tr>
+    `;
+    qualityEl.style.display = 'block';
+
+    // Download
+    downloadSection.style.display = 'block';
+  }
+
+  // ── Download report ────────────────────────────────────────
+  downloadBtn.addEventListener('click', () => {
+    const prevRow = previousStats.row_count;
+    const currRow = currentStats.row_count;
+    const prevMiss = Object.values(previousStats.missing_values).reduce((a, b) => a + b, 0);
+    const currMiss = Object.values(currentStats.missing_values).reduce((a, b) => a + b, 0);
+    const prevDup = previousStats.duplicate_rows;
+    const currDup = currentStats.duplicate_rows;
+
+    let md = `# Dataset Comparison Report\n\n`;
+    md += `## AI Insights\n\n${insightsText}\n\n`;
+    md += `## Overview\n\n`;
+    md += `| Metric | Previous | Current | Change |\n|---|---|---|---|\n`;
+    md += `| Rows | ${prevRow.toLocaleString()} | ${currRow.toLocaleString()} | ${(currRow - prevRow) >= 0 ? '+' : ''}${(currRow - prevRow).toLocaleString()} |\n`;
+    md += `| Columns | ${previousStats.column_count} | ${currentStats.column_count} | ${currentStats.column_count - previousStats.column_count} |\n`;
+    md += `| Missing Values | ${prevMiss.toLocaleString()} | ${currMiss.toLocaleString()} | ${currMiss - prevMiss >= 0 ? '+' : ''}${(currMiss - prevMiss).toLocaleString()} |\n`;
+    md += `| Duplicate Rows | ${prevDup.toLocaleString()} | ${currDup.toLocaleString()} | ${currDup - prevDup >= 0 ? '+' : ''}${(currDup - prevDup).toLocaleString()} |\n\n`;
+
+    const numPrev = previousStats.numeric_summary || {};
+    const numCurr = currentStats.numeric_summary || {};
+    const commonNum = Object.keys(numCurr).filter(c => numPrev[c]);
+    if (commonNum.length > 0) {
+      md += `## Numeric Column Changes\n\n`;
+      md += `| Column | Previous Mean | Current Mean | Change | % Change |\n|---|---|---|---|---|\n`;
+      commonNum.forEach(col => {
+        const pMean = numPrev[col].mean;
+        const cMean = numCurr[col].mean;
+        const diff = round(cMean - pMean);
+        const pct = pMean !== 0 ? round((diff / Math.abs(pMean)) * 100) : 0;
+        md += `| ${col} | ${fmtNum(pMean)} | ${fmtNum(cMean)} | ${diff >= 0 ? '+' : ''}${fmtNum(diff)} | ${pct >= 0 ? '+' : ''}${pct}% |\n`;
+      });
+      md += '\n';
+    }
+
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'comparison_report.md';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
 });
