@@ -22,12 +22,127 @@ public class UserController {
     @Autowired
     private DashboardHistoryRepository dashboardHistoryRepository;
 
+    @Autowired
+    private com.example.analytics.config.JwtUtil jwtUtil;
+
+    @Autowired
+    private com.example.analytics.service.PaymentGatewayService paymentGatewayService;
+
+    @PostMapping("/upgrade")
+    public ResponseEntity<?> upgradeToPremium() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof User)) {
+            return ResponseEntity.status(401).build();
+        }
+        User user = (User) principal;
+        
+        java.util.Optional<User> userOpt = userRepository.findById(user.getId());
+        if (!userOpt.isPresent()) {
+            return ResponseEntity.status(404).build();
+        }
+        
+        User dbUser = userOpt.get();
+        dbUser.setRole("PREMIUM_USER");
+        dbUser.setSubscriptionPlan("STARTER");
+        dbUser.setSubscriptionExpiresAt(java.time.LocalDateTime.now().plusMonths(3));
+        userRepository.save(dbUser);
+        
+        String token = jwtUtil.generateToken(dbUser.getEmail(), dbUser.getRole(), dbUser.getId());
+        
+        Map<String, String> response = new java.util.HashMap<>();
+        response.put("message", "Upgraded to Premium plan successfully!");
+        response.put("token", token);
+        response.put("role", dbUser.getRole());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/subscribe")
+    public ResponseEntity<?> subscribe(@RequestBody Map<String, String> request) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof User)) {
+            return ResponseEntity.status(401).build();
+        }
+        User user = (User) principal;
+        
+        String plan = request.get("plan");
+        String paymentMethod = request.get("paymentMethod");
+        String paymentToken = request.get("paymentToken");
+
+        if (plan == null || (!plan.equals("FREE") && !plan.equals("STARTER") && !plan.equals("PROFESSIONAL") && !plan.equals("ENTERPRISE"))) {
+            Map<String, String> response = new java.util.HashMap<>();
+            response.put("error", "Invalid subscription plan specified.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        java.util.Optional<User> userOpt = userRepository.findById(user.getId());
+        if (!userOpt.isPresent()) {
+            return ResponseEntity.status(404).build();
+        }
+        User dbUser = userOpt.get();
+
+        double price = 0.0;
+        int durationMonths = 0;
+        if (plan.equals("STARTER")) {
+            price = 27.0;
+            durationMonths = 3;
+        } else if (plan.equals("PROFESSIONAL")) {
+            price = 42.0;
+            durationMonths = 6;
+        } else if (plan.equals("ENTERPRISE")) {
+            price = 60.0;
+            durationMonths = 12;
+        }
+
+        if (price > 0) {
+            com.example.analytics.service.PaymentGatewayService.PaymentResult paymentResult = 
+                paymentGatewayService.processPayment(plan, price, paymentMethod != null ? paymentMethod : "stripe", paymentToken != null ? paymentToken : "tok_visa");
+            
+            if (!paymentResult.isSuccess()) {
+                Map<String, String> response = new java.util.HashMap<>();
+                response.put("error", paymentResult.getErrorMessage());
+                return ResponseEntity.badRequest().body(response);
+            }
+        }
+
+        dbUser.setSubscriptionPlan(plan);
+        if (durationMonths > 0) {
+            dbUser.setSubscriptionExpiresAt(java.time.LocalDateTime.now().plusMonths(durationMonths));
+            if ("USER".equalsIgnoreCase(dbUser.getRole())) {
+                dbUser.setRole("PREMIUM_USER");
+            }
+        } else {
+            dbUser.setSubscriptionExpiresAt(null);
+            if ("PREMIUM_USER".equalsIgnoreCase(dbUser.getRole())) {
+                dbUser.setRole("USER");
+            }
+        }
+        dbUser.setDashboardsGeneratedThisMonth(0);
+        dbUser.setLimitResetAt(java.time.LocalDateTime.now().plusMonths(1));
+        userRepository.save(dbUser);
+
+        String token = jwtUtil.generateToken(dbUser.getEmail(), dbUser.getRole(), dbUser.getId());
+        
+        Map<String, Object> response = new java.util.HashMap<>();
+        response.put("message", "Subscribed to " + plan + " plan successfully!");
+        response.put("token", token);
+        response.put("role", dbUser.getRole());
+        response.put("subscriptionPlan", dbUser.getSubscriptionPlan());
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/profile")
-    public ResponseEntity<User> getProfile() {
-        // Retrieve the authenticated user from the Security Context
+    public ResponseEntity<?> getProfile() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof User) {
-            return ResponseEntity.ok((User) principal);
+            User principalUser = (User) principal;
+            java.util.Optional<User> userOpt = userRepository.findById(principalUser.getId());
+            if (userOpt.isPresent()) {
+                User dbUser = userOpt.get();
+                dbUser.checkSubscriptionStatus();
+                dbUser.checkAndResetLimits();
+                userRepository.save(dbUser);
+                return ResponseEntity.ok(dbUser);
+            }
         }
         return ResponseEntity.status(401).build();
     }
@@ -41,26 +156,36 @@ public class UserController {
 
         User user = (User) principal;
         List<DashboardHistory> history = dashboardHistoryRepository.findTop3ByUserOrderByCreatedAtDesc(user);
-
-        // Return empty list if no history exists
-        // (We no longer seed mock data to avoid confusing users)
-
         return ResponseEntity.ok(history);
     }
 
     @PostMapping("/dashboards/history")
-    public ResponseEntity<DashboardHistory> createHistory(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> createHistory(@RequestBody Map<String, String> body) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!(principal instanceof User)) {
             return ResponseEntity.status(401).build();
         }
         User user = (User) principal;
 
+        java.util.Optional<User> userOpt = userRepository.findById(user.getId());
+        if (!userOpt.isPresent()) {
+            return ResponseEntity.status(404).build();
+        }
+        User dbUser = userOpt.get();
+
+        if (!dbUser.incrementGeneration()) {
+            Map<String, Object> response = new java.util.HashMap<>();
+            response.put("limit_reached", true);
+            response.put("error", "You have reached your monthly dashboard generation limit. Please upgrade to a higher plan.");
+            return ResponseEntity.status(403).body(response);
+        }
+        userRepository.save(dbUser);
+
         String rowCountStr = body.get("rowCount");
         Integer rowCount = rowCountStr != null ? Integer.parseInt(rowCountStr) : 0;
 
         DashboardHistory history = new DashboardHistory(
-            user,
+            dbUser,
             body.getOrDefault("datasetName", "Unknown"),
             rowCount,
             body.getOrDefault("cleaningSummary", ""),
@@ -70,6 +195,7 @@ public class UserController {
         dashboardHistoryRepository.save(history);
         return ResponseEntity.ok(history);
     }
+
 
     private void seedSampleHistory(User user) {
         DashboardHistory h1 = new DashboardHistory(

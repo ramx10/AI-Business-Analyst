@@ -33,6 +33,21 @@ public class User {
     @Column(name = "auth_token", unique = true)
     private String authToken;
 
+    @Column(name = "role")
+    private String role = "USER";
+
+    @Column(name = "subscription_plan")
+    private String subscriptionPlan = "FREE";
+
+    @Column(name = "subscription_expires_at")
+    private LocalDateTime subscriptionExpiresAt;
+
+    @Column(name = "dashboards_generated_this_month")
+    private Integer dashboardsGeneratedThisMonth = 0;
+
+    @Column(name = "limit_reset_at")
+    private LocalDateTime limitResetAt = LocalDateTime.now().plusMonths(1);
+
     // Constructors
     public User() {}
 
@@ -55,6 +70,55 @@ public class User {
         this.authToken = java.util.UUID.randomUUID().toString();
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+    }
+
+    // Quota and Subscription status helpers
+    public void checkSubscriptionStatus() {
+        if (subscriptionPlan != null && !"FREE".equalsIgnoreCase(subscriptionPlan)) {
+            if (subscriptionExpiresAt != null && LocalDateTime.now().isAfter(subscriptionExpiresAt)) {
+                this.subscriptionPlan = "FREE";
+                this.subscriptionExpiresAt = null;
+                if (!"ADMIN".equalsIgnoreCase(this.role)) {
+                    this.role = "USER";
+                }
+            }
+        }
+    }
+
+    public boolean checkAndResetLimits() {
+        LocalDateTime now = LocalDateTime.now();
+        if (limitResetAt == null || now.isAfter(limitResetAt)) {
+            this.dashboardsGeneratedThisMonth = 0;
+            this.limitResetAt = now.plusMonths(1);
+            return true;
+        }
+        return false;
+    }
+
+    public int getDashboardLimit() {
+        checkSubscriptionStatus();
+        if ("STARTER".equalsIgnoreCase(subscriptionPlan)) {
+            return 50;
+        } else if ("PROFESSIONAL".equalsIgnoreCase(subscriptionPlan)) {
+            return 200;
+        } else if ("ENTERPRISE".equalsIgnoreCase(subscriptionPlan)) {
+            return Integer.MAX_VALUE;
+        } else {
+            return 5;
+        }
+    }
+
+    public boolean incrementGeneration() {
+        checkSubscriptionStatus();
+        checkAndResetLimits();
+        if (this.dashboardsGeneratedThisMonth == null) {
+            this.dashboardsGeneratedThisMonth = 0;
+        }
+        if (this.dashboardsGeneratedThisMonth >= getDashboardLimit()) {
+            return false;
+        }
+        this.dashboardsGeneratedThisMonth++;
+        return true;
     }
 
     // Getters and Setters
@@ -84,4 +148,20 @@ public class User {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getRole() { return role != null ? role : "USER"; }
+    public void setRole(String role) { this.role = role; }
+
+    public String getSubscriptionPlan() { return subscriptionPlan != null ? subscriptionPlan : "FREE"; }
+    public void setSubscriptionPlan(String subscriptionPlan) { this.subscriptionPlan = subscriptionPlan; }
+
+    public LocalDateTime getSubscriptionExpiresAt() { return subscriptionExpiresAt; }
+    public void setSubscriptionExpiresAt(LocalDateTime subscriptionExpiresAt) { this.subscriptionExpiresAt = subscriptionExpiresAt; }
+
+    public int getDashboardsGeneratedThisMonth() { return dashboardsGeneratedThisMonth != null ? dashboardsGeneratedThisMonth : 0; }
+    public void setDashboardsGeneratedThisMonth(Integer dashboardsGeneratedThisMonth) { this.dashboardsGeneratedThisMonth = dashboardsGeneratedThisMonth; }
+
+    public LocalDateTime getLimitResetAt() { return limitResetAt; }
+    public void setLimitResetAt(LocalDateTime limitResetAt) { this.limitResetAt = limitResetAt; }
 }
+
