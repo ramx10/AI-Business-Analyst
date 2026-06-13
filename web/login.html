@@ -287,7 +287,12 @@
         const data = await res.json();
         if (res.ok) {
           Auth.setToken(data.token);
-          window.location.href = "/index.html";
+          Auth.setRole(data.role);
+          if (data.role === 'ADMIN') {
+            window.location.href = "/admin.html";
+          } else {
+            window.location.href = "/index.html";
+          }
         } else {
           alert(data.error || "Login failed");
         }
@@ -311,7 +316,12 @@
         const data = await res.json();
         if (res.ok) {
           Auth.setToken(data.token);
-          window.location.href = "/index.html";
+          Auth.setRole(data.role);
+          if (data.role === 'ADMIN') {
+            window.location.href = "/admin.html";
+          } else {
+            window.location.href = "/index.html";
+          }
         } else {
           alert(data.error || "Registration failed");
         }

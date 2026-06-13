@@ -192,14 +192,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   const tempSelect = document.getElementById('template-select');
   const themeSelect = document.getElementById('theme-select');
 
-  const savedTemplate = localStorage.getItem('ai_ba_template') || 'exec';
+  let savedTemplate = localStorage.getItem('ai_ba_template') || 'exec';
   let savedTheme = localStorage.getItem('ai_ba_theme') || 'dark';
 
-  if (savedTemplate !== 'superieur-admin' && savedTemplate !== 'study-admin' && savedTemplate !== 'server-admin') {
-    localStorage.setItem('ai_ba_regular_theme', savedTheme);
+  const plan = typeof getSubscriptionPlan === 'function' ? getSubscriptionPlan() : 'FREE';
+  const isFree = plan === 'FREE';
+  const isPremiumTemplate = savedTemplate === 'exec' || savedTemplate === 'product' || savedTemplate === 'hr' || 
+                            savedTemplate === 'superieur-admin' || savedTemplate === 'study-admin' || savedTemplate === 'server-admin';
+
+  if (isFree && isPremiumTemplate) {
+    savedTemplate = 'sales';
+    localStorage.setItem('ai_ba_template', 'sales');
   }
 
-  if (tempSelect) tempSelect.value = savedTemplate;
+  if (tempSelect) {
+    tempSelect.value = savedTemplate;
+    Array.from(tempSelect.options).forEach(opt => {
+      const val = opt.value;
+      const isPrem = val === 'exec' || val === 'product' || val === 'hr' || 
+                     val === 'superieur-admin' || val === 'study-admin' || val === 'server-admin';
+      if (isPrem && isFree) {
+        opt.textContent = '🔒 ' + opt.textContent;
+      }
+    });
+  }
 
   let dashData = null;
 
@@ -1507,6 +1523,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (tempSelect) {
     tempSelect.addEventListener('change', (e) => {
       const template = e.target.value;
+      const plan = typeof getSubscriptionPlan === 'function' ? getSubscriptionPlan() : 'FREE';
+      const isFree = plan === 'FREE';
+      const isPremiumTemplate = template === 'exec' || template === 'product' || template === 'hr' || 
+                                template === 'superieur-admin' || template === 'study-admin' || template === 'server-admin';
+      
+      if (isFree && isPremiumTemplate) {
+        Toast.error('This is a premium template. Please upgrade your plan to unlock.');
+        tempSelect.value = localStorage.getItem('ai_ba_template') || 'sales';
+        setTimeout(() => {
+          if (confirm('Upgrade to a premium plan to unlock all dashboard templates?')) {
+            window.location.href = '/settings.html';
+          }
+        }, 150);
+        return;
+      }
+
       localStorage.setItem('ai_ba_template', template);
       render(template);
     });
@@ -1556,6 +1588,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ─── Export Dashboard as PDF ────────────────────────────────
   document.getElementById('btn-export-pdf')?.addEventListener('click', async () => {
+    if (typeof isFeatureLocked === 'function' && isFeatureLocked('pdf-export')) {
+      Toast.error('PDF reports are a premium feature. Please upgrade your plan.');
+      setTimeout(() => {
+        if (confirm('Upgrade your plan to unlock PDF reports?')) {
+          window.location.href = '/settings.html';
+        }
+      }, 150);
+      return;
+    }
     const dashRoot = document.getElementById('dash-root');
     if (!dashRoot) return;
     const { jsPDF } = window.jspdf;
@@ -1591,6 +1632,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (quickExportBtn && quickExportFmt) {
     quickExportBtn.addEventListener('click', async () => {
       const fmt = quickExportFmt.value;
+      if (fmt === 'excel' && typeof isFeatureLocked === 'function' && isFeatureLocked('excel-export')) {
+        Toast.error('Excel export is a premium feature. Please upgrade your plan.');
+        setTimeout(() => {
+          if (confirm('Upgrade your plan to unlock Excel export?')) {
+            window.location.href = '/settings.html';
+          }
+        }, 150);
+        return;
+      }
       quickExportBtn.disabled = true;
       quickExportBtn.textContent = '⏳...';
       try {
