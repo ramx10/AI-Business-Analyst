@@ -1,11 +1,7 @@
-import sys
-import os
 import json
 import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from config.llm_manager import (
     LLMConfig,

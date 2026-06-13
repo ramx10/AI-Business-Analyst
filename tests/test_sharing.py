@@ -1,9 +1,6 @@
-import sys
 import os
 import json
 import time
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from utils.sharing import create_share_link, get_shared_session, list_shares, revoke_share, SHARE_DIR
 

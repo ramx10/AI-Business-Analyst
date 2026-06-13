@@ -1,10 +1,7 @@
-import sys
 import os
 import json
 import time
 import uuid
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from utils.scheduler import (
     ReportSchedule, save_schedule, load_schedule,
