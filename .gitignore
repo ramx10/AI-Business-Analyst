@@ -31,3 +31,6 @@ target/
 plugins/
 !plugins/__init__.py
 !plugins/sentiment_plugin.py
+
+# Python packaging metadata
+*.egg-info/
