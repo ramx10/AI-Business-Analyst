@@ -1,11 +1,7 @@
-import sys
-import os
 import uuid
 from datetime import datetime
 
 import pandas as pd
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import JSONResponse
