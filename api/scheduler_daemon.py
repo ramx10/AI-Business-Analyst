@@ -1,10 +1,7 @@
-import sys
 import os
 import threading
 import time
 from datetime import datetime
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from utils.scheduler import list_schedules, save_schedule, ReportSchedule
 from api.session_store import load_df, session_exists
