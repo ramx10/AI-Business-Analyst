@@ -1,0 +1,25 @@
+[
+  {
+    "step_id": "upload",
+    "step_name": "Sample Data Load",
+    "category": "upload",
+    "description": "Loaded sample retail sales dataset",
+    "affected_columns": [
+      "Date",
+      "Order_ID",
+      "Customer_ID",
+      "Region",
+      "Product_Category",
+      "Product",
+      "Revenue",
+      "Profit",
+      "PostalCode"
+    ],
+    "rows_before": 0,
+    "rows_after": 2823,
+    "columns_before": 0,
+    "columns_after": 9,
+    "duration_ms": 0,
+    "timestamp": "2026-06-13T09:53:33.514526"
+  }
+]

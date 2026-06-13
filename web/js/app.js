@@ -28,6 +28,8 @@ window.Icons = {
   info: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 9v5M10 6.5v.5" stroke-linecap="round"/></svg>',
   user: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="10" cy="7" r="3.5"/><path d="M3 18c0-4 3-7 7-7s7 3 7 7"/></svg>',
   upload_zone: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M24 32V12M24 12l-6 6M24 12l6 6"/><path d="M8 36v4a4 4 0 004 4h24a4 4 0 004-4v-4"/></svg>',
+  sidebar_collapse: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4L7 10l5 6"/><path d="M15 4v12"/></svg>',
+  sidebar_expand: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4l5 6-5 6"/><path d="M5 4v12"/></svg>',
 };
 const Icons = window.Icons;
 
@@ -50,11 +52,19 @@ const Icons = window.Icons;
 
   const path = window.location.pathname;
   const isLoginPage = path.endsWith('login.html');
+  const isAdminPage = path.endsWith('admin.html');
   const token = localStorage.getItem('auth_token');
+  const role = localStorage.getItem('auth_role');
   
   if (!token && !isLoginPage) {
     window.location.href = '/login.html';
   } else if (token && isLoginPage) {
+    if (role === 'ADMIN') {
+      window.location.href = '/admin.html';
+    } else {
+      window.location.href = '/index.html';
+    }
+  } else if (token && isAdminPage && role !== 'ADMIN') {
     window.location.href = '/index.html';
   }
 })();
@@ -155,13 +165,26 @@ function buildSidebar(activePage) {
     { href: '/report.html',    icon: 'report',      label: 'Report',             badge: '7',  page: 'report',   sym: '\u22A1' },
   ];
   const settingsItem = { href: '/settings.html',  icon: 'settings',  label: 'Settings',  badge: null,  page: 'settings', sym: '\u2726' };
+  const adminItem = { href: '/admin.html',  icon: 'governance',  label: 'Admin Panel',  badge: null,  page: 'admin', sym: '\u22A1' };
 
   const makeItem = item => {
     const isActive = item.page === activePage;
+    let labelSuffix = '';
+
+    let featureKey = null;
+    if (item.href.includes('smart-dashboard.html')) featureKey = 'smart-dashboard';
+    else if (item.href.includes('share-manage.html')) featureKey = 'sharing';
+    else if (item.href.includes('scheduled-reports.html')) featureKey = 'schedules';
+
+    if (featureKey && typeof isFeatureLocked === 'function' && isFeatureLocked(featureKey)) {
+      labelSuffix = ' <span style="font-size:10px; margin-left: auto; filter: opacity(0.6);">🔒</span>';
+    }
+
     return `<a class="nav-item${isActive ? ' active' : ''}" href="${item.href}">
       <span class="nav-icon">${Icons[item.icon] || ''}</span>
       <span class="nav-label">${item.label}</span>
-      ${item.badge ? `<span class="nav-badge">${item.badge}</span>` : ''}
+      ${labelSuffix}
+      ${item.badge && !labelSuffix ? `<span class="nav-badge">${item.badge}</span>` : ''}
     </a>`;
   };
 
@@ -194,10 +217,15 @@ function buildSidebar(activePage) {
     </div>
   ` : '';
 
+  const isCollapsed = localStorage.getItem('ai_ba_sidebar_collapsed') === 'true';
+
+  const toggleIcon = isCollapsed ? Icons.sidebar_expand : Icons.sidebar_collapse;
+
   return `
     <div class="sidebar-header" onclick="window.location='/index.html'">
       <img class="logo-mark" src="${getLogoUrl()}" alt="A" onerror="this.outerHTML='<div class=&quot;logo-mark&quot;>A</div>'" style="object-fit: cover;">
       <span class="workspace-name">AI Business Analyst</span>
+      <button class="sidebar-toggle" onclick="event.stopPropagation();toggleSidebar()" title="${isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}">${toggleIcon}</button>
       <span class="chevron">${Icons.chevron_down}</span>
     </div>
     ${profileHtml}
@@ -207,18 +235,52 @@ function buildSidebar(activePage) {
         <div class="nav-section-label">AI Pipeline</div>
         ${aiItems.map(makeItem).join('')}
       </div>
-      <div class="nav-section">${makeItem(settingsItem)}</div>
+      <div class="nav-section">
+        ${Auth.getRole() === 'ADMIN' ? makeItem(adminItem) : ''}
+        ${makeItem(settingsItem)}
+      </div>
     </div>
     <div class="sidebar-footer">AI Business Analyst</div>`;
+}
+
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const main = document.querySelector('.main');
+  const isCollapsed = sidebar.classList.toggle('collapsed');
+  if (main) main.classList.toggle('sidebar-collapsed', isCollapsed);
+  localStorage.setItem('ai_ba_sidebar_collapsed', isCollapsed);
+  // Update toggle icon in header
+  const toggleBtn = sidebar.querySelector('.sidebar-toggle');
+  if (toggleBtn) {
+    toggleBtn.innerHTML = isCollapsed ? Icons.sidebar_expand : Icons.sidebar_collapse;
+    toggleBtn.title = isCollapsed ? 'Expand sidebar' : 'Collapse sidebar';
+  }
 }
 
 function initSidebar(activePage) {
   window.activePageGlobal = activePage;
   const sidebar = document.querySelector('.sidebar');
+  const main = document.querySelector('.main');
   if (sidebar) {
     sidebar.innerHTML = buildSidebar(activePage);
+    // Restore collapsed state
+    const isCollapsed = localStorage.getItem('ai_ba_sidebar_collapsed') === 'true';
+    if (isCollapsed) {
+      sidebar.classList.add('collapsed');
+      if (main) main.classList.add('sidebar-collapsed');
+    }
     window.addEventListener('theme-changed', () => {
+      const wasCollapsed = sidebar.classList.contains('collapsed');
       sidebar.innerHTML = buildSidebar(activePage);
+      if (wasCollapsed) {
+        sidebar.classList.add('collapsed');
+        if (main) main.classList.add('sidebar-collapsed');
+        const toggleBtn = sidebar.querySelector('.sidebar-toggle');
+        if (toggleBtn) {
+          toggleBtn.innerHTML = Icons.sidebar_expand;
+          toggleBtn.title = 'Expand sidebar';
+        }
+      }
     });
   }
 }
@@ -257,10 +319,31 @@ function showLoading(el, msg = 'Loading…') {
   el.innerHTML = `<div class="loading-state"><div class="spinner"></div><span>${msg}</span></div>`;
 }
 
+function showSkeleton(el, lines = 3) {
+  const cards = Array(lines).fill(0).map(() =>
+    '<div class="skeleton skeleton-card" style="margin-bottom:12px;"></div>'
+  ).join('');
+  el.innerHTML = `<div style="padding:20px;">${cards}</div>`;
+}
+
 // ─── Alert Injection ──────────────────────────────────────────
 function showAlert(el, type, msg) {
   el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
 }
+
+// ─── Keyboard Shortcuts ───────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  // Ctrl+Shift+T / Cmd+Shift+T → toggle theme
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
+    e.preventDefault();
+    toggleTheme();
+    Toast.show(`Theme switched`, 'info', 1500);
+  }
+  // Escape → close any open dropdown
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  }
+});
 
 // ─── Toast Notifications ──────────────────────────────────────
 const Toast = {
@@ -271,13 +354,15 @@ const Toast = {
     this.container.id = 'toast-container';
     Object.assign(this.container.style, {
       position: 'fixed', top: '16px', right: '16px', zIndex: '99999',
-      display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '380px'
+      display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '380px',
+      pointerEvents: 'none'
     });
     document.body.appendChild(this.container);
   },
   show(message, type = 'info', duration = 4000) {
     this.init();
     const el = document.createElement('div');
+    el.style.pointerEvents = 'auto';
     const colors = {
       success: 'var(--green)', error: 'var(--red)', warning: 'var(--yellow)', info: 'var(--accent)'
     };
@@ -288,11 +373,14 @@ const Toast = {
     </div>`;
     this.container.appendChild(el);
     setTimeout(() => {
-      el.style.opacity = '0';
-      el.style.transition = 'opacity 0.3s ease';
-      setTimeout(() => el.remove(), 300);
+      el.style.animation = 'toastOut 0.25s ease-in forwards';
+      setTimeout(() => el.remove(), 250);
     }, duration);
-  }
+  },
+  success(msg, duration) { this.show(msg, 'success', duration); },
+  error(msg, duration) { this.show(msg, 'error', duration); },
+  warning(msg, duration) { this.show(msg, 'warning', duration); },
+  info(msg, duration) { this.show(msg, 'info', duration); }
 };
 
 // ─── Authentication & Settings ───────────────────────────────
@@ -302,6 +390,9 @@ const Auth = {
   getToken() { return localStorage.getItem('auth_token'); },
   setToken(token) { localStorage.setItem('auth_token', token); },
   clearToken() { localStorage.removeItem('auth_token'); },
+  getRole() { return localStorage.getItem('auth_role'); },
+  setRole(role) { localStorage.setItem('auth_role', role); },
+  clearRole() { localStorage.removeItem('auth_role'); },
   getHeaders() {
     const token = this.getToken();
     return token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -315,8 +406,9 @@ function handleGoogleLogin() {
 
 function handleLogout() {
   Auth.clearToken();
+  Auth.clearRole();
   localStorage.removeItem('user_profile');
-  location.reload();
+  window.location.href = "/login.html";
 }
 
 async function initSettings() {
@@ -367,14 +459,183 @@ async function initSettings() {
 
   // 3. Render Auth Panel
   if (user) {
+    localStorage.setItem('user_profile', JSON.stringify(user));
+    const activePlan = user.subscriptionPlan || 'FREE';
+    let planLabel = activePlan.charAt(0).toUpperCase() + activePlan.slice(1).toLowerCase() + ' Plan';
+    if (user.role === 'ADMIN') {
+      planLabel = 'Administrator';
+    }
+
     authPanel.innerHTML = `
       <div class="profile-card">
         <img class="profile-avatar" src="${user.pictureUrl || 'https://lh3.googleusercontent.com/a/default-user'}" alt="Avatar" />
         <div class="profile-name">${user.name || 'AI Analyst User'}</div>
         <div class="profile-email">${user.email}</div>
+        <div style="display:inline-block; padding: 4px 12px; border-radius:12px; background:var(--bg-hover); border:1px solid var(--border); font-size:12px; font-weight:600; color:var(--accent); margin-bottom:16px;">
+          ${planLabel}
+        </div>
         <button class="btn btn-danger btn-lg" onclick="handleLogout()" style="width: 100%">Sign Out</button>
       </div>
     `;
+
+    // Render Subscription Status & Pricing Grid
+    const subCard = document.getElementById('subscription-card');
+    const subPanel = document.getElementById('subscription-panel');
+    if (subCard && subPanel) {
+      subCard.style.display = 'block';
+
+      // Usage details
+      const generated = user.dashboardsGeneratedThisMonth || 0;
+      let limit = 5;
+      if (activePlan === 'STARTER') limit = 50;
+      else if (activePlan === 'PROFESSIONAL') limit = 200;
+      else if (activePlan === 'ENTERPRISE') limit = 999999;
+
+      const limitLabel = limit === 999999 ? 'Unlimited' : limit;
+      const progressPercent = Math.min(100, limit === 999999 ? 0 : (generated / limit) * 100);
+      const remaining = limit === 999999 ? 'Unlimited' : Math.max(0, limit - generated);
+
+      // Reset date
+      let resetInfoHtml = '';
+      if (user.limitResetAt) {
+        const resetDate = new Date(user.limitResetAt).toLocaleDateString();
+        resetInfoHtml = `<span style="font-size: 11px; color: var(--text-tertiary);">Limits reset on: <strong>${resetDate}</strong></span>`;
+      }
+
+      let expiryInfoHtml = '';
+      if (user.subscriptionExpiresAt) {
+        const expiryDate = new Date(user.subscriptionExpiresAt).toLocaleDateString();
+        expiryInfoHtml = `<span style="font-size: 11px; color: var(--text-tertiary); margin-left: 16px;">Expires: <strong>${expiryDate}</strong></span>`;
+      }
+
+      // 4 Pricing Tiers metadata
+      const tiers = [
+        {
+          id: 'FREE',
+          name: 'Free Plan',
+          price: '$0',
+          billing: 'Free forever',
+          limitText: '5 dashboards / mo',
+          features: [
+            { text: 'CSV upload & Cleaning', ok: true },
+            { text: 'Basic AI insights & charts', ok: true },
+            { text: 'Sales/Marketing/Finance templates', ok: true },
+            { text: 'Smart Dashboard Generator', ok: false },
+            { text: 'PDF/Excel exports', ok: false },
+            { text: 'Dashboard sharing & schedules', ok: false }
+          ],
+          popular: false
+        },
+        {
+          id: 'STARTER',
+          name: 'Starter Plan',
+          price: '$27',
+          billing: 'Billed every 3 months ($9/mo)',
+          limitText: '50 dashboards / mo',
+          features: [
+            { text: 'CSV upload & Cleaning', ok: true },
+            { text: 'Basic AI insights & charts', ok: true },
+            { text: 'All basic & premium templates', ok: true },
+            { text: 'PDF/Excel exports', ok: true },
+            { text: 'Smart Dashboard Generator', ok: false },
+            { text: 'Dashboard sharing & schedules', ok: false }
+          ],
+          popular: false
+        },
+        {
+          id: 'PROFESSIONAL',
+          name: 'Professional Plan',
+          price: '$42',
+          billing: 'Billed every 6 months ($7/mo)',
+          limitText: '200 dashboards / mo',
+          features: [
+            { text: 'All Starter features', ok: true },
+            { text: 'Smart Dashboard Generator', ok: true },
+            { text: 'Advanced KPI recommendations', ok: true },
+            { text: 'Dashboard sharing & collaboration', ok: true },
+            { text: 'Scheduled reports & email alerts', ok: true },
+            { text: 'Team workspace & branding', ok: false }
+          ],
+          popular: true
+        },
+        {
+          id: 'ENTERPRISE',
+          name: 'Enterprise Plan',
+          price: '$60',
+          billing: 'Billed yearly ($5/mo)',
+          limitText: 'Unlimited generations',
+          features: [
+            { text: 'All Professional features', ok: true },
+            { text: 'Unlimited dashboard generations', ok: true },
+            { text: 'Team workspaces & multi-user', ok: true },
+            { text: 'White-label branding', ok: true },
+            { text: 'Full API access', ok: true },
+            { text: 'Dedicated support manager', ok: true }
+          ],
+          popular: false
+        }
+      ];
+
+      subPanel.innerHTML = `
+        <div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <span style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Current Plan</span>
+              <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 2px 0 0 0;">${planLabel}</h3>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-size: 12px; color: var(--text-secondary); font-weight: 600;">Monthly Usage</span>
+              <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-top: 2px;">
+                ${generated} / ${limitLabel} <span style="font-size:12px; font-weight:500; color:var(--text-secondary);">dashboards</span>
+              </div>
+            </div>
+          </div>
+          <div class="quality-bar" style="height: 8px; margin-bottom: 8px;">
+            <div class="quality-bar-fill" style="width: ${progressPercent}%; background: var(--accent);"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            ${resetInfoHtml}
+            ${expiryInfoHtml}
+          </div>
+        </div>
+
+        <h4 style="font-size: 13px; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px; margin: 24px 0 12px 0;">Available Upgrades & Subscriptions</h4>
+        
+        <div class="pricing-grid">
+          ${tiers.map(tier => {
+            const isCurrent = tier.id === activePlan;
+            const btnText = isCurrent ? 'Active Plan' : 'Select Plan';
+            const btnClass = isCurrent ? 'btn-secondary' : (tier.popular ? 'btn-primary' : 'btn-ghost');
+            
+            return `
+              <div class="pricing-card ${tier.popular ? 'popular' : ''}">
+                ${tier.popular ? `<span class="pricing-badge">Popular</span>` : ''}
+                <div>
+                  <div class="pricing-title">${tier.name}</div>
+                  <div class="pricing-price">${tier.price} <span style="font-size: 11px;">/ period</span></div>
+                  <div style="font-size: 10px; color: var(--text-tertiary); margin-top: -8px; margin-bottom: 12px;">${tier.billing}</div>
+                  <div style="font-size: 11px; font-weight: 600; color: var(--accent); margin-bottom: 16px; padding: 4px 8px; background: var(--bg-hover); border-radius: 4px; display: inline-block;">
+                    ${tier.limitText}
+                  </div>
+                  <ul class="pricing-features">
+                    ${tier.features.map(f => `
+                      <li class="${f.ok ? '' : 'locked'}">
+                        <span>${f.ok ? '✔' : '🔒'}</span> ${f.text}
+                      </li>
+                    `).join('')}
+                  </ul>
+                </div>
+                <button class="btn ${btnClass} btn-sm" style="width: 100%;" 
+                  ${isCurrent ? 'disabled' : ''} 
+                  onclick="openCheckoutModal('${tier.id}', '${tier.name}', '${tier.price}')">
+                  ${btnText}
+                </button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
   } else {
     authPanel.innerHTML = `
       <div style="text-align: center; padding: 24px;">
@@ -395,6 +656,7 @@ async function initSettings() {
       </div>
     `;
   }
+
 
   // 4. Render Dashboard History
   if (isDemo) {
@@ -440,8 +702,8 @@ async function initSettings() {
 
 function loadDashboardFromHistory(id) {
   Session.set(`mock_session_${id}`);
-  alert(`Loaded dashboard state for session ID: ${id}`);
-  window.location.href = '/dashboard.html';
+  Toast.success('Dashboard state loaded');
+  setTimeout(() => { window.location.href = '/dashboard.html'; }, 200);
 }
 
 async function loadAndCacheUserProfile() {
@@ -473,11 +735,268 @@ async function loadAndCacheUserProfile() {
   }
 }
 
+// ─── Smooth scroll to top on page load ─────────────────────────
+function smoothScrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── Global click: close dropdowns on outside click ────────────
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.dropdown-menu, .download-group')) {
+    document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  }
+});
+
+// ─── Global export button loading state helper ─────────────────
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-loading-text]');
+  if (btn && !btn.disabled) {
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.dataset.originalText = original;
+    btn.textContent = btn.dataset.loadingText || '⏳...';
+  }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   updateLogos();
   renderSessionBadge();
+  smoothScrollToTop();
   if (document.getElementById('auth-panel')) {
     initSettings();
   }
   loadAndCacheUserProfile();
+
+  // Auto page gates
+  const path = window.location.pathname;
+  if (path.endsWith('smart-dashboard.html') && isFeatureLocked('smart-dashboard')) {
+    renderFeatureLockScreen('Smart Dashboard Generator', 'The Smart Dashboard Generator is available on the Professional and Enterprise plans.');
+  } else if (path.endsWith('share-manage.html') && isFeatureLocked('sharing')) {
+    renderFeatureLockScreen('Dashboard Sharing', 'Dashboard sharing is available on the Professional and Enterprise plans.');
+  } else if (path.endsWith('scheduled-reports.html') && isFeatureLocked('schedules')) {
+    renderFeatureLockScreen('Scheduled Reports', 'Scheduled reports are available on the Professional and Enterprise plans.');
+  }
 });
+
+function getSubscriptionPlan() {
+  const profileStr = localStorage.getItem('user_profile');
+  if (profileStr) {
+    try {
+      const p = JSON.parse(profileStr);
+      return p.subscriptionPlan || 'FREE';
+    } catch (_) {}
+  }
+  return 'FREE';
+}
+
+function isFeatureLocked(featureName) {
+  const plan = getSubscriptionPlan();
+  const role = localStorage.getItem('auth_role');
+  if (role === 'ADMIN') return false; // Admins bypass all gates
+
+  if (featureName === 'smart-dashboard' || featureName === 'sharing' || featureName === 'schedules') {
+    return plan !== 'PROFESSIONAL' && plan !== 'ENTERPRISE';
+  }
+  if (featureName === 'pdf-export' || featureName === 'excel-export') {
+    return plan === 'FREE';
+  }
+  return false;
+}
+
+function renderFeatureLockScreen(title, message) {
+  const main = document.querySelector('.main');
+  if (!main) return;
+  const content = document.querySelector('.page-content') || main;
+  content.innerHTML = `
+    <div class="card no-hover" style="max-width: 600px; margin: 80px auto; text-align: center; padding: 48px 24px; border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--card-bg);">
+      <div style="font-size: 56px; margin-bottom: 24px;">🔒</div>
+      <h2 style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">${title}</h2>
+      <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 32px; line-height: 1.6; max-width: 440px; margin-left: auto; margin-right: auto;">
+        ${message}
+      </p>
+      <div style="display:flex; justify-content:center; gap: 16px;">
+        <button class="btn btn-secondary btn-lg" onclick="window.history.back()">Go Back</button>
+        <a href="/settings.html" class="btn btn-primary btn-lg">Upgrade Now</a>
+      </div>
+    </div>
+  `;
+}
+
+async function upgradeToPremium() {
+  try {
+    const res = await fetch(`${SPRING_BOOT_BACKEND}/api/user/upgrade`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...Auth.getHeaders()
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      Auth.setToken(data.token);
+      Auth.setRole(data.role);
+      Toast.success("Congratulations! You are now a Premium user!");
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      Toast.error("Upgrade request failed.");
+    }
+  } catch (err) {
+    console.error(err);
+    Toast.error("Failed to connect to authentication server.");
+  }
+}
+
+let currentCheckoutPlan = '';
+let currentCheckoutMethod = 'stripe';
+
+function openCheckoutModal(planId, planName, planPrice) {
+  currentCheckoutPlan = planId;
+  currentCheckoutMethod = 'stripe';
+
+  let overlay = document.getElementById('checkout-modal-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'checkout-modal-overlay';
+    overlay.className = 'checkout-modal-overlay';
+    document.body.appendChild(overlay);
+  }
+
+  overlay.innerHTML = `
+    <div class="checkout-modal">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+        <h3 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin:0;">Complete Subscription</h3>
+        <button class="btn btn-ghost btn-sm" onclick="closeCheckoutModal()" style="padding:4px 8px; border-radius:50%; font-size:14px; font-weight:700;">✕</button>
+      </div>
+      <div style="margin-bottom: 20px; padding: 12px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: var(--radius);">
+        <div style="font-size: 11px; color: var(--text-secondary);">Selected Plan:</div>
+        <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-top:2px;">${planName}</div>
+        <div style="font-size: 18px; font-weight: 800; color: var(--accent); margin-top: 4px;">${planPrice}</div>
+      </div>
+
+      <div class="checkout-method-tabs">
+        <div class="checkout-method-tab active" id="tab-stripe" onclick="setCheckoutMethod('stripe')">Stripe (Card)</div>
+        <div class="checkout-method-tab" id="tab-razorpay" onclick="setCheckoutMethod('razorpay')">Razorpay (UPI)</div>
+      </div>
+
+      <div id="checkout-form-container">
+        <!-- Stripe Form -->
+        <div id="form-stripe">
+          <div class="llm-field">
+            <label style="display:block; font-size:10px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">Card Number</label>
+            <input type="text" class="input" style="width:100%; padding:8px 12px;" placeholder="4242 4242 4242 4242" value="4242 4242 4242 4242" id="stripe-card-num" />
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px;">
+            <div class="llm-field">
+              <label style="display:block; font-size:10px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">Expiry Date</label>
+              <input type="text" class="input" style="width:100%; padding:8px 12px;" placeholder="MM/YY" value="12/29" />
+            </div>
+            <div class="llm-field">
+              <label style="display:block; font-size:10px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">CVC</label>
+              <input type="text" class="input" style="width:100%; padding:8px 12px;" placeholder="123" value="123" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Razorpay Form -->
+        <div id="form-razorpay" style="display:none;">
+          <div class="llm-field">
+            <label style="display:block; font-size:10px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">UPI ID / VPA</label>
+            <input type="text" class="input" style="width:100%; padding:8px 12px;" placeholder="username@upi" value="success@razorpay" id="razorpay-vpa" />
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px; display:flex; gap:12px;">
+        <button class="btn btn-secondary btn-lg" style="flex:1;" onclick="closeCheckoutModal()">Cancel</button>
+        <button class="btn btn-primary btn-lg" style="flex:2;" id="btn-submit-payment" onclick="processCheckout()">
+          Pay & Activate
+        </button>
+      </div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    overlay.classList.add('open');
+  }, 10);
+}
+
+function closeCheckoutModal() {
+  const overlay = document.getElementById('checkout-modal-overlay');
+  if (overlay) {
+    overlay.classList.remove('open');
+    setTimeout(() => {
+      overlay.remove();
+    }, 250);
+  }
+}
+
+function setCheckoutMethod(method) {
+  currentCheckoutMethod = method;
+  const tabStripe = document.getElementById('tab-stripe');
+  const tabRazorpay = document.getElementById('tab-razorpay');
+  if (tabStripe && tabRazorpay) {
+    tabStripe.classList.toggle('active', method === 'stripe');
+    tabRazorpay.classList.toggle('active', method === 'razorpay');
+  }
+  const formStripe = document.getElementById('form-stripe');
+  const formRazorpay = document.getElementById('form-razorpay');
+  if (formStripe && formRazorpay) {
+    formStripe.style.display = method === 'stripe' ? 'block' : 'none';
+    formRazorpay.style.display = method === 'razorpay' ? 'block' : 'none';
+  }
+}
+
+async function processCheckout() {
+  const btn = document.getElementById('btn-submit-payment');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Processing Payment...';
+  }
+
+  await new Promise(resolve => setTimeout(resolve, 1200));
+
+  let token = 'tok_visa';
+  if (currentCheckoutMethod === 'razorpay') {
+    token = 'pay_' + Math.random().toString(36).substring(2, 12);
+  }
+
+  try {
+    const res = await fetch(`${SPRING_BOOT_BACKEND}/api/user/subscribe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...Auth.getHeaders()
+      },
+      body: JSON.stringify({
+        plan: currentCheckoutPlan,
+        paymentMethod: currentCheckoutMethod,
+        paymentToken: token
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      Auth.setToken(data.token);
+      Auth.setRole(data.role);
+      Toast.success(`Plan ${currentCheckoutPlan} activated successfully!`);
+      closeCheckoutModal();
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      const err = await res.json();
+      Toast.error(err.error || 'Checkout process failed.');
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Pay & Activate';
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    Toast.error('Failed to contact subscription server.');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Pay & Activate';
+    }
+  }
+}
+
+

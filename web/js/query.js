@@ -144,17 +144,6 @@ function addMessage(question, result) {
   const ts = new Date().toLocaleTimeString();
   const msgId = 'msg-' + Date.now();
 
-  // User bubble
-  const userBubble = document.createElement('div');
-  userBubble.className = 'chat-bubble user';
-  userBubble.innerHTML = `
-    <div class="chat-avatar user">Q</div>
-    <div class="chat-body user">
-      <div>${escapeHtml(question)}</div>
-      <div class="chat-meta">${ts}</div>
-    </div>`;
-  chatMessages.appendChild(userBubble);
-
   // AI bubble
   const aiBubble = document.createElement('div');
   aiBubble.className = 'chat-bubble ai';
@@ -185,6 +174,26 @@ function escapeHtml(text) {
   return d.innerHTML;
 }
 
+function showTypingIndicator() {
+  const el = document.createElement('div');
+  el.className = 'chat-bubble ai typing-indicator-wrapper';
+  el.innerHTML = `
+    <div class="chat-avatar ai">A</div>
+    <div class="typing-indicator">
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+    </div>`;
+  chatMessages.appendChild(el);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  return el;
+}
+
+function removeTypingIndicator() {
+  const el = chatMessages.querySelector('.typing-indicator-wrapper');
+  if (el) el.remove();
+}
+
 async function askQuestion(question) {
   if (!question.trim()) return;
 
@@ -197,28 +206,41 @@ async function askQuestion(question) {
   askBtn.disabled = true;
   askBtn.textContent = 'Thinking…';
 
-  // Add message optimistically
-  addMessage(question, { answer: 'Analyzing…', confidence: 'low', chart: null });
+  // User bubble
+  emptyState?.remove();
+  const userBubble = document.createElement('div');
+  userBubble.className = 'chat-bubble user';
+  const ts = new Date().toLocaleTimeString();
+  userBubble.innerHTML = `
+    <div class="chat-avatar user">Q</div>
+    <div class="chat-body user">
+      <div>${escapeHtml(question.trim())}</div>
+      <div class="chat-meta">${ts}</div>
+    </div>`;
+  chatMessages.appendChild(userBubble);
+
+  // Typing indicator
+  const typingEl = showTypingIndicator();
 
   try {
     const result = await API.post('/api/query', { session_id: sid, question: question.trim() });
-    // Remove the optimistic message and replace with real one
-    const msgs = chatMessages.querySelectorAll('.chat-bubble');
-    if (msgs.length >= 2) {
-      msgs[msgs.length - 1].remove(); // remove optimistic AI
-      msgs[msgs.length - 2].remove(); // remove user bubble
-    }
+    removeTypingIndicator();
     addMessage(question, result);
   } catch (e) {
-    // Show error in the last (optimistic) AI message
-    const msgs = chatMessages.querySelectorAll('.chat-bubble');
-    const lastAi = msgs[msgs.length - 1];
-    if (lastAi && lastAi.classList.contains('ai')) {
-      const body = lastAi.querySelector('.chat-body');
-      if (body) {
-        body.innerHTML = `<div style="color:var(--red);">${escapeHtml(e.message)}</div>`;
-      }
-    }
+    removeTypingIndicator();
+    // Show error in a new AI bubble
+    const errorBubble = document.createElement('div');
+    errorBubble.className = 'chat-bubble ai';
+    errorBubble.innerHTML = `
+      <div class="chat-avatar ai">A</div>
+      <div class="chat-body">
+        <div style="color:var(--red);display:flex;align-items:center;gap:8px;">
+          <span>${Icons.warning}</span>
+          <span>${escapeHtml(e.message)}</span>
+        </div>
+      </div>`;
+    chatMessages.appendChild(errorBubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
   } finally {
     askBtn.disabled = false;
     askBtn.textContent = 'Ask';

@@ -1,18 +1,26 @@
 [
   {
+    "session_id": "0e6fa435-25f0-4718-80c4-d70588c2f285",
+    "filename": "(previous)",
+    "rows": 2823,
+    "columns": 25,
+    "uploaded_at": "2026-06-12T06:02:47Z",
+    "sort_key": 4
+  },
+  {
+    "session_id": "056e5b92-f61c-4e61-b30a-2f8c827b263a",
+    "filename": "(previous)",
+    "rows": 2823,
+    "columns": 9,
+    "uploaded_at": "2026-06-12T06:02:02Z",
+    "sort_key": 3
+  },
+  {
     "session_id": "57360bdf-80f6-43a9-b6ab-91edfdfd0ff0",
     "filename": "(previous)",
     "rows": 1000,
     "columns": 9,
     "uploaded_at": "2026-06-11T06:21:49Z",
     "sort_key": 2
-  },
-  {
-    "session_id": "68ef6851-248f-48e0-bd72-f7620f598700",
-    "filename": "(previous)",
-    "rows": 1000,
-    "columns": 9,
-    "uploaded_at": "2026-06-11T06:19:30Z",
-    "sort_key": 1
   }
 ]

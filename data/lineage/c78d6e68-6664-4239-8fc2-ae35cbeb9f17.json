@@ -36,7 +36,7 @@
     "columns_before": 0,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-10T11:02:18.803069"
+    "timestamp": "2026-06-12T10:09:45.783003"
   },
   {
     "step_id": "clean_1",
@@ -51,7 +51,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:39:51.998753"
+    "timestamp": "2026-06-12T10:24:22.149032"
   },
   {
     "step_id": "clean_2",
@@ -66,7 +66,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:39:52.003885"
+    "timestamp": "2026-06-12T10:24:22.151751"
   },
   {
     "step_id": "clean_3",
@@ -81,7 +81,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:39:52.010071"
+    "timestamp": "2026-06-12T10:24:22.158784"
   },
   {
     "step_id": "clean_4",
@@ -96,7 +96,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:39:52.026276"
+    "timestamp": "2026-06-12T10:24:22.167623"
   },
   {
     "step_id": "clean_5",
@@ -111,7 +111,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:39:52.030917"
+    "timestamp": "2026-06-12T10:24:22.173183"
   },
   {
     "step_id": "clean_6",
@@ -126,7 +126,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:39:52.036885"
+    "timestamp": "2026-06-12T10:24:22.177848"
   },
   {
     "step_id": "clean_7",
@@ -141,7 +141,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:39:52.046519"
+    "timestamp": "2026-06-12T10:24:22.186781"
   },
   {
     "step_id": "clean_8",
@@ -156,7 +156,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:39:52.056675"
+    "timestamp": "2026-06-12T10:24:22.192070"
   },
   {
     "step_id": "clean_9",
@@ -171,7 +171,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:39:52.058516"
+    "timestamp": "2026-06-12T10:24:22.197295"
   },
   {
     "step_id": "clean_10",
@@ -186,7 +186,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:39:52.059027"
+    "timestamp": "2026-06-12T10:24:22.197295"
   },
   {
     "step_id": "clean_1",
@@ -201,7 +201,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:26.910961"
+    "timestamp": "2026-06-12T10:24:24.359682"
   },
   {
     "step_id": "clean_2",
@@ -216,7 +216,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:26.923072"
+    "timestamp": "2026-06-12T10:24:24.367904"
   },
   {
     "step_id": "clean_3",
@@ -231,7 +231,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:26.933192"
+    "timestamp": "2026-06-12T10:24:24.372999"
   },
   {
     "step_id": "clean_4",
@@ -246,7 +246,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:26.963047"
+    "timestamp": "2026-06-12T10:24:24.380566"
   },
   {
     "step_id": "clean_5",
@@ -261,7 +261,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:26.972894"
+    "timestamp": "2026-06-12T10:24:24.386749"
   },
   {
     "step_id": "clean_6",
@@ -276,7 +276,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:26.985963"
+    "timestamp": "2026-06-12T10:24:24.392455"
   },
   {
     "step_id": "clean_7",
@@ -291,7 +291,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:27.122289"
+    "timestamp": "2026-06-12T10:24:24.402335"
   },
   {
     "step_id": "clean_8",
@@ -306,7 +306,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:27.152040"
+    "timestamp": "2026-06-12T10:24:24.409396"
   },
   {
     "step_id": "clean_9",
@@ -321,7 +321,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:27.158427"
+    "timestamp": "2026-06-12T10:24:24.409396"
   },
   {
     "step_id": "clean_10",
@@ -336,7 +336,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:27.159531"
+    "timestamp": "2026-06-12T10:24:24.411968"
   },
   {
     "step_id": "clean_1",
@@ -351,7 +351,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:49.564559"
+    "timestamp": "2026-06-12T10:24:25.790489"
   },
   {
     "step_id": "clean_2",
@@ -366,7 +366,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:49.568770"
+    "timestamp": "2026-06-12T10:24:25.798998"
   },
   {
     "step_id": "clean_3",
@@ -381,7 +381,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:49.573383"
+    "timestamp": "2026-06-12T10:24:25.806200"
   },
   {
     "step_id": "clean_4",
@@ -396,7 +396,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:49.584204"
+    "timestamp": "2026-06-12T10:24:25.816770"
   },
   {
     "step_id": "clean_5",
@@ -411,7 +411,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:49.588898"
+    "timestamp": "2026-06-12T10:24:25.821678"
   },
   {
     "step_id": "clean_6",
@@ -426,7 +426,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:49.595740"
+    "timestamp": "2026-06-12T10:24:25.828620"
   },
   {
     "step_id": "clean_7",
@@ -441,7 +441,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:49.605536"
+    "timestamp": "2026-06-12T10:24:25.840262"
   },
   {
     "step_id": "clean_8",
@@ -456,7 +456,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:49.612262"
+    "timestamp": "2026-06-12T10:24:25.847175"
   },
   {
     "step_id": "clean_9",
@@ -471,7 +471,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:49.613805"
+    "timestamp": "2026-06-12T10:24:25.850897"
   },
   {
     "step_id": "clean_10",
@@ -486,7 +486,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:40:49.613805"
+    "timestamp": "2026-06-12T10:24:25.851845"
   },
   {
     "step_id": "clean_1",
@@ -501,7 +501,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:06.442508"
+    "timestamp": "2026-06-12T10:24:26.826119"
   },
   {
     "step_id": "clean_2",
@@ -516,7 +516,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:06.466067"
+    "timestamp": "2026-06-12T10:24:26.830739"
   },
   {
     "step_id": "clean_3",
@@ -531,7 +531,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:06.481946"
+    "timestamp": "2026-06-12T10:24:26.836839"
   },
   {
     "step_id": "clean_4",
@@ -546,7 +546,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:06.529418"
+    "timestamp": "2026-06-12T10:24:26.847278"
   },
   {
     "step_id": "clean_5",
@@ -561,7 +561,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:06.551169"
+    "timestamp": "2026-06-12T10:24:26.851975"
   },
   {
     "step_id": "clean_6",
@@ -576,7 +576,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:06.572136"
+    "timestamp": "2026-06-12T10:24:26.861751"
   },
   {
     "step_id": "clean_7",
@@ -591,7 +591,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:06.591252"
+    "timestamp": "2026-06-12T10:24:26.873203"
   },
   {
     "step_id": "clean_8",
@@ -606,7 +606,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:06.611162"
+    "timestamp": "2026-06-12T10:24:26.880713"
   },
   {
     "step_id": "clean_9",
@@ -621,7 +621,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:06.616548"
+    "timestamp": "2026-06-12T10:24:26.884613"
   },
   {
     "step_id": "clean_10",
@@ -636,7 +636,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:06.619094"
+    "timestamp": "2026-06-12T10:24:26.886940"
   },
   {
     "step_id": "clean_1",
@@ -651,7 +651,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:34.457002"
+    "timestamp": "2026-06-12T10:24:28.002140"
   },
   {
     "step_id": "clean_2",
@@ -666,7 +666,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:34.505220"
+    "timestamp": "2026-06-12T10:24:28.009755"
   },
   {
     "step_id": "clean_3",
@@ -681,7 +681,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:34.538671"
+    "timestamp": "2026-06-12T10:24:28.017961"
   },
   {
     "step_id": "clean_4",
@@ -696,7 +696,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:34.569540"
+    "timestamp": "2026-06-12T10:24:28.027870"
   },
   {
     "step_id": "clean_5",
@@ -711,7 +711,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:34.580544"
+    "timestamp": "2026-06-12T10:24:28.033113"
   },
   {
     "step_id": "clean_6",
@@ -726,7 +726,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:34.593327"
+    "timestamp": "2026-06-12T10:24:28.043933"
   },
   {
     "step_id": "clean_7",
@@ -741,7 +741,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:34.617716"
+    "timestamp": "2026-06-12T10:24:28.052727"
   },
   {
     "step_id": "clean_8",
@@ -756,7 +756,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:34.630558"
+    "timestamp": "2026-06-12T10:24:28.059814"
   },
   {
     "step_id": "clean_9",
@@ -771,7 +771,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:34.636386"
+    "timestamp": "2026-06-12T10:24:28.066850"
   },
   {
     "step_id": "clean_10",
@@ -786,7 +786,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:41:34.640203"
+    "timestamp": "2026-06-12T10:24:28.067891"
   },
   {
     "step_id": "clean_1",
@@ -801,7 +801,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:42:55.965565"
+    "timestamp": "2026-06-12T10:43:23.204263"
   },
   {
     "step_id": "clean_2",
@@ -816,7 +816,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:42:55.983047"
+    "timestamp": "2026-06-12T10:43:23.263153"
   },
   {
     "step_id": "clean_3",
@@ -831,7 +831,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:42:55.997405"
+    "timestamp": "2026-06-12T10:43:23.362288"
   },
   {
     "step_id": "clean_4",
@@ -846,7 +846,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:42:56.019347"
+    "timestamp": "2026-06-12T10:43:23.646426"
   },
   {
     "step_id": "clean_5",
@@ -861,7 +861,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:42:56.034807"
+    "timestamp": "2026-06-12T10:43:23.765646"
   },
   {
     "step_id": "clean_6",
@@ -876,7 +876,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:42:56.049451"
+    "timestamp": "2026-06-12T10:43:24.027669"
   },
   {
     "step_id": "clean_7",
@@ -891,7 +891,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:42:56.065512"
+    "timestamp": "2026-06-12T10:43:24.352271"
   },
   {
     "step_id": "clean_8",
@@ -906,7 +906,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:42:56.078900"
+    "timestamp": "2026-06-12T10:43:24.473704"
   },
   {
     "step_id": "clean_9",
@@ -921,7 +921,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:42:56.082822"
+    "timestamp": "2026-06-12T10:43:24.494906"
   },
   {
     "step_id": "clean_10",
@@ -936,7 +936,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:42:56.084917"
+    "timestamp": "2026-06-12T10:43:24.506800"
   },
   {
     "step_id": "clean_1",
@@ -951,7 +951,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:45:17.231415"
+    "timestamp": "2026-06-12T10:46:14.815473"
   },
   {
     "step_id": "clean_2",
@@ -966,7 +966,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:45:17.251121"
+    "timestamp": "2026-06-12T10:46:14.823201"
   },
   {
     "step_id": "clean_3",
@@ -981,7 +981,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:45:17.280678"
+    "timestamp": "2026-06-12T10:46:14.830679"
   },
   {
     "step_id": "clean_4",
@@ -996,7 +996,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:45:17.309963"
+    "timestamp": "2026-06-12T10:46:14.841974"
   },
   {
     "step_id": "clean_5",
@@ -1011,7 +1011,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:45:17.328394"
+    "timestamp": "2026-06-12T10:46:14.851560"
   },
   {
     "step_id": "clean_6",
@@ -1026,7 +1026,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:45:17.351693"
+    "timestamp": "2026-06-12T10:46:14.858961"
   },
   {
     "step_id": "clean_7",
@@ -1041,7 +1041,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:45:17.520429"
+    "timestamp": "2026-06-12T10:46:14.873168"
   },
   {
     "step_id": "clean_8",
@@ -1056,7 +1056,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:45:17.540314"
+    "timestamp": "2026-06-12T10:46:14.884994"
   },
   {
     "step_id": "clean_9",
@@ -1071,7 +1071,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:45:17.553093"
+    "timestamp": "2026-06-12T10:46:14.889192"
   },
   {
     "step_id": "clean_10",
@@ -1086,7 +1086,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:45:17.565992"
+    "timestamp": "2026-06-12T10:46:14.892521"
   },
   {
     "step_id": "clean_1",
@@ -1101,7 +1101,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:49:28.790364"
+    "timestamp": "2026-06-12T11:33:33.316190"
   },
   {
     "step_id": "clean_2",
@@ -1116,7 +1116,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:49:28.817873"
+    "timestamp": "2026-06-12T11:33:33.323858"
   },
   {
     "step_id": "clean_3",
@@ -1131,7 +1131,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:49:28.840374"
+    "timestamp": "2026-06-12T11:33:33.330705"
   },
   {
     "step_id": "clean_4",
@@ -1146,7 +1146,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:49:28.865747"
+    "timestamp": "2026-06-12T11:33:33.335424"
   },
   {
     "step_id": "clean_5",
@@ -1161,7 +1161,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:49:28.878630"
+    "timestamp": "2026-06-12T11:33:33.340584"
   },
   {
     "step_id": "clean_6",
@@ -1176,13 +1176,13 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:49:28.889871"
+    "timestamp": "2026-06-12T11:33:33.351066"
   },
   {
     "step_id": "clean_7",
     "step_name": "Handle Outliers (IQR Capping)",
     "category": "clean",
-    "description": "No outliers detected",
+    "description": "`quantityordered`: 8 values capped, `orderlinenumber`: 10 values capped, `state`: 644 values capped, `country`: 16 values capped",
     "affected_columns": [
       "*"
     ],
@@ -1191,7 +1191,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:49:28.922273"
+    "timestamp": "2026-06-12T11:33:33.369463"
   },
   {
     "step_id": "clean_8",
@@ -1206,13 +1206,13 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:49:28.937672"
+    "timestamp": "2026-06-12T11:33:33.377744"
   },
   {
     "step_id": "clean_9",
     "step_name": "Validate Data",
     "category": "clean",
-    "description": "All values are valid",
+    "description": "`quantityordered`: clamped 1475 negative values to 0; `priceeach`: clamped 1108 negative values to 0; `country`: clamped 1680 negative values to 0",
     "affected_columns": [
       "*"
     ],
@@ -1221,7 +1221,7 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:49:28.943227"
+    "timestamp": "2026-06-12T11:33:33.382535"
   },
   {
     "step_id": "clean_10",
@@ -1236,6 +1236,6 @@
     "columns_before": 25,
     "columns_after": 25,
     "duration_ms": 0,
-    "timestamp": "2026-06-12T10:49:28.948407"
+    "timestamp": "2026-06-12T11:33:33.386717"
   }
 ]
