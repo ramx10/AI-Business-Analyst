@@ -15,6 +15,26 @@ public class AnalyticsApplication {
         SpringApplication.run(AnalyticsApplication.class, args);
     }
 
+    @org.springframework.context.annotation.Bean
+    public org.springframework.boot.CommandLineRunner initAdmin(
+            com.example.analytics.repository.UserRepository userRepository) {
+        return args -> {
+            String adminEmail = "admin@example.com";
+            if (!userRepository.findByEmail(adminEmail).isPresent()) {
+                org.springframework.security.crypto.password.PasswordEncoder encoder = 
+                    new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+                String hashedPassword = encoder.encode("admin123");
+                String googleId = "manual_admin";
+                com.example.analytics.model.User admin = new com.example.analytics.model.User(
+                    googleId, adminEmail, "System Administrator", null, hashedPassword
+                );
+                admin.setRole("ADMIN");
+                userRepository.save(admin);
+                System.out.println("Auto-seeded admin user: " + adminEmail);
+            }
+        };
+    }
+
     private static void loadEnv() {
         Path envPath = Paths.get(".env");
         if (!Files.exists(envPath)) {

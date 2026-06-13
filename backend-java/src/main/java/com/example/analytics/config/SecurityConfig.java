@@ -45,6 +45,9 @@ public class SecurityConfig {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @Value("${cors.allowed-origins}")
     private String corsAllowedOrigins;
 
@@ -57,7 +60,10 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/user/**").authenticated()
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/premium/**").hasAnyRole("PREMIUM_USER", "ADMIN")
+                .requestMatchers("/api/user/**").hasAnyRole("USER", "PREMIUM_USER", "ADMIN")
                 .anyRequest().permitAll()
             )
             .oauth2Login(oauth2 -> oauth2
@@ -145,13 +151,19 @@ public class SecurityConfig {
                 String header = request.getHeader("Authorization");
                 if (header != null && header.startsWith("Bearer ")) {
                     String token = header.substring(7);
-
-                    Optional<User> userOpt = userRepository.findByAuthToken(token);
-                    if (userOpt.isPresent()) {
-                        User user = userOpt.get();
-                        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                                user, null, Collections.emptyList());
-                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    try {
+                        String email = jwtUtil.getEmailFromToken(token);
+                        Optional<User> userOpt = userRepository.findByEmail(email);
+                        if (userOpt.isPresent()) {
+                            User user = userOpt.get();
+                            org.springframework.security.core.authority.SimpleGrantedAuthority authority = 
+                                new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + user.getRole());
+                            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                                    user, null, Collections.singletonList(authority));
+                            SecurityContextHolder.getContext().setAuthentication(auth);
+                        }
+                    } catch (Exception e) {
+                        // Token invalid or expired
                     }
                 }
                 filterChain.doFilter(request, response);
@@ -168,17 +180,10 @@ public class SecurityConfig {
                 String email = oauth2User.getAttribute("email");
 
                 Optional<User> userOpt = userRepository.findByEmail(email);
-                String token;
+                String token = "";
                 if (userOpt.isPresent()) {
                     User user = userOpt.get();
-                    token = user.getAuthToken();
-                    if (token == null) {
-                        token = UUID.randomUUID().toString();
-                        user.setAuthToken(token);
-                        userRepository.save(user);
-                    }
-                } else {
-                    token = UUID.randomUUID().toString();
+                    token = jwtUtil.generateToken(user.getEmail(), user.getRole(), user.getId());
                 }
 
                 String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/index.html")
