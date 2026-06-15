@@ -358,6 +358,7 @@
         if (res.ok) {
           const data = await res.json();
           Auth.setToken(data.token);
+          Auth.setRole(data.role || 'USER');
           window.location.href = "/index.html";
         } else {
           alert("Guest login failed.");
@@ -366,6 +367,7 @@
         console.error("Guest login failed", err);
         // Fallback to demo mode if backend is completely unreachable
         Auth.setToken("guest_user@example.com");
+        Auth.setRole("USER");
         window.location.href = "/index.html";
       }
     }
