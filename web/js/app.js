@@ -45,6 +45,17 @@ const Icons = window.Icons;
   const tokenFromUrl = urlParams.get('token');
   if (tokenFromUrl) {
     localStorage.setItem('auth_token', tokenFromUrl);
+    try {
+      const parts = tokenFromUrl.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        if (payload && payload.role) {
+          localStorage.setItem('auth_role', payload.role);
+        }
+      }
+    } catch (e) {
+      console.error("Error decoding JWT role:", e);
+    }
     // Strip token from URL
     const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
     window.history.replaceState({path: cleanUrl}, '', cleanUrl);
@@ -721,6 +732,9 @@ async function loadAndCacheUserProfile() {
     const userRes = await fetch(`${SPRING_BOOT_BACKEND}/api/user/profile`, { headers });
     if (userRes.ok) {
       const user = await userRes.json();
+      if (user.role) {
+        Auth.setRole(user.role);
+      }
       const oldProfile = localStorage.getItem('user_profile');
       localStorage.setItem('user_profile', JSON.stringify(user));
       if (oldProfile !== JSON.stringify(user)) {
